@@ -1,8 +1,9 @@
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import type { Agency } from '@/types/database.types'
 
-async function getAgencies(): Promise<Agency[]> {
+async function getAgencies() {
+  const supabase = await createClient()
+  
   const { data, error } = await supabase
     .from('agencies')
     .select('*')
@@ -57,7 +58,7 @@ export default async function AgensiPage() {
                       <span className="text-2xl">🏢</span>
                     )}
                   </div>
-
+                  
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <h3 className="text-lg font-semibold group-hover:text-yellow-500 transition-colors line-clamp-2">
@@ -69,13 +70,13 @@ export default async function AgensiPage() {
                         </span>
                       )}
                     </div>
-
+                    
                     {agency.about && (
                       <p className="text-sm text-gray-400 line-clamp-2 mb-3">
                         {agency.about}
                       </p>
                     )}
-
+                    
                     <div className="space-y-1 text-sm text-gray-500">
                       {agency.phone && (
                         <div className="flex items-center gap-2">
