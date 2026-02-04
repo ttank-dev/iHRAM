@@ -221,14 +221,13 @@ export default function PaymentSettingsForm({ initialSettings }: { initialSettin
             style={{
               width: '100%',
               padding: '12px 16px',
-              fontSize: '15px',
+              fontSize: '16px',
               border: '1px solid #E5E5E0',
               borderRadius: '8px',
               outline: 'none',
               backgroundColor: 'white',
               color: '#2C2C2C',
-              fontFamily: 'monospace',
-              fontSize: '16px'
+              fontFamily: 'monospace'
             }}
           />
         </div>
