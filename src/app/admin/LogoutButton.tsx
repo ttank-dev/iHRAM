@@ -2,25 +2,26 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
-import { LogOut } from 'lucide-react'
 
-export default function AdminLogoutButton() {
+export default function LogoutButton() {
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
   const supabase = createClient()
 
-  async function handleLogout() {
-    if (!confirm('Logout from admin panel?')) return
-    
+  const handleLogout = async () => {
+    if (!confirm('Log out from admin panel?')) return
+
     setLoading(true)
     try {
-      await supabase.auth.signOut()
-      router.push('/admin-login')
-      router.refresh()
-    } catch (error) {
+      // Sign out from Supabase
+      const { error } = await supabase.auth.signOut()
+      
+      if (error) throw error
+
+      // Redirect to admin-login (with DASH!)
+      window.location.href = '/admin-login'
+    } catch (error: any) {
       console.error('Logout error:', error)
-      alert('Error logging out')
+      alert(`❌ Error: ${error.message}`)
       setLoading(false)
     }
   }
@@ -29,10 +30,23 @@ export default function AdminLogoutButton() {
     <button
       onClick={handleLogout}
       disabled={loading}
-      className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-[#1A1A1A] rounded-lg transition-colors w-full disabled:opacity-50"
+      style={{
+        padding: '10px 20px',
+        backgroundColor: loading ? '#999' : '#EF4444',
+        color: 'white',
+        border: 'none',
+        borderRadius: '8px',
+        fontSize: '14px',
+        fontWeight: '600',
+        cursor: loading ? 'not-allowed' : 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        width: '100%',
+        justifyContent: 'center'
+      }}
     >
-      <LogOut size={20} />
-      <span>{loading ? 'Logging out...' : 'Logout'}</span>
+      {loading ? '⏳ Logging out...' : '🚪 Log Out'}
     </button>
   )
 }

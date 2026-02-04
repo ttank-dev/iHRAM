@@ -4,23 +4,23 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Shield, Mail, Lock } from 'lucide-react'
+import ForgotPasswordModal from '@/components/ForgotPasswordModal'
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
 
-  async function handleLogin(e: React.FormEvent) {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setLoading(true)
 
     try {
-      // Sign in
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -28,122 +28,154 @@ export default function AdminLoginPage() {
 
       if (signInError) throw signInError
 
-      // Check if user is admin
       if (data.user) {
+        // Check if user is admin
         const { data: adminRole } = await supabase
           .from('admin_roles')
           .select('role, is_active')
           .eq('user_id', data.user.id)
           .single()
 
-        if (!adminRole || !adminRole.is_active) {
+        if (!adminRole) {
+          setError('Anda bukan admin. Akses ditolak.')
           await supabase.auth.signOut()
-          setError('Access denied. Admin credentials required.')
           setLoading(false)
           return
         }
-      }
 
-      router.push('/admin')
-      router.refresh()
+        if (!adminRole.is_active) {
+          setError('Akaun admin anda tidak aktif.')
+          await supabase.auth.signOut()
+          setLoading(false)
+          return
+        }
+
+        router.push('/admin')
+        router.refresh()
+      }
     } catch (err: any) {
-      console.error('Admin login error:', err)
-      setError(err.message || 'Invalid admin credentials')
-    } finally {
+      setError(err.message || 'Login gagal. Sila cuba lagi.')
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center px-4">
-      <div className="max-w-md w-full">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-[#D4AF37]/10 rounded-full mb-4">
-            <Shield className="text-[#D4AF37]" size={32} />
-          </div>
-          <h1 className="text-4xl font-bold mb-2">
-            <span className="text-[#D4AF37]">iHRAM</span>
-          </h1>
-          <p className="text-white text-lg font-semibold">Admin Portal</p>
-          <p className="text-gray-400 text-sm mt-2">Authorized personnel only</p>
+    <div style={{ backgroundColor: '#F5F5F0', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
+      <div style={{ width: '100%', maxWidth: '480px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <Link href="/">
+            <img src="/logo.png" alt="iHRAM" style={{ height: '60px', filter: 'brightness(0) saturate(100%) invert(56%) sepia(35%) saturate(643%) hue-rotate(358deg) brightness(95%) contrast(92%)' }} />
+          </Link>
         </div>
 
-        <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg p-8">
-          <h2 className="text-2xl font-bold text-white mb-6">Admin Login</h2>
+        <div style={{ backgroundColor: 'white', borderRadius: '16px', padding: '48px', boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '64px', height: '64px', backgroundColor: '#B8936D', borderRadius: '50%', marginBottom: '16px' }}>
+              <span style={{ fontSize: '32px' }}>🔐</span>
+            </div>
+            <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: '#2C2C2C', fontFamily: 'Georgia, serif' }}>
+              Admin Dashboard
+            </h1>
+            <p style={{ color: '#666' }}>
+              Log masuk sebagai pentadbir sistem
+            </p>
+          </div>
 
           {error && (
-            <div className="mb-6 bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded-lg text-sm">
-              <p className="font-semibold mb-1">⚠️ Access Denied</p>
-              <p className="text-sm">{error}</p>
+            <div style={{ padding: '12px 16px', backgroundColor: '#FEE', border: '1px solid #F88', borderRadius: '8px', marginBottom: '20px', color: '#C33', fontSize: '14px' }}>
+              {error}
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-6">
+          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Admin Email
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#2C2C2C', marginBottom: '8px' }}>
+                Email
               </label>
-              <div className="relative">
-                <Mail
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
-                  size={20}
-                />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-black border border-[#2A2A2A] rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
-                  placeholder="admin@ihram.com.my"
-                  required
-                />
-              </div>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin@ihram.com.my"
+                required
+                style={{ width: '100%', padding: '12px 16px', border: '1px solid #E5E5E0', borderRadius: '8px', fontSize: '16px', outline: 'none' }}
+              />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#2C2C2C', marginBottom: '8px' }}>
                 Password
               </label>
-              <div className="relative">
-                <Lock
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
-                  size={20}
-                />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-black border border-[#2A2A2A] rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                style={{ width: '100%', padding: '12px 16px', border: '1px solid #E5E5E0', borderRadius: '8px', fontSize: '16px', outline: 'none' }}
+              />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-[#D4AF37] hover:bg-[#C4A030] text-black font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                width: '100%',
+                padding: '14px',
+                backgroundColor: loading ? '#CCC' : '#B8936D',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: loading ? 'not-allowed' : 'pointer'
+              }}
             >
-              {loading ? 'Authenticating...' : 'Login as Admin'}
+              {loading ? 'Log Masuk...' : 'Log Masuk'}
             </button>
+            <div style={{ textAlign: 'center', marginTop: '16px' }}>
+  <button
+    type="button"
+    onClick={() => setShowForgotPassword(true)}
+    style={{
+      background: 'none',
+      border: 'none',
+      color: '#B8936D',
+      fontSize: '14px',
+      fontWeight: '600',
+      cursor: 'pointer',
+      textDecoration: 'underline'
+    }}
+  >
+    Forgot Password?
+  </button>
+</div>
+
+{/* ADD MODAL */}
+<ForgotPasswordModal 
+  isOpen={showForgotPassword}
+  onClose={() => setShowForgotPassword(false)}
+/>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-[#2A2A2A]">
-            <p className="text-gray-400 text-sm text-center">
-              Not an admin?{' '}
-              <Link href="/login" className="text-[#D4AF37] hover:text-[#C4A030]">
-                Merchant Login
-              </Link>
-            </p>
+          <div style={{ marginTop: '24px', padding: '16px', backgroundColor: '#FFF8E1', borderRadius: '8px', border: '1px solid #FFD54F' }}>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'start' }}>
+              <span style={{ fontSize: '20px' }}>⚠️</span>
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: '600', color: '#2C2C2C', marginBottom: '4px' }}>
+                  Akses Terhad
+                </div>
+                <div style={{ fontSize: '13px', color: '#666' }}>
+                  Halaman ini hanya untuk pentadbir sistem.
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="mt-6 text-center">
-          <Link
-            href="/"
-            className="text-gray-400 hover:text-white text-sm transition-colors"
-          >
-            ← Back to Homepage
+        <div style={{ textAlign: 'center', marginTop: '24px' }}>
+          <Link href="/" style={{ color: '#666', fontSize: '14px', textDecoration: 'none' }}>
+            ← Kembali ke Homepage
           </Link>
         </div>
       </div>

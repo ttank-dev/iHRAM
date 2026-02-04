@@ -1,81 +1,281 @@
 import { checkAdminAccess } from '@/lib/admin'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import AdminLogoutButton from './LogoutButton'
+import LogoutButton from './LogoutButton'
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const { isAdmin, user } = await checkAdminAccess()
+  const { isAdmin } = await checkAdminAccess()
   if (!isAdmin) redirect('/admin-login')
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#0A0A0A' }}>
-      <div style={{
-        width: '256px',
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F5F5F0' }}>
+      {/* SIDEBAR */}
+      <aside style={{
+        width: '240px',
         backgroundColor: '#1A1A1A',
-        borderRight: '1px solid #2A2A2A',
+        color: 'white',
+        padding: '0',
+        display: 'flex',
+        flexDirection: 'column',
         position: 'fixed',
         height: '100vh',
-        left: 0,
-        top: 0,
-        overflow: 'auto',
-        zIndex: 50
+        overflowY: 'auto'
       }}>
-        <div style={{ padding: '24px', borderBottom: '1px solid #2A2A2A' }}>
-          <h1 style={{ color: '#D4AF37', fontSize: '24px', fontWeight: 'bold' }}>iHRAM</h1>
-          <p style={{ color: '#A0A0A0', fontSize: '14px', marginTop: '4px' }}>Admin Panel</p>
-        </div>
-        
-        <div style={{ padding: '24px', borderBottom: '1px solid #2A2A2A' }}>
-          <p style={{ color: '#A0A0A0', fontSize: '14px' }}>Logged in as</p>
-          <p style={{ color: 'white', fontWeight: '600', marginTop: '4px' }}>{user?.email}</p>
+        {/* Logo / Header */}
+        <div style={{ padding: '24px' }}>
+          <Link href="/admin" style={{ textDecoration: 'none' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ fontSize: '24px' }}>🕌</div>
+              <div>
+                <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#B8936D' }}>iHRAM</div>
+                <div style={{ fontSize: '11px', color: '#999' }}>Admin Dashboard</div>
+              </div>
+            </div>
+          </Link>
         </div>
 
-        <nav style={{ padding: '16px', paddingBottom: '80px' }}>
-          <Link href="/admin" style={{ display: 'block', padding: '12px 16px', color: '#A0A0A0', textDecoration: 'none', borderRadius: '8px', marginBottom: '8px' }}>
-            📊 Dashboard
+        {/* Menu Items */}
+        <nav style={{ flex: 1, padding: '0 16px' }}>
+          
+          {/* Dashboard */}
+          <Link href="/admin" style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '10px 12px',
+            color: 'white',
+            textDecoration: 'none',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: '500',
+            marginBottom: '8px'
+          }}>
+            <span>📊</span>
+            <span>Dashboard</span>
           </Link>
-          <Link href="/admin/agensi" style={{ display: 'block', padding: '12px 16px', color: '#A0A0A0', textDecoration: 'none', borderRadius: '8px', marginBottom: '8px' }}>
-            🏢 Agensi
-          </Link>
-          <Link href="/admin/pakej" style={{ display: 'block', padding: '12px 16px', color: '#A0A0A0', textDecoration: 'none', borderRadius: '8px', marginBottom: '8px' }}>
-            📦 Pakej
-          </Link>
-          <Link href="/admin/ulasan" style={{ display: 'block', padding: '12px 16px', color: '#A0A0A0', textDecoration: 'none', borderRadius: '8px', marginBottom: '8px' }}>
-            ⭐ Ulasan
-          </Link>
-          <Link href="/admin/panduan" style={{ display: 'block', padding: '12px 16px', color: '#A0A0A0', textDecoration: 'none', borderRadius: '8px', marginBottom: '8px' }}>
-            📝 Panduan
-          </Link>
-          <Link href="/admin/leads" style={{ display: 'block', padding: '12px 16px', color: '#A0A0A0', textDecoration: 'none', borderRadius: '8px', marginBottom: '8px' }}>
-            📈 Leads
-          </Link>
-          <Link href="/admin/sumbangan" style={{ display: 'block', padding: '12px 16px', color: '#A0A0A0', textDecoration: 'none', borderRadius: '8px', marginBottom: '8px' }}>
-            💰 Sumbangan
-          </Link>
+
+          {/* MANAGEMENT Section */}
+          <div style={{ marginTop: '24px', marginBottom: '8px' }}>
+            <div style={{ 
+              fontSize: '11px', 
+              color: '#666', 
+              fontWeight: '700', 
+              padding: '0 12px',
+              marginBottom: '8px'
+            }}>
+              MANAGEMENT
+            </div>
+            
+            <Link href="/admin/agensi" style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '10px 12px',
+              color: 'white',
+              textDecoration: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '500',
+              marginBottom: '4px'
+            }}>
+              <span>🏢</span>
+              <span>Agensi</span>
+            </Link>
+
+            <Link href="/admin/pakej" style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '10px 12px',
+              color: 'white',
+              textDecoration: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '500',
+              marginBottom: '4px'
+            }}>
+              <span>📦</span>
+              <span>Pakej</span>
+            </Link>
+
+            <Link href="/admin/ulasan" style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '10px 12px',
+              color: 'white',
+              textDecoration: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '500',
+              marginBottom: '4px'
+            }}>
+              <span>⭐</span>
+              <span>Ulasan</span>
+            </Link>
+
+            <Link href="/admin/panduan" style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '10px 12px',
+              color: 'white',
+              textDecoration: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '500',
+              marginBottom: '4px'
+            }}>
+              <span>📚</span>
+              <span>Panduan</span>
+            </Link>
+
+            <Link href="/admin/panduan/categories" style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '10px 12px 10px 36px',
+              color: '#999',
+              textDecoration: 'none',
+              borderRadius: '8px',
+              fontSize: '13px',
+              fontWeight: '500',
+              marginBottom: '4px'
+            }}>
+              <span>🏷️</span>
+              <span>Categories</span>
+            </Link>
+
+            <Link href="/admin/leads" style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '10px 12px',
+              color: 'white',
+              textDecoration: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '500',
+              marginBottom: '4px'
+            }}>
+              <span>🎯</span>
+              <span>Leads</span>
+            </Link>
+          </div>
+
+          {/* CONTENT Section */}
+          <div style={{ marginTop: '24px', marginBottom: '8px' }}>
+            <div style={{ 
+              fontSize: '11px', 
+              color: '#666', 
+              fontWeight: '700', 
+              padding: '0 12px',
+              marginBottom: '8px'
+            }}>
+              CONTENT
+            </div>
+            
+            <Link href="/admin/newsfeed" style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '10px 12px',
+              color: 'white',
+              textDecoration: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '500',
+              marginBottom: '4px'
+            }}>
+              <span>📰</span>
+              <span>News Feed</span>
+            </Link>
+
+            <Link href="/admin/reels" style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '10px 12px',
+              color: 'white',
+              textDecoration: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '500',
+              marginBottom: '4px'
+            }}>
+              <span>🎬</span>
+              <span>Reels</span>
+            </Link>
+          </div>
+
+          {/* SETTINGS Section */}
+          <div style={{ marginTop: '24px', marginBottom: '8px' }}>
+            <div style={{ 
+              fontSize: '11px', 
+              color: '#666', 
+              fontWeight: '700', 
+              padding: '0 12px',
+              marginBottom: '8px'
+            }}>
+              SETTINGS
+            </div>
+            
+            <Link href="/admin/sumbangan" style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '10px 12px',
+              color: 'white',
+              textDecoration: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '500',
+              marginBottom: '4px'
+            }}>
+              <span>💰</span>
+              <span>Sumbangan</span>
+            </Link>
+
+            <Link href="/admin/settings" style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '10px 12px',
+              color: 'white',
+              textDecoration: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '500',
+              marginBottom: '4px'
+            }}>
+              <span>⚙️</span>
+              <span>Settings</span>
+            </Link>
+          </div>
+
+          {/* SPACER - Push logout to bottom */}
+          <div style={{ flex: 1 }} />
         </nav>
 
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '16px', borderTop: '1px solid #2A2A2A', backgroundColor: '#1A1A1A' }}>
-          <AdminLogoutButton />
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', color: '#A0A0A0', textDecoration: 'none', borderRadius: '8px', marginTop: '8px' }}>
-            🏠 View Site
-          </Link>
+        {/* LOGOUT BUTTON - At the bottom */}
+        <div style={{ padding: '16px', borderTop: '1px solid #333' }}>
+          <LogoutButton />
         </div>
-      </div>
+      </aside>
 
-      <div style={{ 
-        marginLeft: '256px',
-        width: 'calc(100vw - 256px)',
-        minHeight: '100vh',
-        padding: '32px',
-        backgroundColor: '#0A0A0A',
-        boxSizing: 'border-box'
+      {/* MAIN CONTENT */}
+      <main style={{
+        marginLeft: '240px',
+        flex: 1,
+        padding: '40px',
+        minHeight: '100vh'
       }}>
         {children}
-      </div>
+      </main>
     </div>
   )
 }
