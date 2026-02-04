@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation'
 
 export async function submitReview(formData: FormData) {
   const supabase = await createClient()
-
+  
   console.log('=== REVIEW SUBMISSION DEBUG ===')
   
   // Handle image uploads
@@ -15,7 +15,7 @@ export async function submitReview(formData: FormData) {
   
   console.log('Image files found:', imageFiles.length)
   console.log('Image files details:', imageFiles.map(f => ({ name: f.name, size: f.size, type: f.type })))
-
+  
   for (const file of imageFiles) {
     if (file && file.size > 0) {
       console.log('Processing file:', file.name, 'Size:', file.size)
@@ -23,18 +23,19 @@ export async function submitReview(formData: FormData) {
       const fileExt = file.name.split('.').pop()
       const fileName = `${Math.random().toString(36).substring(7)}-${Date.now()}.${fileExt}`
       const filePath = `reviews/${fileName}`
-
+      
       console.log('Uploading to path:', filePath)
-
+      
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('packages')
         .upload(filePath, file, {
           contentType: file.type,
           upsert: false
         })
-
+      
       if (uploadError) {
         console.error('Upload error:', uploadError)
+        // Continue even if one image fails
       } else {
         console.log('Upload success:', uploadData)
         
@@ -49,10 +50,10 @@ export async function submitReview(formData: FormData) {
       console.log('Skipping empty file')
     }
   }
-
+  
   console.log('Total uploaded URLs:', uploadedPhotoUrls.length)
   console.log('URLs:', uploadedPhotoUrls)
-
+  
   const reviewData = {
     reviewer_name: formData.get('name') as string,
     reviewer_email: formData.get('email') as string,
@@ -65,21 +66,23 @@ export async function submitReview(formData: FormData) {
     is_approved: false,
     is_verified: false
   }
-
+  
   console.log('Review data to insert:', reviewData)
-
+  
   const { error, data } = await supabase
     .from('reviews')
     .insert([reviewData])
     .select()
-
+  
   if (error) {
     console.error('Error submitting review:', error)
-    return { error: error.message }
+    // Throw error instead of returning it
+    throw new Error(`Failed to submit review: ${error.message}`)
   }
-
+  
   console.log('Review inserted successfully:', data)
-
+  
+  // Revalidate and redirect on success
   revalidatePath('/ulasan')
-  redirect('/ulasan?submitted=true')
+  redirect('/ulasan/terima-kasih')
 }
