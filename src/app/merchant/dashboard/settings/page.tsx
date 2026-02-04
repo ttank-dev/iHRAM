@@ -178,7 +178,7 @@ export default async function MerchantSettingsPage() {
           </div>
 
           {/* Add Staff Form */}
-          <AddStaffForm agencyId={agency.id} />
+          <AddStaffForm />
 
           {/* Staff List */}
           <div style={{ marginTop: '32px' }}>
