@@ -63,12 +63,7 @@ export default function NewReelPage() {
 
     const { data, error } = await supabase.storage
       .from('reels-videos')
-      .upload(fileName, videoFile, {
-        onUploadProgress: (progress) => {
-          const percent = (progress.loaded / progress.total) * 100
-          setUploadProgress(Math.round(percent))
-        }
-      })
+      .upload(fileName, videoFile)
 
     if (error) {
       console.error('Upload error:', error)
