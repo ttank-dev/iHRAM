@@ -694,6 +694,26 @@ export default function AdminPakejPage() {
                 </button>
               )}
 
+              {/* 🔥 NEW: UNARCHIVE BUTTON FOR ARCHIVED PACKAGES */}
+              {pkg.status === 'archived' && (
+                <button
+                  onClick={() => handleChangeStatus(pkg.id, 'published')}
+                  style={{
+                    padding: '8px 12px',
+                    backgroundColor: '#10B981',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    cursor: 'pointer'
+                  }}
+                  title="Unarchive & Publish Package"
+                >
+                  ♻️
+                </button>
+              )}
+
               {/* Delete */}
               <button
                 onClick={() => handleDelete(pkg.id, pkg.title)}
