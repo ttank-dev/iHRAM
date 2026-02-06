@@ -9,7 +9,6 @@ export default function NewReelPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [uploadingVideo, setUploadingVideo] = useState(false)
-  const [uploadingThumbnail, setUploadingThumbnail] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const router = useRouter()
   const supabase = createClient()
@@ -21,8 +20,6 @@ export default function NewReelPage() {
 
   const [videoFile, setVideoFile] = useState<File | null>(null)
   const [videoPreview, setVideoPreview] = useState<string | null>(null)
-  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
-  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null)
 
   const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -42,14 +39,6 @@ export default function NewReelPage() {
 
     setVideoFile(file)
     setVideoPreview(URL.createObjectURL(file))
-  }
-
-  const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    setThumbnailFile(file)
-    setThumbnailPreview(URL.createObjectURL(file))
   }
 
   const uploadVideo = async (agencyId: string) => {
@@ -79,32 +68,6 @@ export default function NewReelPage() {
     return publicUrl
   }
 
-  const uploadThumbnail = async (agencyId: string) => {
-    if (!thumbnailFile) return null
-
-    setUploadingThumbnail(true)
-    
-    const fileExt = thumbnailFile.name.split('.').pop()
-    const fileName = `${agencyId}/${Date.now()}.${fileExt}`
-
-    const { data, error } = await supabase.storage
-      .from('reels-thumbnails')
-      .upload(fileName, thumbnailFile)
-
-    if (error) {
-      console.error('Upload error:', error)
-      setUploadingThumbnail(false)
-      return null
-    }
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('reels-thumbnails')
-      .getPublicUrl(fileName)
-
-    setUploadingThumbnail(false)
-    return publicUrl
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -131,15 +94,13 @@ export default function NewReelPage() {
       const videoUrl = await uploadVideo(agency.id)
       if (!videoUrl) throw new Error('Video upload failed')
 
-      const thumbnailUrl = await uploadThumbnail(agency.id)
-
       const { error: insertError } = await supabase
         .from('reels')
         .insert({
           agency_id: agency.id,
           title: formData.title,
           video_url: videoUrl,
-          thumbnail_url: thumbnailUrl,
+          thumbnail_url: null, // No thumbnail needed
           is_published: formData.is_published,
           views: 0
         })
@@ -260,42 +221,6 @@ export default function NewReelPage() {
             )}
           </div>
 
-          {/* Thumbnail Upload */}
-          <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#2C2C2C', marginBottom: '8px' }}>
-              Thumbnail (Optional)
-            </label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleThumbnailUpload}
-              style={{
-                width: '100%',
-                padding: '14px 16px',
-                fontSize: '14px',
-                border: '2px solid #E5E5E0',
-                borderRadius: '10px',
-                outline: 'none',
-                cursor: 'pointer'
-              }}
-            />
-            {thumbnailPreview && (
-              <div style={{ marginTop: '16px' }}>
-                <img 
-                  src={thumbnailPreview} 
-                  alt="Thumbnail preview"
-                  style={{ 
-                    width: '200px',
-                    height: '355px',
-                    objectFit: 'cover',
-                    borderRadius: '8px',
-                    border: '2px solid #E5E5E0'
-                  }} 
-                />
-              </div>
-            )}
-          </div>
-
           {/* Upload Progress */}
           {uploadingVideo && (
             <div style={{ marginBottom: '24px' }}>
@@ -339,7 +264,7 @@ export default function NewReelPage() {
         <div style={{ display: 'flex', gap: '16px' }}>
           <button
             type="submit"
-            disabled={loading || uploadingVideo || uploadingThumbnail}
+            disabled={loading || uploadingVideo}
             style={{
               padding: '16px 32px',
               backgroundColor: '#B8936D',
@@ -349,10 +274,10 @@ export default function NewReelPage() {
               fontSize: '16px',
               fontWeight: '700',
               cursor: 'pointer',
-              opacity: (loading || uploadingVideo || uploadingThumbnail) ? 0.7 : 1
+              opacity: (loading || uploadingVideo) ? 0.7 : 1
             }}
           >
-            {uploadingVideo ? `Uploading... ${uploadProgress}%` : uploadingThumbnail ? 'Uploading thumbnail...' : loading ? 'Menyimpan...' : 'Upload Reel'}
+            {uploadingVideo ? `Uploading... ${uploadProgress}%` : loading ? 'Menyimpan...' : 'Upload Reel'}
           </button>
 
           <Link

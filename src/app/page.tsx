@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import './homepage.css' // We'll create this file
 
 export default async function HomePage() {
   const supabase = await createClient()
@@ -25,7 +26,7 @@ export default async function HomePage() {
       {/* Navigation */}
       <nav style={{ backgroundColor: 'white', borderBottom: '1px solid #E5E5E0', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '80px' }}>
-             <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
             <img 
               src="/logo.png" 
               alt="iHRAM" 
@@ -56,45 +57,162 @@ export default async function HomePage() {
         
         <div style={{ position: 'relative', zIndex: 10, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '0 20px' }}>
           <p style={{ color: 'white', fontSize: '24px', marginBottom: '24px', fontFamily: 'Georgia, serif', letterSpacing: '2px' }}>
-لَبَّيْكَ اللَّهُمَّ لَبَّيْك
+            لَبَّيْكَ اللَّهُمَّ لَبَّيْك
           </p>
           <h1 style={{ color: 'white', fontSize: '64px', fontWeight: 'bold', marginBottom: '24px', fontFamily: 'Georgia, serif', maxWidth: '1000px', lineHeight: '1.2' }}>
-            Platform Discovery Pakej Umrah Malaysia
+            Platform Pakej-Pakej Umrah Di Malaysia
           </h1>
           <p style={{ color: 'white', fontSize: '20px', marginBottom: '40px', maxWidth: '800px', lineHeight: '1.6' }}>
-            Temui pakej umrah yang sesuai dengan anda dari agensi-agensi terpercaya di Malaysia
+            Temui pakej umrah yang sesuai dengan anda dari agensi-agensi Umrah di Malaysia.
           </p>
-          <Link href="/pakej" style={{ padding: '18px 48px', backgroundColor: '#B8936D', color: 'white', textDecoration: 'none', borderRadius: '50px', fontSize: '18px', fontWeight: '600', boxShadow: '0 4px 20px rgba(184,147,109,0.4)' }}>
-            TEROKAI PAKEJ
-          </Link>
+    
         </div>
 
-        {/* Three Category Cards Overlay */}
-        <div style={{ position: 'absolute', bottom: '-60px', left: '50%', transform: 'translateX(-50%)', width: '90%', maxWidth: '1400px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', padding: '0 20px' }}>
-          <Link href="/pakej" style={{ textDecoration: 'none' }}>
-            <div style={{ position: 'relative', height: '200px', backgroundImage: 'url(https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=600)', backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: '12px', overflow: 'hidden', border: '2px solid white' }}>
-              <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <h3 style={{ color: 'white', fontSize: '28px', fontWeight: 'bold', fontFamily: 'Georgia, serif' }}>Pakej Umrah</h3>
-              </div>
+        {/* Three Category Cards - WITH CSS HOVER */}
+        <div style={{ 
+          position: 'absolute', 
+          bottom: '-60px', 
+          left: '50%', 
+          transform: 'translateX(-50%)', 
+          width: '90%', 
+          maxWidth: '1400px', 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(3, 1fr)', 
+          gap: '24px', 
+          padding: '0 20px',
+          zIndex: 10 
+        }}>
+          
+          {/* Card 1: Pakej Umrah */}
+          <Link 
+            href="/pakej" 
+            className="category-card"
+            style={{ 
+              textDecoration: 'none',
+              position: 'relative',
+              height: '200px',
+              backgroundImage: 'url(https://iltceupcvsvttzzucpac.supabase.co/storage/v1/object/public/homepage-images/mecca.jpg)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              borderRadius: '12px',
+              overflow: 'hidden',
+              border: '2px solid white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              transition: 'transform 0.3s ease, box-shadow 0.3s ease'
+            }}
+          >
+            <div style={{ 
+              position: 'absolute', 
+              inset: 0, 
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <h3 style={{ 
+                color: 'white', 
+                fontSize: '28px', 
+                fontWeight: 'bold', 
+                fontFamily: 'Georgia, serif',
+                textAlign: 'center',
+                padding: '0 20px'
+              }}>
+                Pakej Umrah
+              </h3>
             </div>
           </Link>
-          <Link href="/agensi" style={{ textDecoration: 'none' }}>
-            <div style={{ position: 'relative', height: '200px', backgroundImage: 'url(https://images.unsplash.com/photo-1564769662533-4f00a87b4056?w=600)', backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: '12px', overflow: 'hidden', border: '2px solid white' }}>
-              <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <h3 style={{ color: 'white', fontSize: '28px', fontWeight: 'bold', fontFamily: 'Georgia, serif' }}>Agensi Terpercaya</h3>
-              </div>
+
+          {/* Card 2: Senarai Agensi */}
+          <Link 
+            href="/agensi" 
+            className="category-card"
+            style={{ 
+              textDecoration: 'none',
+              position: 'relative',
+              height: '200px',
+              backgroundImage: 'url(https://images.unsplash.com/photo-1497366216548-37526070297c?w=600)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              borderRadius: '12px',
+              overflow: 'hidden',
+              border: '2px solid white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              transition: 'transform 0.3s ease, box-shadow 0.3s ease'
+            }}
+          >
+            <div style={{ 
+              position: 'absolute', 
+              inset: 0, 
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <h3 style={{ 
+                color: 'white', 
+                fontSize: '28px', 
+                fontWeight: 'bold', 
+                fontFamily: 'Georgia, serif',
+                textAlign: 'center',
+                padding: '0 20px'
+              }}>
+                Senarai Agensi
+              </h3>
             </div>
           </Link>
-          <Link href="/panduan" style={{ textDecoration: 'none' }}>
-            <div style={{ position: 'relative', height: '200px', backgroundImage: 'url(https://images.unsplash.com/photo-1591604021695-0c69b7c05981?w=600)', backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: '12px', overflow: 'hidden', border: '2px solid white' }}>
-              <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <h3 style={{ color: 'white', fontSize: '28px', fontWeight: 'bold', fontFamily: 'Georgia, serif' }}>Panduan & Tips</h3>
-              </div>
+
+          {/* Card 3: Panduan & Tips */}
+          <Link 
+            href="/panduan" 
+            className="category-card"
+            style={{ 
+              textDecoration: 'none',
+              position: 'relative',
+              height: '200px',
+              backgroundImage: 'url(https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=600)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              borderRadius: '12px',
+              overflow: 'hidden',
+              border: '2px solid white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              transition: 'transform 0.3s ease, box-shadow 0.3s ease'
+            }}
+          >
+            <div style={{ 
+              position: 'absolute', 
+              inset: 0, 
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <h3 style={{ 
+                color: 'white', 
+                fontSize: '28px', 
+                fontWeight: 'bold', 
+                fontFamily: 'Georgia, serif',
+                textAlign: 'center',
+                padding: '0 20px'
+              }}>
+                Panduan & Tips
+              </h3>
             </div>
           </Link>
+
         </div>
       </div>
 
+      {/* Spacer */}
       <div style={{ height: '100px' }}></div>
 
       {/* About Section */}
@@ -129,7 +247,7 @@ export default async function HomePage() {
             Pakej Umrah Pilihan
           </h2>
           <p style={{ textAlign: 'center', fontSize: '18px', color: '#666', marginBottom: '60px', maxWidth: '700px', margin: '0 auto 60px' }}>
-            Pilihan pakej umrah terbaik dari agensi-agensi terpercaya untuk perjalanan rohani anda
+            Pilihan pakej umrah dari agensi-agensi untuk perjalanan rohani anda.
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '32px' }}>
