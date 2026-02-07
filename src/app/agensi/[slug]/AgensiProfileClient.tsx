@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
 interface Agency {
   id: string
@@ -402,6 +403,7 @@ export default function AgensiProfileClient({
   newsFeed: NewsFeedPost[]
   reels: Reel[]
 }) {
+  const supabase = createClient()
   const [activeTab, setActiveTab] = useState<'pakej' | 'newsfeed' | 'reels' | 'tentang' | 'ulasan'>('pakej')
   const [showShareMenu, setShowShareMenu] = useState(false)
   const [selectedReelIndex, setSelectedReelIndex] = useState<number | null>(null)
@@ -410,7 +412,25 @@ export default function AgensiProfileClient({
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
     : null
   const reviewCount = reviews ? reviews.length : 0
-
+const trackReelView = async (reelId: string) => {
+  try {
+    console.log('🔵 Tracking view for:', reelId)
+    
+    // Use RPC function instead of direct update
+    const { error } = await supabase.rpc('increment_reel_views', {
+      reel_id: reelId
+    })
+    
+    if (error) {
+      console.error('❌ Error:', error)
+      return
+    }
+    
+    console.log('✅ View tracked!')
+  } catch (error) {
+    console.error('❌ Error:', error)
+  }
+}
   const handleShare = async () => {
     const shareUrl = window.location.href
     const shareTitle = `${agency.name} - Agensi Umrah`
@@ -1002,144 +1022,159 @@ export default function AgensiProfileClient({
 
         {activeTab === 'reels' && (
   <div style={{ padding: '32px 0' }}>
-    
-    {reels && reels.length > 0 ? (
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-        gap: '16px',
-        maxWidth: '1200px',
-        margin: '0 auto'
-      }}>
-        {reels.map((reel, index) => (
-          <div 
-            key={reel.id}
-            onClick={() => setSelectedReelIndex(index)}
-            style={{
-              aspectRatio: '9/16',
-              backgroundColor: '#000',
-              borderRadius: '12px',
-              position: 'relative',
-              overflow: 'hidden',
-              cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-              transition: 'transform 0.2s, box-shadow 0.2s'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'scale(1.02)'
-              e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.2)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'scale(1)'
-              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)'
-            }}
-          >
-            {/* Video Element - Shows directly, no thumbnail needed */}
-            <video
-              src={reel.video_url}
-              loop
-              playsInline
-              muted
-              autoPlay
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover'
-              }}
-            />
+{reels && reels.length > 0 ? (
+  <div style={{ 
+    display: 'grid', 
+    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+    gap: '16px',
+    maxWidth: '1200px',
+    margin: '0 auto'
+  }}>
+    {reels.map((reel, index) => (
+      <div 
+        key={reel.id}
+        onClick={async () => {
+  await trackReelView(reel.id)
+  setSelectedReelIndex(index)
+}}
+        style={{
+          aspectRatio: '9/16',
+          backgroundColor: '#000',
+          borderRadius: '12px',
+          position: 'relative',
+          overflow: 'hidden',
+          cursor: 'pointer',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+          transition: 'transform 0.2s, box-shadow 0.2s'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'scale(1.02)'
+          e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.2)'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'scale(1)'
+          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)'
+        }}
+      >
+        {/* Video Element - Shows directly, no thumbnail needed */}
+        <video
+          src={reel.video_url}
+          loop
+          playsInline
+          muted
+          autoPlay
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover'
+          }}
+        />
 
-            {/* Gradient Overlay at bottom */}
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 40%)',
-              pointerEvents: 'none'
-            }} />
-            
-            {/* Info Overlay */}
-            <div style={{
-              position: 'absolute',
-              bottom: '12px',
-              left: '12px',
-              right: '12px',
-              color: 'white',
-              pointerEvents: 'none'
-            }}>
-              <div style={{ 
-                fontSize: '14px', 
-                fontWeight: '600', 
-                marginBottom: '4px',
-                textShadow: '0 1px 3px rgba(0,0,0,0.8)',
-                lineHeight: '1.3',
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden'
-              }}>
-                {reel.title}
-              </div>
-              <div style={{ 
-                fontSize: '12px', 
-                opacity: 0.9,
-                textShadow: '0 1px 2px rgba(0,0,0,0.8)'
-              }}>
-                👁️ {reel.views.toLocaleString()} views
-              </div>
-            </div>
-
-            {/* Play icon indicator (optional - shows it's clickable) */}
-            <div style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              fontSize: '40px',
-              opacity: 0.8,
-              pointerEvents: 'none',
-              textShadow: '0 2px 8px rgba(0,0,0,0.5)'
-            }}>
-              ▶️
-            </div>
-
-            {/* Mute indicator */}
-            <div style={{
-              position: 'absolute',
-              top: '12px',
-              right: '12px',
-              backgroundColor: 'rgba(0,0,0,0.5)',
-              borderRadius: '50%',
-              width: '32px',
-              height: '32px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '16px',
-              pointerEvents: 'none'
-            }}>
-              🔇
-            </div>
+        {/* Gradient Overlay at bottom */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 40%)',
+          pointerEvents: 'none'
+        }} />
+        
+        {/* Info Overlay - WITH VIEWS + DATE */}
+        <div style={{
+          position: 'absolute',
+          bottom: '12px',
+          left: '12px',
+          right: '12px',
+          color: 'white',
+          pointerEvents: 'none'
+        }}>
+          {/* Title */}
+          <div style={{ 
+            fontSize: '14px', 
+            fontWeight: '600', 
+            marginBottom: '4px',
+            textShadow: '0 1px 3px rgba(0,0,0,0.8)',
+            lineHeight: '1.3',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden'
+          }}>
+            {reel.title}
           </div>
-        ))}
+
+          {/* 🔥 VIEWS + DATE (UPDATED) */}
+          <div style={{ 
+            fontSize: '12px', 
+            opacity: 0.9,
+            textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            flexWrap: 'wrap'
+          }}>
+            <span>👁️ {reel.views.toLocaleString()}</span>
+            <span>•</span>
+            <span>📅 {new Date(reel.created_at).toLocaleDateString('ms-MY', { 
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric'
+            })}</span>
+          </div>
+        </div>
+
+        {/* Play icon indicator */}
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          fontSize: '40px',
+          opacity: 0.8,
+          pointerEvents: 'none',
+          textShadow: '0 2px 8px rgba(0,0,0,0.5)'
+        }}>
+          ▶️
+        </div>
+
+        {/* Mute indicator */}
+        <div style={{
+          position: 'absolute',
+          top: '12px',
+          right: '12px',
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          borderRadius: '50%',
+          width: '32px',
+          height: '32px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '16px',
+          pointerEvents: 'none'
+        }}>
+          🔇
+        </div>
       </div>
-    ) : (
-      <div style={{
-        backgroundColor: 'white',
-        borderRadius: '16px',
-        padding: '80px 40px',
-        textAlign: 'center',
-        border: '1px solid #E5E5E0',
-        maxWidth: '800px',
-        margin: '0 auto'
-      }}>
-        <div style={{ fontSize: '64px', marginBottom: '16px' }}>🎬</div>
-        <h3 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '12px' }}>
-          Reels
-        </h3>
-        <p style={{ fontSize: '16px', color: '#666', lineHeight: '1.6' }}>
-          Video pendek dan reels dari {agency.name} akan dipaparkan di sini
-        </p>
-      </div>
-    )}
+    ))}
+  </div>
+) : (
+  <div style={{
+    backgroundColor: 'white',
+    borderRadius: '16px',
+    padding: '80px 40px',
+    textAlign: 'center',
+    border: '1px solid #E5E5E0',
+    maxWidth: '800px',
+    margin: '0 auto'
+  }}>
+    <div style={{ fontSize: '64px', marginBottom: '16px' }}>🎬</div>
+    <h3 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '12px' }}>
+      Reels
+    </h3>
+    <p style={{ fontSize: '16px', color: '#666', lineHeight: '1.6' }}>
+      Video pendek dan reels dari {agency.name} akan dipaparkan di sini
+    </p>
+  </div>
+)}
   </div>
 )}
 
