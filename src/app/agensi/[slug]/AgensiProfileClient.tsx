@@ -15,6 +15,10 @@ interface Agency {
   email: string | null
   website: string | null
   ssm_number: string | null
+  motac_license_number: string | null
+  motac_license_expiry: string | null
+  motac_verified_at: string | null
+  license_status: string | null
   is_verified: boolean
 }
 
