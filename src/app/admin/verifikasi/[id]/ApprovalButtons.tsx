@@ -24,7 +24,7 @@ export default function ApprovalButtons({
   const [rejectionReason, setRejectionReason] = useState('')
   const [adminNotes, setAdminNotes] = useState('')
 
-  // 🔥 NEW: Calculate license status based on expiry date
+  // Calculate license status based on expiry date
   const calculateLicenseStatus = (expiryDate: string): string => {
     // Parse DD/MM/YYYY format
     const [day, month, year] = expiryDate.split('/')
@@ -49,11 +49,11 @@ export default function ApprovalButtons({
     try {
       console.log('🔵 Starting approval process...')
 
-      // 🔥 NEW: Calculate license status from new expiry date
+      // Step 1: Calculate new license status
       const newLicenseStatus = calculateLicenseStatus(motacLicenseExpiry)
       console.log('🔵 Calculated license status:', newLicenseStatus)
 
-      // Step 1: Update verification request status
+      // Step 2: Update verification request status
       const { error: requestError } = await supabase
         .from('verification_requests')
         .update({
@@ -66,7 +66,7 @@ export default function ApprovalButtons({
       if (requestError) throw requestError
       console.log('✅ Request approved')
 
-      // Step 2: Update agency with verification details + NEW LICENSE STATUS
+      // Step 3: Update agency with verification details + license status
       const { error: agencyError } = await supabase
         .from('agencies')
         .update({
@@ -75,12 +75,34 @@ export default function ApprovalButtons({
           motac_verified_at: new Date().toISOString(),
           motac_license_number: motacLicenseNumber,
           motac_license_expiry: motacLicenseExpiry,
-          license_status: newLicenseStatus  // 🔥 NEW: Set calculated status
+          license_status: newLicenseStatus
         })
         .eq('id', agencyId)
 
       if (agencyError) throw agencyError
       console.log('✅ Agency verified and license status updated')
+
+      // 🔥 NEW STEP 4: Delete old notifications for this agency
+      console.log('🔵 Cleaning up old notifications...')
+      
+      const { error: deleteError } = await supabase
+        .from('license_notifications')
+        .delete()
+        .eq('agency_id', agencyId)
+
+      if (deleteError) {
+        console.error('⚠️ Warning: Could not delete old notifications:', deleteError)
+        // Don't throw - this is not critical, approval still succeeded
+      } else {
+        console.log('✅ Old notifications deleted')
+      }
+
+      // 🔥 NEW STEP 5: If license is now active, ensure no lingering alerts
+      if (newLicenseStatus === 'active') {
+        console.log('✅ License is active - all notifications cleared')
+      } else {
+        console.log(`ℹ️ License status: ${newLicenseStatus} - may need monitoring`)
+      }
 
       alert('✅ Verification approved successfully!')
       router.refresh()
