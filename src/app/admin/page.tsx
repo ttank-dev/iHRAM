@@ -2,41 +2,70 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import LicenseExpiryAlerts from './LicenseExpiryAlerts'
 
 interface DashboardStats {
   totalAgencies: number
   totalPackages: number
   totalReviews: number
   pendingReviews: number
+  pendingVerifications: number
   totalLeads: number
   totalGuides: number
   recentLeads: any[]
   recentReviews: any[]
+  recentVerifications: any[]
 }
 
 export default function AdminDashboardPage() {
+  const supabase = createClient()
   const [stats, setStats] = useState<DashboardStats>({
     totalAgencies: 0,
     totalPackages: 0,
     totalReviews: 0,
     pendingReviews: 0,
+    pendingVerifications: 0,
     totalLeads: 0,
     totalGuides: 0,
     recentLeads: [],
-    recentReviews: []
+    recentReviews: [],
+    recentVerifications: []
   })
 
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // TODO: Fetch real data from Supabase
-    // This is mock data for now
-    setTimeout(() => {
+    fetchStats()
+  }, [])
+
+  const fetchStats = async () => {
+    try {
+      // Fetch pending verifications
+      const { data: verifications, error: verError } = await supabase
+        .from('verification_requests')
+        .select(`
+          *,
+          agencies (
+            id,
+            name,
+            logo_url
+          )
+        `)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+        .limit(3)
+
+      const pendingVerifCount = verifications?.length || 0
+
+      // TODO: Fetch other real data from Supabase
+      // For now, using mock data for the rest
       setStats({
         totalAgencies: 24,
         totalPackages: 156,
         totalReviews: 89,
         pendingReviews: 12,
+        pendingVerifications: pendingVerifCount,
         totalLeads: 342,
         totalGuides: 18,
         recentLeads: [
@@ -48,11 +77,21 @@ export default function AdminDashboardPage() {
           { id: '1', reviewer: 'Ahmad Abdullah', rating: 5, package: 'Pakej Ramadhan', status: 'pending' },
           { id: '2', reviewer: 'Fatimah Zahra', rating: 4, package: 'Premium VIP', status: 'pending' },
           { id: '3', reviewer: 'Zainab Hassan', rating: 5, package: 'Standard Plus', status: 'pending' },
-        ]
+        ],
+        recentVerifications: verifications?.map(v => ({
+          id: v.id,
+          company: v.company_name,
+          agency: v.agencies?.name || 'Unknown',
+          license: v.motac_license_number,
+          timestamp: new Date(v.created_at).toLocaleDateString('ms-MY')
+        })) || []
       })
+    } catch (error) {
+      console.error('Error fetching stats:', error)
+    } finally {
       setLoading(false)
-    }, 500)
-  }, [])
+    }
+  }
 
   const statCards = [
     {
@@ -80,6 +119,14 @@ export default function AdminDashboardPage() {
       change: `${stats.pendingReviews} pending`
     },
     {
+      title: 'Verifikasi Pending',
+      value: stats.pendingVerifications,
+      icon: '✅',
+      color: '#06B6D4',
+      link: '/admin/verifikasi',
+      change: 'Perlu review'
+    },
+    {
       title: 'WhatsApp Leads',
       value: stats.totalLeads,
       icon: '🎯',
@@ -94,14 +141,6 @@ export default function AdminDashboardPage() {
       color: '#B8936D',
       link: '/admin/panduan',
       change: 'All published'
-    },
-    {
-      title: 'Ulasan Pending',
-      value: stats.pendingReviews,
-      icon: '⏳',
-      color: '#EF4444',
-      link: '/admin/ulasan?status=pending',
-      change: 'Perlu approval'
     },
   ]
 
@@ -141,6 +180,11 @@ export default function AdminDashboardPage() {
         }}>
           Welcome back, Admin! Here's what's happening with iHRAM today.
         </p>
+      </div>
+
+      {/* 🔥 NEW: LICENSE EXPIRY ALERTS - FULL WIDTH */}
+      <div style={{ marginBottom: '32px' }}>
+        <LicenseExpiryAlerts />
       </div>
 
       {/* STATS GRID */}
@@ -222,10 +266,10 @@ export default function AdminDashboardPage() {
         ))}
       </div>
 
-      {/* TWO COLUMN LAYOUT */}
+      {/* THREE COLUMN LAYOUT */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(2, 1fr)',
+        gridTemplateColumns: 'repeat(3, 1fr)',
         gap: '24px'
       }}>
         
@@ -243,7 +287,7 @@ export default function AdminDashboardPage() {
             marginBottom: '20px'
           }}>
             <h2 style={{
-              fontSize: '20px',
+              fontSize: '18px',
               fontWeight: 'bold',
               color: '#2C2C2C'
             }}>
@@ -252,7 +296,7 @@ export default function AdminDashboardPage() {
             <Link
               href="/admin/leads"
               style={{
-                fontSize: '14px',
+                fontSize: '13px',
                 color: '#B8936D',
                 textDecoration: 'none',
                 fontWeight: '600'
@@ -262,39 +306,34 @@ export default function AdminDashboardPage() {
             </Link>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {stats.recentLeads.map((lead) => (
               <div
                 key={lead.id}
                 style={{
-                  padding: '16px',
+                  padding: '12px',
                   backgroundColor: '#F5F5F0',
-                  borderRadius: '12px',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
+                  borderRadius: '8px'
                 }}
               >
-                <div>
-                  <div style={{
-                    fontSize: '15px',
-                    fontWeight: '600',
-                    color: '#2C2C2C',
-                    marginBottom: '4px'
-                  }}>
-                    {lead.package}
-                  </div>
-                  <div style={{
-                    fontSize: '13px',
-                    color: '#666'
-                  }}>
-                    {lead.agency}
-                  </div>
+                <div style={{
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#2C2C2C',
+                  marginBottom: '4px'
+                }}>
+                  {lead.package}
                 </div>
                 <div style={{
                   fontSize: '12px',
-                  color: '#999',
-                  whiteSpace: 'nowrap'
+                  color: '#666',
+                  marginBottom: '4px'
+                }}>
+                  {lead.agency}
+                </div>
+                <div style={{
+                  fontSize: '11px',
+                  color: '#999'
                 }}>
                   {lead.timestamp}
                 </div>
@@ -309,7 +348,88 @@ export default function AdminDashboardPage() {
               color: '#999'
             }}>
               <div style={{ fontSize: '32px', marginBottom: '8px' }}>📭</div>
-              <div>No recent leads</div>
+              <div style={{ fontSize: '13px' }}>No recent leads</div>
+            </div>
+          )}
+        </div>
+
+        {/* PENDING VERIFICATIONS */}
+        <div style={{
+          backgroundColor: 'white',
+          borderRadius: '16px',
+          padding: '24px',
+          border: '1px solid #E5E5E0'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '20px'
+          }}>
+            <h2 style={{
+              fontSize: '18px',
+              fontWeight: 'bold',
+              color: '#2C2C2C'
+            }}>
+              ✅ Pending Verifications
+            </h2>
+            <Link
+              href="/admin/verifikasi"
+              style={{
+                fontSize: '13px',
+                color: '#B8936D',
+                textDecoration: 'none',
+                fontWeight: '600'
+              }}
+            >
+              View All →
+            </Link>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {stats.recentVerifications.map((verification) => (
+              <div
+                key={verification.id}
+                style={{
+                  padding: '12px',
+                  backgroundColor: '#E0F2FE',
+                  borderRadius: '8px',
+                  borderLeft: '3px solid #06B6D4'
+                }}
+              >
+                <div style={{
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#2C2C2C',
+                  marginBottom: '4px'
+                }}>
+                  {verification.company}
+                </div>
+                <div style={{
+                  fontSize: '12px',
+                  color: '#666',
+                  marginBottom: '4px'
+                }}>
+                  License: {verification.license}
+                </div>
+                <div style={{
+                  fontSize: '11px',
+                  color: '#999'
+                }}>
+                  {verification.timestamp}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {stats.recentVerifications.length === 0 && (
+            <div style={{
+              padding: '40px',
+              textAlign: 'center',
+              color: '#999'
+            }}>
+              <div style={{ fontSize: '32px', marginBottom: '8px' }}>✅</div>
+              <div style={{ fontSize: '13px' }}>All caught up!</div>
             </div>
           )}
         </div>
@@ -328,7 +448,7 @@ export default function AdminDashboardPage() {
             marginBottom: '20px'
           }}>
             <h2 style={{
-              fontSize: '20px',
+              fontSize: '18px',
               fontWeight: 'bold',
               color: '#2C2C2C'
             }}>
@@ -337,7 +457,7 @@ export default function AdminDashboardPage() {
             <Link
               href="/admin/ulasan?status=pending"
               style={{
-                fontSize: '14px',
+                fontSize: '13px',
                 color: '#B8936D',
                 textDecoration: 'none',
                 fontWeight: '600'
@@ -347,35 +467,35 @@ export default function AdminDashboardPage() {
             </Link>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {stats.recentReviews.map((review) => (
               <div
                 key={review.id}
                 style={{
-                  padding: '16px',
+                  padding: '12px',
                   backgroundColor: '#FFF7ED',
-                  borderRadius: '12px',
+                  borderRadius: '8px',
                   borderLeft: '3px solid #F59E0B'
                 }}
               >
                 <div style={{
                   display: 'flex',
                   justifyContent: 'space-between',
-                  marginBottom: '8px'
+                  marginBottom: '6px'
                 }}>
                   <div style={{
-                    fontSize: '15px',
+                    fontSize: '14px',
                     fontWeight: '600',
                     color: '#2C2C2C'
                   }}>
                     {review.reviewer}
                   </div>
-                  <div style={{ display: 'flex', gap: '2px' }}>
+                  <div style={{ display: 'flex', gap: '1px', fontSize: '12px' }}>
                     {'⭐'.repeat(review.rating)}
                   </div>
                 </div>
                 <div style={{
-                  fontSize: '13px',
+                  fontSize: '12px',
                   color: '#666',
                   marginBottom: '8px'
                 }}>
@@ -383,27 +503,27 @@ export default function AdminDashboardPage() {
                 </div>
                 <div style={{
                   display: 'flex',
-                  gap: '8px'
+                  gap: '6px'
                 }}>
                   <button style={{
-                    padding: '6px 16px',
+                    padding: '4px 12px',
                     backgroundColor: '#10B981',
                     color: 'white',
                     border: 'none',
-                    borderRadius: '6px',
-                    fontSize: '12px',
+                    borderRadius: '4px',
+                    fontSize: '11px',
                     fontWeight: '600',
                     cursor: 'pointer'
                   }}>
                     ✓ Approve
                   </button>
                   <button style={{
-                    padding: '6px 16px',
+                    padding: '4px 12px',
                     backgroundColor: 'transparent',
                     color: '#EF4444',
                     border: '1px solid #EF4444',
-                    borderRadius: '6px',
-                    fontSize: '12px',
+                    borderRadius: '4px',
+                    fontSize: '11px',
                     fontWeight: '600',
                     cursor: 'pointer'
                   }}>
@@ -421,7 +541,7 @@ export default function AdminDashboardPage() {
               color: '#999'
             }}>
               <div style={{ fontSize: '32px', marginBottom: '8px' }}>✅</div>
-              <div>All caught up!</div>
+              <div style={{ fontSize: '13px' }}>All caught up!</div>
             </div>
           )}
         </div>
@@ -449,6 +569,56 @@ export default function AdminDashboardPage() {
           gridTemplateColumns: 'repeat(4, 1fr)',
           gap: '16px'
         }}>
+          {/* Verification Quick Action */}
+          <Link
+            href="/admin/verifikasi"
+            style={{
+              padding: '20px',
+              backgroundColor: stats.pendingVerifications > 0 ? '#E0F2FE' : '#F5F5F0',
+              borderRadius: '12px',
+              textDecoration: 'none',
+              textAlign: 'center',
+              transition: 'all 0.2s',
+              position: 'relative'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#06B6D4'
+              const icon = e.currentTarget.querySelector('.icon') as HTMLElement
+              const text = e.currentTarget.querySelector('.text') as HTMLElement
+              if (icon) icon.style.transform = 'scale(1.2)'
+              if (text) text.style.color = 'white'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = stats.pendingVerifications > 0 ? '#E0F2FE' : '#F5F5F0'
+              const icon = e.currentTarget.querySelector('.icon') as HTMLElement
+              const text = e.currentTarget.querySelector('.text') as HTMLElement
+              if (icon) icon.style.transform = 'scale(1)'
+              if (text) text.style.color = '#2C2C2C'
+            }}
+          >
+            {stats.pendingVerifications > 0 && (
+              <div style={{
+                position: 'absolute',
+                top: '12px',
+                right: '12px',
+                backgroundColor: '#EF4444',
+                color: 'white',
+                fontSize: '11px',
+                fontWeight: '700',
+                padding: '4px 8px',
+                borderRadius: '12px'
+              }}>
+                {stats.pendingVerifications}
+              </div>
+            )}
+            <div className="icon" style={{ fontSize: '32px', marginBottom: '8px', transition: 'transform 0.2s' }}>
+              ✅
+            </div>
+            <div className="text" style={{ fontSize: '14px', fontWeight: '600', color: '#2C2C2C', transition: 'color 0.2s' }}>
+              Review Verifikasi
+            </div>
+          </Link>
+
           <Link
             href="/admin/panduan/new"
             style={{
@@ -561,39 +731,6 @@ export default function AdminDashboardPage() {
             </div>
             <div className="text" style={{ fontSize: '14px', fontWeight: '600', color: '#2C2C2C', transition: 'color 0.2s' }}>
               Review Ulasan
-            </div>
-          </Link>
-
-          <Link
-            href="/admin/leads"
-            style={{
-              padding: '20px',
-              backgroundColor: '#F5F5F0',
-              borderRadius: '12px',
-              textDecoration: 'none',
-              textAlign: 'center',
-              transition: 'all 0.2s'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#B8936D'
-              const icon = e.currentTarget.querySelector('.icon') as HTMLElement
-              const text = e.currentTarget.querySelector('.text') as HTMLElement
-              if (icon) icon.style.transform = 'scale(1.2)'
-              if (text) text.style.color = 'white'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#F5F5F0'
-              const icon = e.currentTarget.querySelector('.icon') as HTMLElement
-              const text = e.currentTarget.querySelector('.text') as HTMLElement
-              if (icon) icon.style.transform = 'scale(1)'
-              if (text) text.style.color = '#2C2C2C'
-            }}
-          >
-            <div className="icon" style={{ fontSize: '32px', marginBottom: '8px', transition: 'transform 0.2s' }}>
-              📊
-            </div>
-            <div className="text" style={{ fontSize: '14px', fontWeight: '600', color: '#2C2C2C', transition: 'color 0.2s' }}>
-              View Analytics
             </div>
           </Link>
         </div>

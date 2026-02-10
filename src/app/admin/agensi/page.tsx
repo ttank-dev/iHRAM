@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useSearchParams } from 'next/navigation'
 
 interface Agency {
   id: string
@@ -21,15 +22,20 @@ interface Agency {
   is_active: boolean
   user_id: string
   created_at: string
+  license_status: string | null          // NEW
+  motac_license_expiry: string | null    // NEW
   packages?: { count: number }[]
   reviews?: { count: number }[]
 }
 
 export default function AdminAgensiPage() {
   const supabase = createClient()
+  const searchParams = useSearchParams()
+  const filterParam = searchParams.get('filter')
+  
   const [agencies, setAgencies] = useState<Agency[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<'all' | 'verified' | 'unverified' | 'inactive'>('all')
+  const [filter, setFilter] = useState<string>(filterParam || 'all')
   const [searchQuery, setSearchQuery] = useState('')
   const [stats, setStats] = useState({
     total: 0,
@@ -39,8 +45,61 @@ export default function AdminAgensiPage() {
   })
 
   useEffect(() => {
+    if (filterParam) {
+      setFilter(filterParam)
+    }
+  }, [filterParam])
+
+  useEffect(() => {
     fetchAgencies()
   }, [filter])
+
+  // NEW: Calculate days until license expires
+  const getDaysUntilExpiry = (expiryDate: string | null) => {
+    if (!expiryDate) return null
+    
+    const today = new Date()
+    const expiry = new Date(expiryDate)
+    const diffTime = expiry.getTime() - today.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    
+    return diffDays
+  }
+
+  // NEW: Get badge color based on license status
+  const getLicenseBadge = (status: string | null, expiryDate: string | null) => {
+    if (!status) return null
+    
+    const daysLeft = getDaysUntilExpiry(expiryDate)
+    
+    if (status === 'expired') {
+      return {
+        icon: '🔴',
+        text: 'EXPIRED',
+        color: '#EF4444',
+        bg: '#FEE2E2',
+        days: daysLeft
+      }
+    } else if (status === 'expiring_critical') {
+      return {
+        icon: '🟠',
+        text: `${daysLeft} days left`,
+        color: '#F97316',
+        bg: '#FFEDD5',
+        days: daysLeft
+      }
+    } else if (status === 'expiring_soon') {
+      return {
+        icon: '🟡',
+        text: `${daysLeft} days left`,
+        color: '#EAB308',
+        bg: '#FEF9C3',
+        days: daysLeft
+      }
+    }
+    
+    return null
+  }
 
   const fetchAgencies = async () => {
     setLoading(true)
@@ -62,6 +121,15 @@ export default function AdminAgensiPage() {
         query = query.eq('is_verified', false)
       } else if (filter === 'inactive') {
         query = query.eq('is_active', false)
+      } else if (filter === 'expired') {
+        query = query.eq('license_status', 'expired')
+      } else if (filter === 'expiring_critical') {
+        query = query.eq('license_status', 'expiring_critical')
+      } else if (filter === 'expiring_soon') {
+        query = query.eq('license_status', 'expiring_soon')
+      } else if (filter === 'expiring') {
+        // All expiring (from dashboard alert)
+        query = query.in('license_status', ['expired', 'expiring_critical', 'expiring_soon'])
       }
 
       const { data, error } = await query
@@ -114,6 +182,42 @@ export default function AdminAgensiPage() {
     }
   }
 
+  const handleRevokeVerification = async (agencyId: string, agencyName: string) => {
+    if (!confirm(
+      `🚫 REVOKE VERIFICATION: ${agencyName}\n\n` +
+      `This will:\n` +
+      `- Remove verified badge\n` +
+      `- Clear MOTAC license number\n` +
+      `- Clear license expiry date\n` +
+      `- Clear verified timestamp\n\n` +
+      `Use this for expired licenses, complaints, or violations.\n\n` +
+      `Continue?`
+    )) {
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('agencies')
+        .update({
+          is_verified: false,
+          verification_status: 'unverified',
+          motac_license_number: null,
+          motac_license_expiry: null,
+          motac_verified_at: null
+        })
+        .eq('id', agencyId)
+
+      if (error) throw error
+
+      alert('✅ Verification revoked successfully!')
+      fetchAgencies()
+    } catch (error) {
+      console.error('Error revoking verification:', error)
+      alert('❌ Error revoking verification')
+    }
+  }
+
   const handleToggleActive = async (agencyId: string, currentStatus: boolean) => {
     const action = currentStatus ? 'suspend' : 'activate'
     
@@ -140,7 +244,6 @@ export default function AdminAgensiPage() {
   const handleDelete = async (agencyId: string, agencyName: string) => {
     const agency = agencies.find(a => a.id === agencyId)
     
-    // Double confirmation
     if (!confirm(
       `⚠️ DELETE AGENCY: ${agencyName}\n\n` +
       `This will permanently delete:\n` +
@@ -166,89 +269,37 @@ export default function AdminAgensiPage() {
     try {
       console.log('🗑️ Starting delete for agency:', agencyId)
 
-      // Delete packages
-      console.log('Deleting packages...')
       const { error: packagesError } = await supabase
         .from('packages')
         .delete()
         .eq('agency_id', agencyId)
 
-      if (packagesError) {
-        console.error('Error deleting packages:', packagesError)
-        throw new Error('Failed to delete packages: ' + packagesError.message)
-      }
+      if (packagesError) throw new Error('Failed to delete packages: ' + packagesError.message)
 
-      // Delete reviews
-      console.log('Deleting reviews...')
       const { error: reviewsError } = await supabase
         .from('reviews')
         .delete()
         .eq('agency_id', agencyId)
 
-      if (reviewsError) {
-        console.error('Error deleting reviews:', reviewsError)
-        throw new Error('Failed to delete reviews: ' + reviewsError.message)
-      }
+      if (reviewsError) throw new Error('Failed to delete reviews: ' + reviewsError.message)
 
-      // Delete news_feed (CORRECT TABLE NAME WITH UNDERSCORE!)
-      console.log('Deleting news_feed...')
-      const { error: newsFeedError } = await supabase
-        .from('news_feed')
-        .delete()
-        .eq('agency_id', agencyId)
+      await supabase.from('news_feed').delete().eq('agency_id', agencyId)
+      await supabase.from('reels').delete().eq('agency_id', agencyId)
+      await supabase.from('leads').delete().eq('agency_id', agencyId)
 
-      if (newsFeedError) {
-        console.error('Error deleting news_feed:', newsFeedError)
-        // Don't throw, just log
-      }
-
-      // Delete reels
-      console.log('Deleting reels...')
-      const { error: reelsError } = await supabase
-        .from('reels')
-        .delete()
-        .eq('agency_id', agencyId)
-
-      if (reelsError) {
-        console.error('Error deleting reels:', reelsError)
-        // Don't throw, just log
-      }
-
-      // Delete leads
-      console.log('Deleting leads...')
-      const { error: leadsError } = await supabase
-        .from('leads')
-        .delete()
-        .eq('agency_id', agencyId)
-
-      if (leadsError) {
-        console.error('Error deleting leads:', leadsError)
-        // Don't throw, just log
-      }
-
-      // Finally delete the agency
-      console.log('Deleting agency...')
       const { error: agencyError } = await supabase
         .from('agencies')
         .delete()
         .eq('id', agencyId)
 
-      if (agencyError) {
-        console.error('Error deleting agency:', agencyError)
-        throw new Error('Failed to delete agency: ' + agencyError.message)
-      }
+      if (agencyError) throw new Error('Failed to delete agency: ' + agencyError.message)
 
-      console.log('✅ Delete completed successfully!')
       alert('🗑️ Agency deleted successfully!')
       fetchAgencies()
       
     } catch (error: any) {
       console.error('❌ Delete operation failed:', error)
-      alert(
-        `❌ Error deleting agency:\n\n` +
-        `${error.message}\n\n` +
-        `Check browser console for details.`
-      )
+      alert(`❌ Error deleting agency:\n\n${error.message}`)
     }
   }
 
@@ -534,7 +585,7 @@ export default function AdminAgensiPage() {
         </div>
       </div>
 
-      {/* AGENCIES TABLE - (Same as before, truncated for brevity) */}
+      {/* AGENCIES TABLE */}
       <div style={{
         backgroundColor: 'white',
         borderRadius: '16px',
@@ -562,102 +613,207 @@ export default function AdminAgensiPage() {
           <div>Actions</div>
         </div>
 
-        {filteredAgencies.map((agency) => (
-          <div
-            key={agency.id}
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 240px',
-              padding: '20px 24px',
-              borderBottom: '1px solid #E5E5E0',
-              alignItems: 'center',
-              transition: 'background-color 0.2s'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F5F5F0'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '8px',
-                backgroundColor: agency.logo_url ? 'transparent' : '#F5F5F0',
-                backgroundImage: agency.logo_url ? `url(${agency.logo_url})` : 'none',
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                display: 'flex',
+        {filteredAgencies.map((agency) => {
+          const badge = getLicenseBadge(agency.license_status, agency.motac_license_expiry)
+          
+          return (
+            <div
+              key={agency.id}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 240px',
+                padding: '20px 24px',
+                borderBottom: '1px solid #E5E5E0',
                 alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '20px',
-                fontWeight: 'bold',
-                color: '#B8936D',
-                flexShrink: 0
-              }}>
-                {!agency.logo_url && agency.name.charAt(0)}
-              </div>
-              <div>
+                transition: 'background-color 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F5F5F0'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{
-                  fontSize: '15px',
-                  fontWeight: '600',
-                  color: '#2C2C2C',
-                  marginBottom: '4px',
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '8px',
+                  backgroundColor: agency.logo_url ? 'transparent' : '#F5F5F0',
+                  backgroundImage: agency.logo_url ? `url(${agency.logo_url})` : 'none',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px'
+                  justifyContent: 'center',
+                  fontSize: '20px',
+                  fontWeight: 'bold',
+                  color: '#B8936D',
+                  flexShrink: 0
                 }}>
-                  {agency.name}
-                  {agency.is_verified && <span style={{ fontSize: '16px', color: '#10B981' }}>✓</span>}
+                  {!agency.logo_url && agency.name.charAt(0)}
                 </div>
-                <div style={{ fontSize: '13px', color: '#999' }}>
-                  Joined {new Date(agency.created_at).toLocaleDateString('ms-MY', {
-                    year: 'numeric', month: 'short', day: 'numeric'
-                  })}
+                <div>
+                  <div style={{
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    color: '#2C2C2C',
+                    marginBottom: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    flexWrap: 'wrap'
+                  }}>
+                    {agency.name}
+                    {agency.is_verified && (
+                      <span style={{ fontSize: '16px', color: '#10B981' }}>✓</span>
+                    )}
+                    
+                    {/* 🔥 NEW: LICENSE STATUS BADGE */}
+                    {badge && (
+                      <span style={{
+                        fontSize: '11px',
+                        fontWeight: '700',
+                        color: badge.color,
+                        backgroundColor: badge.bg,
+                        padding: '3px 8px',
+                        borderRadius: '6px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        {badge.icon} {badge.text}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: '13px', color: '#999' }}>
+                    Joined {new Date(agency.created_at).toLocaleDateString('ms-MY', {
+                      year: 'numeric', month: 'short', day: 'numeric'
+                    })}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div>
-              <div style={{ fontSize: '14px', color: '#2C2C2C', marginBottom: '4px' }}>
-                {agency.phone || '-'}
+              <div>
+                <div style={{ fontSize: '14px', color: '#2C2C2C', marginBottom: '4px' }}>
+                  {agency.phone || '-'}
+                </div>
+                <div style={{ fontSize: '13px', color: '#999', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {agency.email || '-'}
+                </div>
               </div>
-              <div style={{ fontSize: '13px', color: '#999', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {agency.email || '-'}
+
+              <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#2C2C2C' }}>
+                {getPackageCount(agency)}
+              </div>
+
+              <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#2C2C2C' }}>
+                {getReviewCount(agency)}
+              </div>
+
+              <div>
+                {!agency.is_active ? (
+                  <span style={{ padding: '6px 12px', backgroundColor: '#EF444415', color: '#EF4444', borderRadius: '6px', fontSize: '12px', fontWeight: '700' }}>INACTIVE</span>
+                ) : agency.is_verified ? (
+                  <span style={{ padding: '6px 12px', backgroundColor: '#10B98115', color: '#10B981', borderRadius: '6px', fontSize: '12px', fontWeight: '700' }}>VERIFIED</span>
+                ) : (
+                  <span style={{ padding: '6px 12px', backgroundColor: '#F59E0B15', color: '#F59E0B', borderRadius: '6px', fontSize: '12px', fontWeight: '700' }}>PENDING</span>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <Link 
+                  href={`/agensi/${agency.slug}`} 
+                  target="_blank" 
+                  style={{ 
+                    padding: '8px 12px', 
+                    backgroundColor: '#F5F5F0', 
+                    border: 'none', 
+                    borderRadius: '6px', 
+                    fontSize: '13px', 
+                    fontWeight: '600', 
+                    cursor: 'pointer', 
+                    textDecoration: 'none', 
+                    color: '#2C2C2C', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center' 
+                  }} 
+                  title="View Profile"
+                >
+                  👁️
+                </Link>
+                
+                {agency.is_verified ? (
+                  <button 
+                    onClick={() => handleRevokeVerification(agency.id, agency.name)} 
+                    style={{ 
+                      padding: '8px 12px', 
+                      backgroundColor: '#F59E0B', 
+                      color: 'white', 
+                      border: 'none', 
+                      borderRadius: '6px', 
+                      fontSize: '13px', 
+                      fontWeight: '600', 
+                      cursor: 'pointer' 
+                    }} 
+                    title="Revoke Verification (e.g., expired license)"
+                  >
+                    ❌
+                  </button>
+                ) : (
+                  <button 
+                    onClick={() => handleToggleVerification(agency.id, agency.is_verified)} 
+                    style={{ 
+                      padding: '8px 12px', 
+                      backgroundColor: '#10B981', 
+                      color: 'white', 
+                      border: 'none', 
+                      borderRadius: '6px', 
+                      fontSize: '13px', 
+                      fontWeight: '600', 
+                      cursor: 'pointer' 
+                    }} 
+                    title="Verify Agency"
+                  >
+                    ✓
+                  </button>
+                )}
+
+                <button 
+                  onClick={() => handleToggleActive(agency.id, agency.is_active)} 
+                  style={{ 
+                    padding: '8px 12px', 
+                    backgroundColor: agency.is_active ? '#8B5CF6' : '#10B981', 
+                    color: 'white', 
+                    border: 'none', 
+                    borderRadius: '6px', 
+                    fontSize: '13px', 
+                    fontWeight: '600', 
+                    cursor: 'pointer' 
+                  }} 
+                  title={agency.is_active ? 'Suspend Agency' : 'Activate Agency'}
+                >
+                  {agency.is_active ? '⏸️' : '▶️'}
+                </button>
+
+                <button 
+                  onClick={() => handleDelete(agency.id, agency.name)} 
+                  style={{ 
+                    padding: '8px 12px', 
+                    backgroundColor: '#EF4444', 
+                    color: 'white', 
+                    border: 'none', 
+                    borderRadius: '6px', 
+                    fontSize: '13px', 
+                    fontWeight: '600', 
+                    cursor: 'pointer' 
+                  }} 
+                  title="Delete Agency"
+                >
+                  🗑️
+                </button>
               </div>
             </div>
-
-            <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#2C2C2C' }}>
-              {getPackageCount(agency)}
-            </div>
-
-            <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#2C2C2C' }}>
-              {getReviewCount(agency)}
-            </div>
-
-            <div>
-              {!agency.is_active ? (
-                <span style={{ padding: '6px 12px', backgroundColor: '#EF444415', color: '#EF4444', borderRadius: '6px', fontSize: '12px', fontWeight: '700' }}>INACTIVE</span>
-              ) : agency.is_verified ? (
-                <span style={{ padding: '6px 12px', backgroundColor: '#10B98115', color: '#10B981', borderRadius: '6px', fontSize: '12px', fontWeight: '700' }}>VERIFIED</span>
-              ) : (
-                <span style={{ padding: '6px 12px', backgroundColor: '#F59E0B15', color: '#F59E0B', borderRadius: '6px', fontSize: '12px', fontWeight: '700' }}>PENDING</span>
-              )}
-            </div>
-
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <Link href={`/agensi/${agency.slug}`} target="_blank" style={{ padding: '8px 12px', backgroundColor: '#F5F5F0', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', textDecoration: 'none', color: '#2C2C2C', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="View Profile">👁️</Link>
-              
-              <button onClick={() => handleToggleVerification(agency.id, agency.is_verified)} style={{ padding: '8px 12px', backgroundColor: agency.is_verified ? '#F59E0B' : '#10B981', color: 'white', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }} title={agency.is_verified ? 'Unverify Agency' : 'Verify Agency'}>
-                {agency.is_verified ? '❌' : '✓'}
-              </button>
-
-              <button onClick={() => handleToggleActive(agency.id, agency.is_active)} style={{ padding: '8px 12px', backgroundColor: agency.is_active ? '#8B5CF6' : '#10B981', color: 'white', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }} title={agency.is_active ? 'Suspend Agency' : 'Activate Agency'}>
-                {agency.is_active ? '⏸️' : '▶️'}
-              </button>
-
-              <button onClick={() => handleDelete(agency.id, agency.name)} style={{ padding: '8px 12px', backgroundColor: '#EF4444', color: 'white', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }} title="Delete Agency">🗑️</button>
-            </div>
-          </div>
-        ))}
+          )
+        })}
 
         {filteredAgencies.length === 0 && (
           <div style={{ padding: '60px', textAlign: 'center', color: '#999' }}>

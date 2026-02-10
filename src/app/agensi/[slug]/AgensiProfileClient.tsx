@@ -557,24 +557,36 @@ const trackReelView = async (reelId: string) => {
           }}>
             {agency.is_verified && (
               <div style={{
-                position: 'absolute',
-                top: '20px',
-                right: '20px',
-                padding: '12px 24px',
-                backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                backdropFilter: 'blur(10px)',
-                color: 'white',
-                borderRadius: '30px',
-                fontSize: '14px',
-                fontWeight: '700',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <span>✓</span>
-                <span>VERIFIED</span>
-              </div>
-            )}
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '8px 16px',
+    backgroundColor: '#E8F5E9',
+    border: '2px solid #4CAF50',
+    borderRadius: '20px',
+    marginTop: '8px',
+    position: 'absolute',
+    top: '8px',
+    right: '8px'
+  }}>
+    <span style={{ fontSize: '20px' }}>✅</span>
+    <div>
+      <div style={{ 
+        fontSize: '12px', 
+        fontWeight: '700', 
+        color: '#2E7D32'
+      }}>
+        VERIFIED AGENCY
+      </div>
+      <div style={{ 
+        fontSize: '10px', 
+        color: '#666'
+      }}>
+        MOTAC License: {agency.motac_license_number}
+      </div>
+    </div>
+  </div>
+)}
           </div>
 
           <div style={{ padding: '0 40px' }}>

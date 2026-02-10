@@ -92,7 +92,7 @@ export default async function PakejDetailPage({ params }: { params: Promise<{ sl
                 <div style={{ position: 'relative', height: '480px', backgroundImage: `url(${pkg.photos[0]})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
                   {pkg.agencies?.is_verified && (
                     <div style={{ position: 'absolute', top: '24px', left: '24px', backgroundColor: '#B8936D', color: 'white', padding: '10px 20px', borderRadius: '50px', fontSize: '13px', fontWeight: '700', letterSpacing: '0.5px', boxShadow: '0 4px 12px rgba(184,147,109,0.4)' }}>
-                      ✓ AGENSI VERIFIED
+                      ✅ VERIFIED AGENCY
                     </div>
                   )}
                 </div>

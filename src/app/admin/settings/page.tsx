@@ -5,7 +5,6 @@ import SettingToggle from './SettingToggle'
 import AdminUsersList from './AdminUsersList'
 import AddAdminForm from './AddAdminForm'
 import ChangePasswordForm from './ChangePasswordForm'
-import GeneralSettings from './GeneralSettings'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -69,16 +68,6 @@ export default async function SettingsPage() {
       {/* SETTINGS SECTIONS */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         
-        {/* GENERAL SETTINGS */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '16px',
-          padding: '32px',
-          border: '1px solid #E5E5E0'
-        }}>
-          <GeneralSettings settings={siteSettings || defaultSettings} />
-        </div>
-
         {/* ADMIN USERS MANAGEMENT */}
         <div style={{
           backgroundColor: 'white',

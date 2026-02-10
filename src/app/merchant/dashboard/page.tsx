@@ -54,6 +54,58 @@ export default async function MerchantDashboardPage() {
     )
   }
 
+  // 🔥 Calculate license expiry status
+  const getLicenseWarning = () => {
+    if (!agency.motac_license_expiry) return null
+    
+    const today = new Date()
+    const expiryDate = new Date(agency.motac_license_expiry)
+    const diffTime = expiryDate.getTime() - today.getTime()
+    const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    
+    if (daysLeft < 0) {
+      // EXPIRED
+      return {
+        type: 'expired',
+        icon: '🔴',
+        title: 'LICENSE EXPIRED',
+        message: `Your MOTAC license expired ${Math.abs(daysLeft)} days ago. Your agency has been automatically hidden from search results. Please renew immediately to restore visibility.`,
+        bg: '#FEE2E2',
+        borderColor: '#EF4444',
+        textColor: '#B91C1C',
+        daysLeft: daysLeft
+      }
+    } else if (daysLeft <= 30) {
+      // CRITICAL (<30 days)
+      return {
+        type: 'critical',
+        icon: '🟠',
+        title: 'URGENT: LICENSE EXPIRING SOON',
+        message: `Your MOTAC license expires in ${daysLeft} days (${agency.motac_license_expiry}). Please renew as soon as possible to avoid service interruption.`,
+        bg: '#FFEDD5',
+        borderColor: '#F97316',
+        textColor: '#C2410C',
+        daysLeft: daysLeft
+      }
+    } else if (daysLeft <= 90) {
+      // WARNING (30-90 days)
+      return {
+        type: 'warning',
+        icon: '🟡',
+        title: 'License Renewal Reminder',
+        message: `Your MOTAC license expires in ${daysLeft} days (${agency.motac_license_expiry}). Start preparing your renewal documents now.`,
+        bg: '#FEF9C3',
+        borderColor: '#EAB308',
+        textColor: '#A16207',
+        daysLeft: daysLeft
+      }
+    }
+    
+    return null
+  }
+
+  const licenseWarning = getLicenseWarning()
+
   // Get stats
   const { data: packages } = await supabase
     .from('packages')
@@ -84,6 +136,135 @@ export default async function MerchantDashboardPage() {
           Here's what's happening with your agency today
         </p>
       </div>
+
+      {/* 🔥 LICENSE EXPIRY WARNING BANNER */}
+      {licenseWarning && (
+        <div style={{
+          marginBottom: '32px',
+          padding: '24px',
+          backgroundColor: licenseWarning.bg,
+          border: `3px solid ${licenseWarning.borderColor}`,
+          borderRadius: '16px',
+          position: 'relative',
+          boxShadow: licenseWarning.type === 'expired' ? '0 8px 24px rgba(239, 68, 68, 0.2)' : 'none'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
+            <div style={{ fontSize: '48px', lineHeight: '1' }}>
+              {licenseWarning.icon}
+            </div>
+            <div style={{ flex: 1 }}>
+              <h3 style={{
+                fontSize: '20px',
+                fontWeight: '700',
+                color: licenseWarning.textColor,
+                marginBottom: '8px'
+              }}>
+                {licenseWarning.title}
+              </h3>
+              <p style={{
+                fontSize: '15px',
+                color: licenseWarning.textColor,
+                marginBottom: '16px',
+                lineHeight: '1.6'
+              }}>
+                {licenseWarning.message}
+              </p>
+              
+              {/* 🔥 NEW: Action Buttons - Different for Verified vs Unverified */}
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                {agency.is_verified ? (
+                  // VERIFIED AGENCY - Can update/resubmit
+                  <>
+                    <Link
+                      href="/merchant/dashboard/verifikasi?action=update"
+                      style={{
+                        padding: '12px 24px',
+                        backgroundColor: licenseWarning.borderColor,
+                        color: 'white',
+                        textDecoration: 'none',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        fontWeight: '700',
+                        display: 'inline-block'
+                      }}
+                    >
+                      {licenseWarning.type === 'expired' ? '🔄 Update & Resubmit License' : '📝 Update License Details'}
+                    </Link>
+                    
+                    <Link
+                      href="/merchant/dashboard/verifikasi"
+                      style={{
+                        padding: '12px 24px',
+                        backgroundColor: 'white',
+                        color: licenseWarning.textColor,
+                        textDecoration: 'none',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        display: 'inline-block',
+                        border: `2px solid ${licenseWarning.borderColor}`
+                      }}
+                    >
+                      📋 View Current Status
+                    </Link>
+                  </>
+                ) : (
+                  // UNVERIFIED AGENCY - First time submission
+                  <Link
+                    href="/merchant/dashboard/verifikasi"
+                    style={{
+                      padding: '12px 24px',
+                      backgroundColor: licenseWarning.borderColor,
+                      color: 'white',
+                      textDecoration: 'none',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      fontWeight: '700',
+                      display: 'inline-block'
+                    }}
+                  >
+                    📋 View Verification Status
+                  </Link>
+                )}
+                
+                <a
+                  href="https://www.motac.gov.my/kategori-semakan-new/agensi-pelancongan-umrah/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    padding: '12px 24px',
+                    backgroundColor: 'white',
+                    color: licenseWarning.textColor,
+                    textDecoration: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    display: 'inline-block',
+                    border: `2px solid ${licenseWarning.borderColor}`
+                  }}
+                >
+                  🏛️ Check MOTAC Portal
+                </a>
+              </div>
+
+              {/* Additional Info for Expired */}
+              {licenseWarning.type === 'expired' && (
+                <div style={{
+                  marginTop: '16px',
+                  padding: '12px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                  borderRadius: '8px',
+                  fontSize: '13px',
+                  color: '#B91C1C',
+                  fontWeight: '600'
+                }}>
+                  ⚠️ Your packages are currently hidden from public search. They will be restored automatically once your license is renewed and re-verified.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Quick Stats */}
       <div style={{
@@ -237,6 +418,29 @@ export default async function MerchantDashboardPage() {
               {agency.is_verified ? '✓ Verified' : '⏳ Pending Verification'}
             </span>
           </div>
+          
+          {/* License Expiry Info */}
+          {agency.motac_license_expiry && (
+            <div>
+              <div style={{ fontSize: '13px', color: '#999', marginBottom: '4px' }}>MOTAC License Expiry</div>
+              <div style={{
+                fontSize: '16px',
+                fontWeight: '600',
+                color: licenseWarning ? licenseWarning.textColor : '#2C2C2C'
+              }}>
+                {new Date(agency.motac_license_expiry).toLocaleDateString('ms-MY', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+                {licenseWarning && (
+                  <span style={{ marginLeft: '8px', fontSize: '14px' }}>
+                    {licenseWarning.icon}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

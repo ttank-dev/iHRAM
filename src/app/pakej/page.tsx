@@ -51,19 +51,36 @@ export default async function PakejPage() {
         </div>
       </nav>
 
-      {/* Main Content */}
-      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '60px 40px' }}>
-        
-        {/* Header */}
-        <div style={{ marginBottom: '32px' }}>
-          <h1 style={{ fontSize: '48px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '16px' }}>
+      {/* Hero Section */}
+      <section style={{ 
+        background: 'linear-gradient(135deg, #B8936D 0%, #8B6F47 100%)',
+        padding: '80px 40px',
+        textAlign: 'center'
+      }}>
+        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+          <h1 style={{ 
+            fontSize: '48px',
+            fontWeight: 'bold',
+            color: 'white',
+            marginBottom: '20px',
+            fontFamily: 'Georgia, serif'
+          }}>
             Pakej Umrah
           </h1>
-          <p style={{ fontSize: '18px', color: '#666', lineHeight: '1.6' }}>
-            Pilih pakej umrah yang sesuai dengan keperluan anda
+          <p style={{ 
+            fontSize: '18px',
+            color: 'rgba(255,255,255,0.95)',
+            maxWidth: '700px',
+            margin: '0 auto'
+          }}>
+            Pilih pakej umrah yang sesuai dengan keperluan anda.
           </p>
         </div>
+      </section>
 
+      {/* Main Content */}
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '60px 40px' }}>
+      
         {/* Client Component with Filters */}
         <PakejListingClient packages={packages || []} />
       </div>

@@ -213,6 +213,24 @@ export default function MerchantDashboardLayout({
             <span>Profil Agensi</span>
           </Link>
 
+          <Link
+            href="/merchant/dashboard/verifikasi"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '12px 24px',
+              color: pathname?.startsWith('/merchant/dashboard/profil') ? '#B8936D' : 'white',
+              textDecoration: 'none',
+              backgroundColor: pathname?.startsWith('/merchant/dashboard/profil') ? '#1A1A1A' : 'transparent',
+              borderLeft: pathname?.startsWith('/merchant/dashboard/profil') ? '3px solid #B8936D' : '3px solid transparent',
+              fontSize: '15px'
+            }}
+          >
+            <span style={{ fontSize: '20px' }}>✅</span>
+            <span>Mohon Verifikasi</span>
+          </Link>
+
           <div style={{ margin: '24px 0', height: '1px', backgroundColor: '#444' }} />
 
           <Link href="/merchant/dashboard/settings" 
@@ -228,23 +246,6 @@ export default function MerchantDashboardLayout({
               <span style={{ fontSize: '20px' }}>⚙️</span>
               <span>Settings</span>
             </Link>
-          
-          <Link
-            href="/"
-            target="_blank"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '12px 24px',
-              color: 'white',
-              textDecoration: 'none',
-              fontSize: '15px'
-            }}
-          >
-            <span style={{ fontSize: '20px' }}>🌐</span>
-            <span>Lihat Website</span>
-          </Link>
 
           <button
             onClick={handleLogout}
