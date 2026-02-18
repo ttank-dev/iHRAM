@@ -86,11 +86,11 @@ export default function AddAdminForm() {
       const { error: userError } = await supabaseAdmin
         .from('admin_users')
         .insert({
-          user_id: authData.user.id,
-          full_name: fullName,
-          email: email,
-          role: role
-        })
+  user_id: authData.user.id,
+  name: fullName,       // ← Or use 'name' instead
+  email: email,
+  role: role
+})
 
       if (userError) {
         console.error('❌ User error:', userError)
