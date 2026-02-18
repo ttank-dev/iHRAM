@@ -185,7 +185,7 @@ export default function MerchantLoginPage() {
             {/* Forgot Password Link */}
             <div style={{ textAlign: 'right', marginTop: '-8px' }}>
               <Link
-                href="/forgot-password"
+                href="/merchant-forgot-password"
                 style={{
                   fontSize: '14px',
                   color: '#B8936D',

@@ -193,7 +193,7 @@ export default function AdminLoginPage() {
             {/* Forgot Password Link */}
             <div style={{ textAlign: 'right', marginTop: '-8px' }}>
               <Link
-                href="/forgot-password"
+                href="/admin-forgot-password"
                 style={{
                   fontSize: '14px',
                   color: '#B8936D',
