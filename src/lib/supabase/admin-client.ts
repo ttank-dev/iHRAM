@@ -1,10 +1,11 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Get environment variables
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+// These are injected at BUILD TIME by Next.js
+// They become string literals in the built code
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseServiceKey = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY || ''
 
-// Only create client if both are available
+// Create client only if both exist
 export const supabaseAdmin = supabaseUrl && supabaseServiceKey
   ? createClient(supabaseUrl, supabaseServiceKey, {
       auth: {
@@ -14,7 +15,16 @@ export const supabaseAdmin = supabaseUrl && supabaseServiceKey
     })
   : null
 
-// Helper function to check if admin client is available
+// Helper to check availability
 export function isAdminClientAvailable(): boolean {
   return supabaseAdmin !== null
+}
+
+// Debug helper (remove after testing)
+if (typeof window !== 'undefined') {
+  console.log('🔍 Admin Client Debug:', {
+    hasUrl: !!supabaseUrl,
+    hasKey: !!supabaseServiceKey,
+    clientAvailable: supabaseAdmin !== null
+  })
 }
