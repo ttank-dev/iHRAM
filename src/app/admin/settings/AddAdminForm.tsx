@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { supabaseAdmin } from '@/lib/supabase/admin-client'
+import { supabaseAdmin, isAdminClientAvailable } from '@/lib/supabase/admin-client'
 
 export default function AddAdminForm() {
   const [fullName, setFullName] = useState('')
@@ -9,11 +9,36 @@ export default function AddAdminForm() {
   const [role, setRole] = useState('admin')
   const [loading, setLoading] = useState(false)
 
+  // Check if admin client is available
+  if (!isAdminClientAvailable() || !supabaseAdmin) {
+    return (
+      <div style={{
+        padding: '24px',
+        backgroundColor: '#FEE2E2',
+        borderRadius: '12px',
+        border: '1px solid #EF4444',
+        textAlign: 'center'
+      }}>
+        <p style={{ color: '#991B1B', fontWeight: '600', marginBottom: '8px' }}>
+          ⚠️ Admin Client Not Configured
+        </p>
+        <p style={{ color: '#666', fontSize: '14px' }}>
+          Please add NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY to your environment variables.
+        </p>
+      </div>
+    )
+  }
+
   const handleCreateAdmin = async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!fullName || !email || !role) {
       alert('❌ Please fill all fields')
+      return
+    }
+
+    if (!supabaseAdmin) {
+      alert('❌ Admin client not available')
       return
     }
 
