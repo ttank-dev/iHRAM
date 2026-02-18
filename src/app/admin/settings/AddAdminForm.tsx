@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { supabaseAdmin } from '@/lib/admin'
+import { supabaseAdmin } from '@/lib/supabase/admin-client'
 
 export default function AddAdminForm() {
   const [fullName, setFullName] = useState('')
