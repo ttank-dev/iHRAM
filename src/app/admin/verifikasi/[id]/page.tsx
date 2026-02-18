@@ -413,15 +413,8 @@ export default async function VerificationDetailPage({
 
                 {request.reviewed_at && (
                   <div style={{ fontSize: '14px', color: '#999' }}>
-  Reviewed: {new Date(request.reviewed_at).toLocaleString('ms-MY', {
-    timeZone: 'Asia/Kuala_Lumpur',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
+  Reviewed: {new Date(request.created_at).toLocaleDateString('ms-MY', {
+    timeZone: 'Asia/Kuala_Lumpur'
   })}
 </div>
                 )}

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 export default function MerchantDashboardLayout({
@@ -13,7 +13,6 @@ export default function MerchantDashboardLayout({
   const [loading, setLoading] = useState(true)
   const [agencyName, setAgencyName] = useState('')
   const router = useRouter()
-  const pathname = usePathname()
   const supabase = createClient()
 
   useEffect(() => {
@@ -46,8 +45,6 @@ export default function MerchantDashboardLayout({
     router.push('/merchant/login')
   }
 
-  const isActive = (path: string) => pathname === path
-
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
@@ -57,228 +54,313 @@ export default function MerchantDashboardLayout({
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F5F5F0' }}>
-      
-      {/* Sidebar */}
-      <aside style={{
-        width: '240px',
-        backgroundColor: '#2C2C2C',
-        color: 'white',
-        padding: '24px 0',
-        position: 'fixed',
-        height: '100vh',
-        overflowY: 'auto'
-      }}>
+    <>
+      <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F5F5F0' }}>
         
-        {/* Logo */}
-        <div style={{ padding: '0 24px', marginBottom: '32px' }}>
-          <Link href="/" style={{ textDecoration: 'none' }}>
-            <div style={{ 
-              fontSize: '24px', 
-              fontWeight: 'bold',
-              color: '#B8936D',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-              <span>🕌</span>
-              <span>iHRAM</span>
-            </div>
-          </Link>
-          <div style={{ fontSize: '12px', color: '#999', marginTop: '4px' }}>
-            Merchant Dashboard
-          </div>
-        </div>
-
-        {/* Agency Name */}
-        {agencyName && (
-          <div style={{
-            padding: '12px 24px',
+        {/* SIDEBAR - EXACT SAMA MACAM ADMIN */}
+        <aside 
+          className="merchant-sidebar"
+          style={{
+            width: '240px',
             backgroundColor: '#1A1A1A',
-            marginBottom: '24px',
-            fontSize: '14px'
+            color: 'white',
+            display: 'flex',
+            flexDirection: 'column',
+            position: 'fixed',
+            height: '100vh',
+            overflowY: 'auto',
+            overflowX: 'hidden'
+          }}
+        >
+          {/* Logo / Header - Fixed at top */}
+          <div style={{ 
+            padding: '24px',
+            flexShrink: 0
           }}>
-            <div style={{ color: '#999', fontSize: '11px', marginBottom: '4px' }}>AGENSI</div>
-            <div style={{ fontWeight: '600' }}>{agencyName}</div>
+            <Link href="/merchant/dashboard" style={{ textDecoration: 'none' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ fontSize: '24px' }}>🕌</div>
+                <div>
+                  <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#B8936D' }}>iHRAM</div>
+                  <div style={{ fontSize: '11px', color: '#999' }}>Merchant Dashboard</div>
+                </div>
+              </div>
+            </Link>
           </div>
-        )}
 
-        {/* Menu */}
-        <nav>
-          <Link
-            href="/merchant/dashboard"
-            style={{
+          {/* Agency Name - Fixed below logo */}
+          {agencyName && (
+            <div style={{
+              padding: '12px 24px',
+              backgroundColor: '#2C2C2C',
+              marginBottom: '16px',
+              fontSize: '14px',
+              flexShrink: 0
+            }}>
+              <div style={{ color: '#666', fontSize: '11px', marginBottom: '4px', fontWeight: '700' }}>AGENSI</div>
+              <div style={{ fontWeight: '600', color: 'white' }}>{agencyName}</div>
+            </div>
+          )}
+
+          {/* Menu Items - Scrollable area */}
+          <nav style={{ 
+            flex: 1,
+            padding: '0 16px',
+            overflowY: 'auto',
+            paddingBottom: '24px'
+          }}>
+            
+            {/* Dashboard */}
+            <Link href="/merchant/dashboard" style={{
               display: 'flex',
               alignItems: 'center',
               gap: '12px',
-              padding: '12px 24px',
-              color: isActive('/merchant/dashboard') ? '#B8936D' : 'white',
-              textDecoration: 'none',
-              backgroundColor: isActive('/merchant/dashboard') ? '#1A1A1A' : 'transparent',
-              borderLeft: isActive('/merchant/dashboard') ? '3px solid #B8936D' : '3px solid transparent',
-              fontSize: '15px'
-            }}
-          >
-            <span style={{ fontSize: '20px' }}>📊</span>
-            <span>Dashboard</span>
-          </Link>
-
-          <Link
-            href="/merchant/dashboard/pakej"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '12px 24px',
-              color: pathname?.startsWith('/merchant/dashboard/pakej') ? '#B8936D' : 'white',
-              textDecoration: 'none',
-              backgroundColor: pathname?.startsWith('/merchant/dashboard/pakej') ? '#1A1A1A' : 'transparent',
-              borderLeft: pathname?.startsWith('/merchant/dashboard/pakej') ? '3px solid #B8936D' : '3px solid transparent',
-              fontSize: '15px'
-            }}
-          >
-            <span style={{ fontSize: '20px' }}>📦</span>
-            <span>Pakej Saya</span>
-          </Link>
-
-          <Link
-            href="/merchant/dashboard/newsfeed"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '12px 24px',
-              color: pathname?.startsWith('/merchant/dashboard/newsfeed') ? '#B8936D' : 'white',
-              textDecoration: 'none',
-              backgroundColor: pathname?.startsWith('/merchant/dashboard/newsfeed') ? '#1A1A1A' : 'transparent',
-              borderLeft: pathname?.startsWith('/merchant/dashboard/newsfeed') ? '3px solid #B8936D' : '3px solid transparent',
-              fontSize: '15px'
-            }}
-          >
-            <span style={{ fontSize: '20px' }}>📰</span>
-            <span>News Feed</span>
-          </Link>
-
-          <Link
-            href="/merchant/dashboard/reels"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '12px 24px',
-              color: pathname?.startsWith('/merchant/dashboard/reels') ? '#B8936D' : 'white',
-              textDecoration: 'none',
-              backgroundColor: pathname?.startsWith('/merchant/dashboard/reels') ? '#1A1A1A' : 'transparent',
-              borderLeft: pathname?.startsWith('/merchant/dashboard/reels') ? '3px solid #B8936D' : '3px solid transparent',
-              fontSize: '15px'
-            }}
-          >
-            <span style={{ fontSize: '20px' }}>🎬</span>
-            <span>Reels</span>
-          </Link>
-
-          <Link
-            href="/merchant/dashboard/ulasan"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '12px 24px',
-              color: pathname?.startsWith('/merchant/dashboard/ulasan') ? '#B8936D' : 'white',
-              textDecoration: 'none',
-              backgroundColor: pathname?.startsWith('/merchant/dashboard/ulasan') ? '#1A1A1A' : 'transparent',
-              borderLeft: pathname?.startsWith('/merchant/dashboard/ulasan') ? '3px solid #B8936D' : '3px solid transparent',
-              fontSize: '15px'
-            }}
-          >
-            <span style={{ fontSize: '20px' }}>⭐</span>
-            <span>Ulasan</span>
-          </Link>
-
-          <Link
-            href="/merchant/dashboard/profil"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '12px 24px',
-              color: pathname?.startsWith('/merchant/dashboard/profil') ? '#B8936D' : 'white',
-              textDecoration: 'none',
-              backgroundColor: pathname?.startsWith('/merchant/dashboard/profil') ? '#1A1A1A' : 'transparent',
-              borderLeft: pathname?.startsWith('/merchant/dashboard/profil') ? '3px solid #B8936D' : '3px solid transparent',
-              fontSize: '15px'
-            }}
-          >
-            <span style={{ fontSize: '20px' }}>🏢</span>
-            <span>Profil Agensi</span>
-          </Link>
-
-          <Link
-            href="/merchant/dashboard/verifikasi"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '12px 24px',
-              color: pathname?.startsWith('/merchant/dashboard/profil') ? '#B8936D' : 'white',
-              textDecoration: 'none',
-              backgroundColor: pathname?.startsWith('/merchant/dashboard/profil') ? '#1A1A1A' : 'transparent',
-              borderLeft: pathname?.startsWith('/merchant/dashboard/profil') ? '3px solid #B8936D' : '3px solid transparent',
-              fontSize: '15px'
-            }}
-          >
-            <span style={{ fontSize: '20px' }}>✅</span>
-            <span>Mohon Verifikasi</span>
-          </Link>
-
-          <div style={{ margin: '24px 0', height: '1px', backgroundColor: '#444' }} />
-
-          <Link href="/merchant/dashboard/settings" 
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '12px 24px',
+              padding: '10px 12px',
               color: 'white',
               textDecoration: 'none',
-              fontSize: '15px'
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '500',
+              marginBottom: '8px'
             }}>
-              <span style={{ fontSize: '20px' }}>⚙️</span>
-              <span>Settings</span>
+              <span>📊</span>
+              <span>Dashboard</span>
             </Link>
 
-          <button
-            onClick={handleLogout}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '12px 24px',
-              color: 'white',
-              textDecoration: 'none',
-              fontSize: '15px',
-              width: '100%',
-              border: 'none',
-              backgroundColor: 'transparent',
-              cursor: 'pointer',
-              textAlign: 'left'
-            }}
-          >
-            <span style={{ fontSize: '20px' }}>🚪</span>
-            <span>Log Keluar</span>
-          </button>
-        </nav>
-      </aside>
+            {/* MANAGEMENT Section */}
+            <div style={{ marginTop: '24px', marginBottom: '8px' }}>
+              <div style={{ 
+                fontSize: '11px', 
+                color: '#666', 
+                fontWeight: '700', 
+                padding: '0 12px',
+                marginBottom: '8px'
+              }}>
+                MANAGEMENT
+              </div>
+              
+              <Link href="/merchant/dashboard/pakej" style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '10px 12px',
+                color: 'white',
+                textDecoration: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '500',
+                marginBottom: '4px'
+              }}>
+                <span>📦</span>
+                <span>Pakej Saya</span>
+              </Link>
 
-      {/* Main Content */}
-      <main style={{
-        marginLeft: '240px',
-        flex: 1,
-        padding: '40px',
-        minHeight: '100vh'
-      }}>
-        {children}
-      </main>
-    </div>
+              <Link href="/merchant/dashboard/ulasan" style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '10px 12px',
+                color: 'white',
+                textDecoration: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '500',
+                marginBottom: '4px'
+              }}>
+                <span>⭐</span>
+                <span>Ulasan</span>
+              </Link>
+
+              <Link href="/merchant/dashboard/profil" style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '10px 12px',
+                color: 'white',
+                textDecoration: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '500',
+                marginBottom: '4px'
+              }}>
+                <span>🏢</span>
+                <span>Profil Agensi</span>
+              </Link>
+
+              <Link href="/merchant/dashboard/verifikasi" style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '10px 12px',
+                color: 'white',
+                textDecoration: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '500',
+                marginBottom: '4px'
+              }}>
+                <span>✅</span>
+                <span>Mohon Verifikasi</span>
+              </Link>
+            </div>
+
+            {/* CONTENT Section */}
+            <div style={{ marginTop: '24px', marginBottom: '8px' }}>
+              <div style={{ 
+                fontSize: '11px', 
+                color: '#666', 
+                fontWeight: '700', 
+                padding: '0 12px',
+                marginBottom: '8px'
+              }}>
+                CONTENT
+              </div>
+              
+              <Link href="/merchant/dashboard/newsfeed" style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '10px 12px',
+                color: 'white',
+                textDecoration: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '500',
+                marginBottom: '4px'
+              }}>
+                <span>📰</span>
+                <span>News Feed</span>
+              </Link>
+
+              <Link href="/merchant/dashboard/reels" style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '10px 12px',
+                color: 'white',
+                textDecoration: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '500',
+                marginBottom: '4px'
+              }}>
+                <span>🎬</span>
+                <span>Reels</span>
+              </Link>
+
+              <Link href="/merchant/dashboard/galeri" style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '10px 12px',
+                color: 'white',
+                textDecoration: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '500',
+                marginBottom: '4px'
+              }}>
+                <span>🖼️</span>
+                <span>Galeri</span>
+              </Link>
+            </div>
+
+            {/* SETTINGS Section */}
+            <div style={{ marginTop: '24px', marginBottom: '8px' }}>
+              <div style={{ 
+                fontSize: '11px', 
+                color: '#666', 
+                fontWeight: '700', 
+                padding: '0 12px',
+                marginBottom: '8px'
+              }}>
+                SETTINGS
+              </div>
+              
+              <Link href="/merchant/dashboard/settings" style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '10px 12px',
+                color: 'white',
+                textDecoration: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '500',
+                marginBottom: '4px'
+              }}>
+                <span>⚙️</span>
+                <span>Settings</span>
+              </Link>
+            </div>
+          </nav>
+
+          {/* LOGOUT BUTTON - Fixed at bottom */}
+          <div style={{ 
+            padding: '16px', 
+            borderTop: '1px solid #333',
+            flexShrink: 0
+          }}>
+            <button
+              onClick={handleLogout}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '10px 12px',
+                color: 'white',
+                width: '100%',
+                border: 'none',
+                backgroundColor: '#B8936D',
+                cursor: 'pointer',
+                textAlign: 'left',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '500'
+              }}
+            >
+              <img width="48" height="48" src="https://img.icons8.com/fluency-systems-filled/48/exit.png" alt="exit"/>
+              <span>Log Keluar</span>
+            </button>
+          </div>
+        </aside>
+
+        {/* MAIN CONTENT */}
+        <main style={{
+          marginLeft: '240px',
+          flex: 1,
+          padding: '40px',
+          minHeight: '100vh'
+        }}>
+          {children}
+        </main>
+      </div>
+
+      {/* CSS in separate style tag */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .merchant-sidebar::-webkit-scrollbar {
+          width: 8px;
+        }
+        
+        .merchant-sidebar::-webkit-scrollbar-track {
+          background: #2C2C2C;
+        }
+        
+        .merchant-sidebar::-webkit-scrollbar-thumb {
+          background: #B8936D;
+          border-radius: 4px;
+        }
+        
+        .merchant-sidebar::-webkit-scrollbar-thumb:hover {
+          background: #C4A030;
+        }
+        
+        /* Firefox scrollbar */
+        .merchant-sidebar {
+          scrollbar-width: thin;
+          scrollbar-color: #B8936D #2C2C2C;
+        }
+      `}} />
+    </>
   )
 }

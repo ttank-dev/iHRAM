@@ -58,6 +58,14 @@ export default async function AgensiProfilePage({
   .order('created_at', { ascending: false })
   .limit(10)
 
+  // Get photo albums
+  const { data: albums } = await supabase
+  .from('photo_albums')
+  .select('*')
+  .eq('agency_id', agency.id)
+  .eq('is_published', true)
+  .order('created_at', { ascending: false })
+
   return (
     <AgensiProfileClient 
       agency={agency} 
@@ -65,6 +73,7 @@ export default async function AgensiProfilePage({
       reviews={reviews || []}
       newsFeed={newsFeed || []}
       reels={reels || []}
+      albums={albums || []}
     />
   )
 }

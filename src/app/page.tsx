@@ -44,8 +44,8 @@ export default async function HomePage() {
             <Link href="/panduan" style={{ color: '#2C2C2C', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Panduan</Link>
             <Link href="/ulasan" style={{ color: '#2C2C2C', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Ulasan</Link>
             <Link href="/tentang" style={{ color: '#2C2C2C', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Tentang</Link>
-            <Link href="/hubungi" style={{ padding: '12px 32px', backgroundColor: '#B8936D', color: 'white', textDecoration: 'none', borderRadius: '50px', fontSize: '15px', fontWeight: '600' }}>
-              HUBUNGI KAMI
+            <Link href="/merchant/signup" style={{ padding: '12px 32px', backgroundColor: '#B8936D', color: 'white', textDecoration: 'none', borderRadius: '50px', fontSize: '15px', fontWeight: '600' }}>
+              DAFTAR AGENSI
             </Link>
           </div>
         </div>
@@ -56,11 +56,11 @@ export default async function HomePage() {
         <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)' }}></div>
         
         <div style={{ position: 'relative', zIndex: 10, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '0 20px' }}>
-          <p style={{ color: 'white', fontSize: '24px', marginBottom: '24px', fontFamily: 'Georgia, serif', letterSpacing: '2px' }}>
+          <p style={{ color: 'white', fontSize: '38px', marginBottom: '24px', fontFamily: 'Georgia, serif', letterSpacing: '2px' }}>
             لَبَّيْكَ اللَّهُمَّ لَبَّيْك
           </p>
           <h1 style={{ color: 'white', fontSize: '64px', fontWeight: 'bold', marginBottom: '24px', fontFamily: 'Georgia, serif', maxWidth: '1000px', lineHeight: '1.2' }}>
-            Platform Pakej-Pakej Umrah Di Malaysia
+            Platform Pakej-Pakej Umrah
           </h1>
           <p style={{ color: 'white', fontSize: '20px', marginBottom: '40px', maxWidth: '800px', lineHeight: '1.6' }}>
             Temui pakej umrah yang sesuai dengan anda dari agensi-agensi Umrah di Malaysia.
@@ -228,10 +228,10 @@ export default async function HomePage() {
               Tentang iHRAM
             </h2>
             <p style={{ fontSize: '18px', lineHeight: '1.8', color: '#4A4A4A', marginBottom: '20px' }}>
-              Di <strong style={{ color: '#B8936D' }}>iHRAM</strong>, kami berdedikasi untuk menyediakan platform discovery pakej umrah yang memudahkan umat Islam Malaysia mencari pakej yang sesuai dengan keperluan mereka.
+              Di <strong style={{ color: '#B8936D' }}>iHRAM</strong>, kami berdedikasi untuk menyediakan platform carian pakej umrah yang memudahkan umat Islam Malaysia mencari pakej yang sesuai dengan keperluan mereka.
             </p>
             <p style={{ fontSize: '18px', lineHeight: '1.8', color: '#4A4A4A', marginBottom: '20px' }}>
-              Sebagai <strong style={{ color: '#B8936D' }}>platform pertama</strong> di Malaysia, kami menawarkan perbandingan pakej yang telus, ulasan jemaah sebenar, dan direktori agensi yang dipercayai.
+              Sebagai <strong style={{ color: '#B8936D' }}>platform pertama</strong> di Malaysia, kami menawarkan perbandingan pakej yang telus, ulasan jemaah sebenar, dan direktori agensi-agensi.
             </p>
             <p style={{ fontSize: '18px', lineHeight: '1.8', color: '#4A4A4A' }}>
               Kami tidak mengenakan sebarang bayaran kepada pengguna atau agensi. Misi kami adalah untuk memudahkan perjalanan rohani anda bermula di sini.
@@ -303,17 +303,17 @@ export default async function HomePage() {
           Perkhidmatan Kami
         </h2>
         <p style={{ textAlign: 'center', fontSize: '18px', color: '#666', marginBottom: '60px', maxWidth: '800px', margin: '0 auto 60px' }}>
-          Di iHRAM, kami komited untuk menyediakan platform yang lengkap untuk perjalanan umrah anda
+          Di iHRAM, kami komited untuk menyediakan platform yang lengkap untuk perjalanan umrah anda dan juga keluarga.
         </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '32px' }}>
           <div style={{ backgroundColor: '#E8E2D8', padding: '40px', borderRadius: '12px', textAlign: 'center' }}>
             <div style={{ fontSize: '48px', marginBottom: '20px' }}>📦</div>
             <h3 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '16px', fontFamily: 'Georgia, serif' }}>
-              Discovery Pakej
+              Carian Pakej
             </h3>
             <p style={{ fontSize: '16px', color: '#4A4A4A', lineHeight: '1.7' }}>
-              Platform pertama di Malaysia untuk membandingkan pakej umrah dari pelbagai agensi dalam satu tempat
+              Platform pertama di Malaysia untuk membandingkan pakej umrah dari pelbagai agensi dalam satu tempat.
             </p>
           </div>
 
@@ -323,7 +323,7 @@ export default async function HomePage() {
               Sistem Ulasan
             </h3>
             <p style={{ fontSize: '16px', color: '#4A4A4A', lineHeight: '1.7' }}>
-              Baca ulasan sebenar dari jemaah yang pernah menggunakan perkhidmatan agensi-agensi terpilih
+              Baca ulasan sebenar dari jemaah yang pernah menggunakan perkhidmatan agensi-agensi terpilih.
             </p>
           </div>
 
@@ -333,7 +333,7 @@ export default async function HomePage() {
               Panduan Lengkap
             </h3>
             <p style={{ fontSize: '16px', color: '#4A4A4A', lineHeight: '1.7' }}>
-              Akses panduan lengkap untuk first-timer, senarai packing, dan tips persediaan rohani
+              Akses panduan lengkap untuk first-timer, senarai packing, dan tips persediaan rohani.
             </p>
           </div>
         </div>
@@ -346,26 +346,22 @@ export default async function HomePage() {
             Soalan Lazim
           </h2>
           <p style={{ textAlign: 'center', fontSize: '18px', color: '#666', marginBottom: '60px' }}>
-            Jawapan kepada soalan yang kerap ditanya tentang platform iHRAM
+            Jawapan kepada soalan yang kerap ditanya tentang platform iHRAM.
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {[
               {
                 question: 'Apakah itu iHRAM?',
-                answer: 'iHRAM adalah platform discovery pakej umrah pertama di Malaysia yang membolehkan anda membandingkan pakej dari pelbagai agensi terpercaya dalam satu tempat.'
+                answer: 'iHRAM adalah platform carian pakej umrah pertama di Malaysia yang membolehkan anda membandingkan pakej dari pelbagai agensi dalam satu tempat sahaja.'
               },
               {
                 question: 'Adakah iHRAM mengenakan bayaran?',
-                answer: 'Tidak, iHRAM tidak mengenakan sebarang bayaran kepada pengguna atau agensi pada peringkat MVP ini. Platform ini dibangunkan dengan niat ikhlas untuk memudahkan umat Islam Malaysia.'
+                answer: 'Tidak, iHRAM tidak mengenakan sebarang bayaran kepada pengguna atau agensi (buat masa ini). Tujuan platform ini dibangunkan untuk memudahkan seluruh umat Islam Malaysia.'
               },
               {
-                question: 'Bagaimana cara booking pakej?',
-                answer: 'iHRAM berfungsi sebagai platform discovery. Setelah anda menemui pakej yang sesuai, anda boleh menghubungi agensi secara terus melalui WhatsApp untuk membuat tempahan.'
-              },
-              {
-                question: 'Adakah semua agensi di iHRAM dipercayai?',
-                answer: 'Ya, kami hanya menyenaraikan agensi yang berdaftar dan dipercayai. Setiap agensi melalui proses verifikasi sebelum disenaraikan di platform kami.'
+                question: 'Bagaimana cara menempah pakej?',
+                answer: 'iHRAM berfungsi sebagai platform carian. Setelah anda menemui pakej yang sesuai, anda boleh menghubungi agensi secara terus melalui WhatsApp untuk membuat tempahan.'
               },
               {
                 question: 'Bolehkah saya tinggalkan ulasan?',
@@ -403,7 +399,7 @@ export default async function HomePage() {
                 />
               </div>
               <p style={{ fontSize: '16px', lineHeight: '1.7', color: 'rgba(255,255,255,0.9)' }}>
-                Platform discovery pakej umrah pertama di Malaysia yang memudahkan umat Islam mencari pakej yang sesuai dengan keperluan mereka.
+                Platform carian pakej umrah pertama di Malaysia yang memudahkan umat Islam mencari pakej yang sesuai dengan keperluan perjalanan rohani mereka.
               </p>
             </div>
 

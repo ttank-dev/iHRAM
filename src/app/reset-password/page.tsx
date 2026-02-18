@@ -6,196 +6,293 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 export default function ResetPasswordPage() {
-  const router = useRouter()
   const supabase = createClient()
-  const [loading, setLoading] = useState(false)
-  const [newPassword, setNewPassword] = useState('')
+  const router = useRouter()
+  
+  const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [validToken, setValidToken] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    // Check if user came from email link
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setValidToken(true)
+      }
+    })
+  }, [])
+
+  const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!newPassword || !confirmPassword) {
-      alert('❌ Please fill in both fields')
+    if (password !== confirmPassword) {
+      alert('❌ Kata laluan tidak sepadan!')
       return
     }
 
-    if (newPassword.length < 6) {
-      alert('❌ Password must be at least 6 characters')
-      return
-    }
-
-    if (newPassword !== confirmPassword) {
-      alert('❌ Passwords do not match')
+    if (password.length < 6) {
+      alert('❌ Kata laluan mestilah sekurang-kurangnya 6 aksara')
       return
     }
 
     setLoading(true)
+
     try {
       const { error } = await supabase.auth.updateUser({
-        password: newPassword
+        password: password
       })
 
       if (error) throw error
 
-      alert('✅ Password updated successfully! Redirecting to login...')
-      
-      // Redirect to login
-      setTimeout(() => {
-        router.push('/admin-login')
-      }, 2000)
+      alert('✅ Kata laluan berjaya dikemaskini!')
+      router.push('/admin-login')
     } catch (error: any) {
       console.error('Error:', error)
-      alert(`❌ Error: ${error.message || 'Failed to update password'}`)
+      alert(`❌ Ralat: ${error.message}`)
     } finally {
       setLoading(false)
     }
   }
 
+  if (!validToken) {
+    return (
+      <div style={{
+        backgroundColor: '#F5F5F0',
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '40px'
+      }}>
+        <div style={{
+          width: '100%',
+          maxWidth: '480px',
+          backgroundColor: 'white',
+          borderRadius: '16px',
+          padding: '48px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+          textAlign: 'center'
+        }}>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '64px',
+            height: '64px',
+            backgroundColor: '#FFF8E1',
+            borderRadius: '50%',
+            marginBottom: '16px'
+          }}>
+            <span style={{ fontSize: '32px' }}>⏳</span>
+          </div>
+          <p style={{ fontSize: '16px', color: '#666' }}>Memuatkan...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div style={{
+      backgroundColor: '#F5F5F0',
       minHeight: '100vh',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, #0A0A0A 0%, #1A1A1A 100%)',
-      padding: '20px'
+      padding: '40px'
     }}>
       <div style={{
-        backgroundColor: 'white',
-        borderRadius: '24px',
-        padding: '48px',
-        maxWidth: '500px',
         width: '100%',
-        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)'
+        maxWidth: '480px'
       }}>
         {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{
-            fontSize: '48px',
-            fontWeight: 'bold',
-            color: '#B8936D',
-            marginBottom: '8px',
-            fontFamily: 'Georgia, serif'
-          }}>
-            iHRAM
-          </div>
-          <div style={{ fontSize: '14px', color: '#666' }}>
-            Reset Your Password
-          </div>
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <Link href="/">
+            <img 
+              src="/logo.png" 
+              alt="iHRAM" 
+              style={{ 
+                height: '60px', 
+                filter: 'brightness(0) saturate(100%) invert(56%) sepia(35%) saturate(643%) hue-rotate(358deg) brightness(95%) contrast(92%)' 
+              }} 
+            />
+          </Link>
         </div>
 
-        {/* Icon */}
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <div style={{ fontSize: '64px' }}>🔐</div>
-        </div>
-
-        <form onSubmit={handleSubmit}>
-          {/* New Password */}
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{
-              display: 'block',
-              fontSize: '14px',
-              fontWeight: '600',
-              color: '#666',
-              marginBottom: '8px'
-            }}>
-              New Password
-            </label>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Min. 6 characters"
-              required
-              minLength={6}
-              style={{
-                width: '100%',
-                padding: '14px',
-                border: '2px solid #E5E5E0',
-                borderRadius: '12px',
-                fontSize: '15px',
-                backgroundColor: 'white'
-              }}
-            />
-          </div>
-
-          {/* Confirm Password */}
-          <div style={{ marginBottom: '24px' }}>
-            <label style={{
-              display: 'block',
-              fontSize: '14px',
-              fontWeight: '600',
-              color: '#666',
-              marginBottom: '8px'
-            }}>
-              Confirm New Password
-            </label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Re-enter password"
-              required
-              minLength={6}
-              style={{
-                width: '100%',
-                padding: '14px',
-                border: '2px solid #E5E5E0',
-                borderRadius: '12px',
-                fontSize: '15px',
-                backgroundColor: 'white'
-              }}
-            />
-          </div>
-
-          {/* Info */}
-          <div style={{
-            padding: '12px 16px',
-            backgroundColor: '#FFF8F0',
-            borderRadius: '8px',
-            fontSize: '13px',
-            color: '#666',
-            marginBottom: '24px'
-          }}>
-            💡 Password must be at least 6 characters long
-          </div>
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              width: '100%',
-              padding: '16px',
-              backgroundColor: loading ? '#999' : '#B8936D',
-              color: 'white',
-              border: 'none',
-              borderRadius: '12px',
-              fontSize: '16px',
-              fontWeight: '600',
-              cursor: loading ? 'not-allowed' : 'pointer',
+        {/* Reset Password Card */}
+        <div style={{
+          backgroundColor: 'white',
+          borderRadius: '16px',
+          padding: '48px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.12)'
+        }}>
+          {/* Header */}
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '64px',
+              height: '64px',
+              backgroundColor: '#B8936D',
+              borderRadius: '50%',
               marginBottom: '16px'
-            }}
-          >
-            {loading ? '⏳ Updating Password...' : '🔐 Update Password'}
-          </button>
+            }}>
+              <span style={{ fontSize: '32px' }}>🔐</span>
+            </div>
+            <h1 style={{
+              fontSize: '32px',
+              fontWeight: 'bold',
+              color: '#2C2C2C',
+              fontFamily: 'Georgia, serif',
+              marginBottom: '8px'
+            }}>
+              Set Kata Laluan Baharu
+            </h1>
+            <p style={{ fontSize: '16px', color: '#666' }}>
+              Masukkan kata laluan baharu anda
+            </p>
+          </div>
 
-          {/* Back to Login */}
-          <div style={{ textAlign: 'center' }}>
-            <Link
-              href="/admin-login"
-              style={{
-                color: '#B8936D',
-                textDecoration: 'none',
+          {/* Form */}
+          <form onSubmit={handleResetPassword}>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{
+                display: 'block',
                 fontSize: '14px',
-                fontWeight: '600'
+                fontWeight: '600',
+                color: '#2C2C2C',
+                marginBottom: '8px'
+              }}>
+                Kata Laluan Baharu
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Masukkan kata laluan baharu"
+                required
+                minLength={6}
+                disabled={loading}
+                style={{
+                  width: '100%',
+                  padding: '14px 16px',
+                  backgroundColor: 'white',
+                  border: '1px solid #E5E5E0',
+                  borderRadius: '8px',
+                  fontSize: '16px',
+                  color: '#2C2C2C',
+                  outline: 'none'
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '600',
+                color: '#2C2C2C',
+                marginBottom: '8px'
+              }}>
+                Sahkan Kata Laluan
+              </label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Sahkan kata laluan baharu"
+                required
+                minLength={6}
+                disabled={loading}
+                style={{
+                  width: '100%',
+                  padding: '14px 16px',
+                  backgroundColor: 'white',
+                  border: '1px solid #E5E5E0',
+                  borderRadius: '8px',
+                  fontSize: '16px',
+                  color: '#2C2C2C',
+                  outline: 'none'
+                }}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: '14px',
+                backgroundColor: loading ? '#CCC' : '#B8936D',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                marginBottom: '16px',
+                transition: 'background-color 0.2s'
               }}
             >
-              ← Back to Login
-            </Link>
+              {loading ? 'Mengemaskini...' : 'Kemas Kini Kata Laluan'}
+            </button>
+
+            <div style={{ textAlign: 'center' }}>
+              <Link
+                href="/admin-login"
+                style={{
+                  fontSize: '14px',
+                  color: '#B8936D',
+                  textDecoration: 'none',
+                  fontWeight: '600'
+                }}
+              >
+                ← Kembali ke Login
+              </Link>
+            </div>
+          </form>
+
+          {/* Info Box */}
+          <div style={{
+            marginTop: '24px',
+            padding: '16px',
+            backgroundColor: '#FFF8E1',
+            borderRadius: '8px',
+            border: '1px solid #FFD54F'
+          }}>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'start' }}>
+              <span style={{ fontSize: '20px' }}>💡</span>
+              <div>
+                <div style={{
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#2C2C2C',
+                  marginBottom: '4px'
+                }}>
+                  Tip Keselamatan
+                </div>
+                <div style={{ fontSize: '13px', color: '#666' }}>
+                  Gunakan kombinasi huruf besar, huruf kecil, nombor dan simbol untuk kata laluan yang lebih selamat.
+                </div>
+              </div>
+            </div>
           </div>
-        </form>
+        </div>
+
+        {/* Back to Homepage */}
+        <div style={{ textAlign: 'center', marginTop: '24px' }}>
+          <Link 
+            href="/" 
+            style={{ 
+              color: '#666', 
+              fontSize: '14px', 
+              textDecoration: 'none' 
+            }}
+          >
+            ← Kembali ke Homepage
+          </Link>
+        </div>
       </div>
     </div>
   )

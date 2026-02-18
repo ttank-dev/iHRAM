@@ -59,6 +59,24 @@ interface Reel {
   created_at: string
 }
 
+// 🖼️ GALERI INTERFACES
+interface Album {
+  id: string
+  title: string
+  description: string | null
+  cover_photo_url: string | null
+  photo_count: number
+  created_at: string
+}
+
+interface AlbumPhoto {
+  id: string
+  photo_url: string
+  caption: string | null
+  photo_order: number
+  created_at: string
+}
+
 // 🎬 VIDEO PLAYER MODAL COMPONENT
 function VideoPlayerModal({ 
   reel, 
@@ -399,42 +417,84 @@ export default function AgensiProfileClient({
   packages = [],
   reviews = [],
   newsFeed = [],
-  reels = []
+  reels = [],
+  albums = []  // 🖼️ ADD ALBUMS PROP
 }: {
   agency: Agency
   packages: Package[]
   reviews: Review[]
   newsFeed: NewsFeedPost[]
   reels: Reel[]
+  albums: Album[]  // 🖼️ ADD ALBUMS TYPE
 }) {
   const supabase = createClient()
-  const [activeTab, setActiveTab] = useState<'pakej' | 'newsfeed' | 'reels' | 'tentang' | 'ulasan'>('pakej')
+  const [activeTab, setActiveTab] = useState<'pakej' | 'newsfeed' | 'reels' | 'galeri' | 'tentang' | 'ulasan'>('pakej')  // 🖼️ ADD 'galeri'
   const [showShareMenu, setShowShareMenu] = useState(false)
   const [selectedReelIndex, setSelectedReelIndex] = useState<number | null>(null)
+  
+  // 🖼️ GALERI STATE VARIABLES
+  const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null)
+  const [albumPhotos, setAlbumPhotos] = useState<AlbumPhoto[]>([])
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
   const avgRating = reviews && reviews.length > 0
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
     : null
   const reviewCount = reviews ? reviews.length : 0
-const trackReelView = async (reelId: string) => {
-  try {
-    console.log('🔵 Tracking view for:', reelId)
+
+  // 🖼️ GALERI FUNCTIONS
+  const openAlbum = async (albumId: string) => {
+    const album = albums.find(a => a.id === albumId)
+    if (!album) return
     
-    // Use RPC function instead of direct update
-    const { error } = await supabase.rpc('increment_reel_views', {
-      reel_id: reelId
-    })
+    setSelectedAlbum(album)
     
-    if (error) {
-      console.error('❌ Error:', error)
-      return
-    }
+    // Fetch photos for this album
+    const { data } = await supabase
+      .from('album_photos')
+      .select('*')
+      .eq('album_id', albumId)
+      .order('photo_order')
     
-    console.log('✅ View tracked!')
-  } catch (error) {
-    console.error('❌ Error:', error)
+    setAlbumPhotos(data || [])
   }
-}
+
+  const closeLightbox = () => {
+    setLightboxIndex(null)
+  }
+
+  const nextPhoto = () => {
+    if (lightboxIndex !== null && lightboxIndex < albumPhotos.length - 1) {
+      setLightboxIndex(lightboxIndex + 1)
+    }
+  }
+
+  const prevPhoto = () => {
+    if (lightboxIndex !== null && lightboxIndex > 0) {
+      setLightboxIndex(lightboxIndex - 1)
+    }
+  }
+
+  const trackReelView = async (reelId: string) => {
+    try {
+      console.log('🔵 Tracking view for:', reelId)
+      
+      // Use RPC function instead of direct update
+      const { error } = await supabase.rpc('increment_reel_views', {
+        reel_id: reelId
+      })
+      
+      if (error) {
+        console.error('❌ Error:', error)
+        return
+      }
+      
+      console.log('✅ View tracked!')
+    } catch (error) {
+      console.error('❌ Error:', error)
+    }
+  }
+
   const handleShare = async () => {
     const shareUrl = window.location.href
     const shareTitle = `${agency.name} - Agensi Umrah`
@@ -519,6 +579,24 @@ const trackReelView = async (reelId: string) => {
     return () => window.removeEventListener('keydown', handleKeyPress)
   }, [selectedReelIndex, reels.length])
 
+  // 🖼️ GALERI KEYBOARD NAVIGATION
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (lightboxIndex === null) return
+      
+      if (e.key === 'Escape') {
+        closeLightbox()
+      } else if (e.key === 'ArrowRight') {
+        nextPhoto()
+      } else if (e.key === 'ArrowLeft') {
+        prevPhoto()
+      }
+    }
+    
+    window.addEventListener('keydown', handleKeyPress)
+    return () => window.removeEventListener('keydown', handleKeyPress)
+  }, [lightboxIndex, albumPhotos.length])
+
   return (
     <div style={{ backgroundColor: '#F5F5F0', minHeight: '100vh' }}>
       
@@ -541,8 +619,8 @@ const trackReelView = async (reelId: string) => {
             <Link href="/panduan" style={{ color: '#2C2C2C', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Panduan</Link>
             <Link href="/ulasan" style={{ color: '#2C2C2C', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Ulasan</Link>
             <Link href="/tentang" style={{ color: '#2C2C2C', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Tentang</Link>
-            <Link href="/hubungi" style={{ padding: '12px 32px', backgroundColor: '#B8936D', color: 'white', textDecoration: 'none', borderRadius: '50px', fontSize: '15px', fontWeight: '600' }}>
-              HUBUNGI KAMI
+            <Link href="/merchant/signup" style={{ padding: '12px 32px', backgroundColor: '#B8936D', color: 'white', textDecoration: 'none', borderRadius: '50px', fontSize: '15px', fontWeight: '600' }}>
+              DAFTAR AGENSI
             </Link>
           </div>
         </div>
@@ -561,36 +639,36 @@ const trackReelView = async (reelId: string) => {
           }}>
             {agency.is_verified && (
               <div style={{
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '8px',
-    padding: '8px 16px',
-    backgroundColor: '#E8F5E9',
-    border: '2px solid #4CAF50',
-    borderRadius: '20px',
-    marginTop: '8px',
-    position: 'absolute',
-    top: '8px',
-    right: '8px'
-  }}>
-    <span style={{ fontSize: '20px' }}>✅</span>
-    <div>
-      <div style={{ 
-        fontSize: '12px', 
-        fontWeight: '700', 
-        color: '#2E7D32'
-      }}>
-        VERIFIED AGENCY
-      </div>
-      <div style={{ 
-        fontSize: '10px', 
-        color: '#666'
-      }}>
-        MOTAC License: {agency.motac_license_number}
-      </div>
-    </div>
-  </div>
-)}
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 16px',
+                backgroundColor: '#E8F5E9',
+                border: '2px solid #4CAF50',
+                borderRadius: '20px',
+                marginTop: '8px',
+                position: 'absolute',
+                top: '8px',
+                right: '8px'
+              }}>
+                <span style={{ fontSize: '20px' }}>✅</span>
+                <div>
+                  <div style={{ 
+                    fontSize: '12px', 
+                    fontWeight: '700', 
+                    color: '#2E7D32'
+                  }}>
+                    VERIFIED AGENCY
+                  </div>
+                  <div style={{ 
+                    fontSize: '10px', 
+                    color: '#666'
+                  }}>
+                    MOTAC License: {agency.motac_license_number}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div style={{ padding: '0 40px' }}>
@@ -870,6 +948,24 @@ const trackReelView = async (reelId: string) => {
                 🎬 Reels ({reels.length})
               </button>
 
+              {/* 🖼️ GALERI TAB BUTTON */}
+              <button
+                onClick={() => setActiveTab('galeri')}
+                style={{
+                  padding: '16px 32px',
+                  backgroundColor: 'transparent',
+                  color: activeTab === 'galeri' ? '#B8936D' : '#666',
+                  border: 'none',
+                  borderBottom: activeTab === 'galeri' ? '3px solid #B8936D' : '3px solid transparent',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s'
+                }}
+              >
+                🖼️ Galeri ({albums.length})
+              </button>
+
               <button
                 onClick={() => setActiveTab('tentang')}
                 style={{
@@ -912,6 +1008,9 @@ const trackReelView = async (reelId: string) => {
 
         {activeTab === 'newsfeed' && (
           <div style={{ padding: '32px 0' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '24px' }}>
+              News Feed ({newsFeed.length})
+            </h2>
             <div style={{ maxWidth: '800px', margin: '0 auto' }}>
               
               {newsFeed && newsFeed.length > 0 ? (
@@ -1037,162 +1136,375 @@ const trackReelView = async (reelId: string) => {
         )}
 
         {activeTab === 'reels' && (
-  <div style={{ padding: '32px 0' }}>
-{reels && reels.length > 0 ? (
-  <div style={{ 
-    display: 'grid', 
-    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-    gap: '16px',
-    maxWidth: '1200px',
-    margin: '0 auto'
-  }}>
-    {reels.map((reel, index) => (
-      <div 
-        key={reel.id}
-        onClick={async () => {
-  await trackReelView(reel.id)
-  setSelectedReelIndex(index)
-}}
-        style={{
-          aspectRatio: '9/16',
-          backgroundColor: '#000',
-          borderRadius: '12px',
-          position: 'relative',
-          overflow: 'hidden',
-          cursor: 'pointer',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-          transition: 'transform 0.2s, box-shadow 0.2s'
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'scale(1.02)'
-          e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.2)'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'scale(1)'
-          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)'
-        }}
-      >
-        {/* Video Element - Shows directly, no thumbnail needed */}
-        <video
-          src={reel.video_url}
-          loop
-          playsInline
-          muted
-          autoPlay
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover'
-          }}
-        />
+          <div style={{ padding: '32px 0' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '24px' }}>
+              Reels ({reels.length})
+            </h2>
+            {reels && reels.length > 0 ? (
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                gap: '16px',
+                maxWidth: '1200px',
+                margin: '0 auto'
+              }}>
+                {reels.map((reel, index) => (
+                  <div 
+                    key={reel.id}
+                    onClick={async () => {
+                      await trackReelView(reel.id)
+                      setSelectedReelIndex(index)
+                    }}
+                    style={{
+                      aspectRatio: '9/16',
+                      backgroundColor: '#000',
+                      borderRadius: '12px',
+                      position: 'relative',
+                      overflow: 'hidden',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                      transition: 'transform 0.2s, box-shadow 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'scale(1.02)'
+                      e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.2)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'scale(1)'
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)'
+                    }}
+                  >
+                    <video
+                      src={reel.video_url}
+                      loop
+                      playsInline
+                      muted
+                      autoPlay
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
+                      }}
+                    />
 
-        {/* Gradient Overlay at bottom */}
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 40%)',
-          pointerEvents: 'none'
-        }} />
-        
-        {/* Info Overlay - WITH VIEWS + DATE */}
-        <div style={{
-          position: 'absolute',
-          bottom: '12px',
-          left: '12px',
-          right: '12px',
-          color: 'white',
-          pointerEvents: 'none'
-        }}>
-          {/* Title */}
-          <div style={{ 
-            fontSize: '14px', 
-            fontWeight: '600', 
-            marginBottom: '4px',
-            textShadow: '0 1px 3px rgba(0,0,0,0.8)',
-            lineHeight: '1.3',
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden'
-          }}>
-            {reel.title}
+                    <div style={{
+                      position: 'absolute',
+                      inset: 0,
+                      background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 40%)',
+                      pointerEvents: 'none'
+                    }} />
+                    
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '12px',
+                      left: '12px',
+                      right: '12px',
+                      color: 'white',
+                      pointerEvents: 'none'
+                    }}>
+                      <div style={{ 
+                        fontSize: '14px', 
+                        fontWeight: '600', 
+                        marginBottom: '4px',
+                        textShadow: '0 1px 3px rgba(0,0,0,0.8)',
+                        lineHeight: '1.3',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden'
+                      }}>
+                        {reel.title}
+                      </div>
+
+                      <div style={{ 
+                        fontSize: '12px', 
+                        opacity: 0.9,
+                        textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        flexWrap: 'wrap'
+                      }}>
+                        <span>👁️ {reel.views.toLocaleString()}</span>
+                        <span>•</span>
+                        <span>📅 {new Date(reel.created_at).toLocaleDateString('ms-MY', { 
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric'
+                        })}</span>
+                      </div>
+                    </div>
+
+                    <div style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      fontSize: '40px',
+                      opacity: 0.8,
+                      pointerEvents: 'none',
+                      textShadow: '0 2px 8px rgba(0,0,0,0.5)'
+                    }}>
+                      ▶️
+                    </div>
+
+                    <div style={{
+                      position: 'absolute',
+                      top: '12px',
+                      right: '12px',
+                      backgroundColor: 'rgba(0,0,0,0.5)',
+                      borderRadius: '50%',
+                      width: '32px',
+                      height: '32px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '16px',
+                      pointerEvents: 'none'
+                    }}>
+                      🔇
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{
+                backgroundColor: 'white',
+                borderRadius: '16px',
+                padding: '80px 40px',
+                textAlign: 'center',
+                border: '1px solid #E5E5E0',
+                maxWidth: '800px',
+                margin: '0 auto'
+              }}>
+                <div style={{ fontSize: '64px', marginBottom: '16px' }}>🎬</div>
+                <h3 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '12px' }}>
+                  Reels
+                </h3>
+                <p style={{ fontSize: '16px', color: '#666', lineHeight: '1.6' }}>
+                  Video pendek dan reels dari {agency.name} akan dipaparkan di sini
+                </p>
+              </div>
+            )}
           </div>
+        )}
 
-          {/* 🔥 VIEWS + DATE (UPDATED) */}
-          <div style={{ 
-            fontSize: '12px', 
-            opacity: 0.9,
-            textShadow: '0 1px 2px rgba(0,0,0,0.8)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            flexWrap: 'wrap'
-          }}>
-            <span>👁️ {reel.views.toLocaleString()}</span>
-            <span>•</span>
-            <span>📅 {new Date(reel.created_at).toLocaleDateString('ms-MY', { 
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric'
-            })}</span>
+        {/* 🖼️ GALERI TAB CONTENT */}
+        {activeTab === 'galeri' && (
+          <div style={{ padding: '32px 0' }}>
+            {!selectedAlbum ? (
+              // ALBUMS GRID VIEW
+              <>
+                <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '24px' }}>
+                Galeri ({albums.length})
+                </h2>
+
+                {albums && albums.length > 0 ? (
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                    gap: '16px'
+                  }}>
+                    {albums.map((album) => (
+                      <div
+                        key={album.id}
+                        onClick={() => openAlbum(album.id)}
+                        style={{
+                          aspectRatio: '1',
+                          backgroundColor: '#000',
+                          borderRadius: '12px',
+                          overflow: 'hidden',
+                          cursor: 'pointer',
+                          position: 'relative',
+                          transition: 'transform 0.2s',
+                          border: '1px solid #E5E5E0'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'scale(1.02)'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'scale(1)'
+                        }}
+                      >
+                        {/* Cover Photo */}
+                        <img
+                          src={album.cover_photo_url || '/placeholder.jpg'}
+                          alt={album.title}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                          }}
+                        />
+                        
+                        {/* Gradient Overlay */}
+                        <div style={{
+                          position: 'absolute',
+                          inset: 0,
+                          background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 50%)',
+                          pointerEvents: 'none'
+                        }} />
+                        
+                        {/* Album Info */}
+                        <div style={{
+                          position: 'absolute',
+                          bottom: '16px',
+                          left: '16px',
+                          right: '16px',
+                          color: 'white',
+                          pointerEvents: 'none'
+                        }}>
+                          <div style={{ 
+                            fontWeight: '700', 
+                            fontSize: '18px', 
+                            marginBottom: '4px',
+                            textShadow: '0 2px 4px rgba(0,0,0,0.8)'
+                          }}>
+                            {album.title}
+                          </div>
+                          <div style={{ 
+                            fontSize: '14px', 
+                            opacity: 0.9,
+                            textShadow: '0 1px 2px rgba(0,0,0,0.8)'
+                          }}>
+                            📷 {album.photo_count} gambar
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{
+                    backgroundColor: 'white',
+                    borderRadius: '16px',
+                    padding: '80px 40px',
+                    textAlign: 'center',
+                    border: '1px solid #E5E5E0'
+                  }}>
+                    <div style={{ fontSize: '64px', marginBottom: '16px' }}>🖼️</div>
+                    <h3 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '12px' }}>
+                      Galeri
+                    </h3>
+                    <p style={{ fontSize: '16px', color: '#666', lineHeight: '1.6' }}>
+                      Album foto dari {agency.name} akan dipaparkan di sini
+                    </p>
+                  </div>
+                )}
+              </>
+            ) : (
+              // PHOTOS GRID VIEW
+              <>
+                {/* Back Button */}
+                <button
+                  onClick={() => setSelectedAlbum(null)}
+                  style={{
+                    marginBottom: '24px',
+                    padding: '12px 24px',
+                    backgroundColor: 'white',
+                    color: '#B8936D',
+                    border: '2px solid #B8936D',
+                    borderRadius: '8px',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  <span>←</span>
+                  <span>Back to Albums</span>
+                </button>
+
+                {/* Album Header */}
+                <div style={{ marginBottom: '24px' }}>
+                  <h2 style={{ fontSize: '28px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '8px' }}>
+                    {selectedAlbum.title}
+                  </h2>
+                  {selectedAlbum.description && (
+                    <p style={{ fontSize: '16px', color: '#666', lineHeight: '1.6' }}>
+                      {selectedAlbum.description}
+                    </p>
+                  )}
+                  <div style={{ fontSize: '14px', color: '#999', marginTop: '8px' }}>
+                    📷 {albumPhotos.length} gambar • {new Date(selectedAlbum.created_at).toLocaleDateString('ms-MY')}
+                  </div>
+                </div>
+
+                {/* Photos Grid */}
+                {albumPhotos.length > 0 ? (
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                    gap: '8px'
+                  }}>
+                    {albumPhotos.map((photo, index) => (
+                      <div
+                        key={photo.id}
+                        onClick={() => setLightboxIndex(index)}
+                        style={{
+                          aspectRatio: '1',
+                          backgroundColor: '#F5F5F0',
+                          borderRadius: '8px',
+                          overflow: 'hidden',
+                          cursor: 'pointer',
+                          position: 'relative',
+                          transition: 'transform 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'scale(1.02)'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'scale(1)'
+                        }}
+                      >
+                        <img
+                          src={photo.photo_url}
+                          alt={photo.caption || `Photo ${index + 1}`}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                          }}
+                        />
+                        
+                        {/* Caption overlay if exists */}
+                        {photo.caption && (
+                          <div style={{
+                            position: 'absolute',
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)',
+                            color: 'white',
+                            padding: '24px 12px 12px',
+                            fontSize: '13px',
+                            lineHeight: '1.4'
+                          }}>
+                            {photo.caption}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{
+                    backgroundColor: 'white',
+                    borderRadius: '16px',
+                    padding: '60px 40px',
+                    textAlign: 'center',
+                    border: '1px solid #E5E5E0'
+                  }}>
+                    <div style={{ fontSize: '48px', marginBottom: '12px' }}>📷</div>
+                    <p style={{ fontSize: '16px', color: '#666' }}>
+                      Tiada gambar dalam album ini
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
           </div>
-        </div>
-
-        {/* Play icon indicator */}
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          fontSize: '40px',
-          opacity: 0.8,
-          pointerEvents: 'none',
-          textShadow: '0 2px 8px rgba(0,0,0,0.5)'
-        }}>
-          ▶️
-        </div>
-
-        {/* Mute indicator */}
-        <div style={{
-          position: 'absolute',
-          top: '12px',
-          right: '12px',
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          borderRadius: '50%',
-          width: '32px',
-          height: '32px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '16px',
-          pointerEvents: 'none'
-        }}>
-          🔇
-        </div>
-      </div>
-    ))}
-  </div>
-) : (
-  <div style={{
-    backgroundColor: 'white',
-    borderRadius: '16px',
-    padding: '80px 40px',
-    textAlign: 'center',
-    border: '1px solid #E5E5E0',
-    maxWidth: '800px',
-    margin: '0 auto'
-  }}>
-    <div style={{ fontSize: '64px', marginBottom: '16px' }}>🎬</div>
-    <h3 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '12px' }}>
-      Reels
-    </h3>
-    <p style={{ fontSize: '16px', color: '#666', lineHeight: '1.6' }}>
-      Video pendek dan reels dari {agency.name} akan dipaparkan di sini
-    </p>
-  </div>
-)}
-  </div>
-)}
+        )}
 
         {activeTab === 'pakej' && (
           <div style={{ padding: '32px 0' }}>
@@ -1312,6 +1624,9 @@ const trackReelView = async (reelId: string) => {
 
         {activeTab === 'tentang' && (
           <div style={{ padding: '32px 0' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '24px' }}>
+              Tentang Kami
+            </h2>
             <div style={{ maxWidth: '800px' }}>
               <div style={{
                 backgroundColor: 'white',
@@ -1319,9 +1634,6 @@ const trackReelView = async (reelId: string) => {
                 padding: '32px',
                 border: '1px solid #E5E5E0'
               }}>
-                <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '24px' }}>
-                  Tentang {agency.name}
-                </h2>
 
                 {agency.about ? (
                   <p style={{ fontSize: '16px', color: '#666', lineHeight: '1.8', marginBottom: '24px' }}>
@@ -1451,6 +1763,166 @@ const trackReelView = async (reelId: string) => {
           hasNext={selectedReelIndex < reels.length - 1}
           hasPrev={selectedReelIndex > 0}
         />
+      )}
+
+      {/* 🖼️ LIGHTBOX PHOTO VIEWER */}
+      {lightboxIndex !== null && albumPhotos[lightboxIndex] && (
+        <div
+          onClick={closeLightbox}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.95)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+        >
+          {/* Close Button */}
+          <button
+            onClick={closeLightbox}
+            style={{
+              position: 'absolute',
+              top: '20px',
+              right: '20px',
+              width: '50px',
+              height: '50px',
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              border: 'none',
+              borderRadius: '50%',
+              color: 'white',
+              fontSize: '24px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 10001,
+              fontWeight: 'bold'
+            }}
+          >
+            ✕
+          </button>
+
+          {/* Previous Button */}
+          {lightboxIndex > 0 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                prevPhoto()
+              }}
+              style={{
+                position: 'absolute',
+                left: '20px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: '60px',
+                height: '60px',
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                border: 'none',
+                borderRadius: '50%',
+                color: 'white',
+                fontSize: '32px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 10001
+              }}
+            >
+              ‹
+            </button>
+          )}
+
+          {/* Next Button */}
+          {lightboxIndex < albumPhotos.length - 1 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                nextPhoto()
+              }}
+              style={{
+                position: 'absolute',
+                right: '20px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: '60px',
+                height: '60px',
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                border: 'none',
+                borderRadius: '50%',
+                color: 'white',
+                fontSize: '32px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 10001
+              }}
+            >
+              ›
+            </button>
+          )}
+
+          {/* Photo Container */}
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: '90vw',
+              maxHeight: '90vh',
+              position: 'relative'
+            }}
+          >
+            {/* Photo */}
+            <img
+              src={albumPhotos[lightboxIndex].photo_url}
+              alt={albumPhotos[lightboxIndex].caption || 'Photo'}
+              style={{
+                maxWidth: '100%',
+                maxHeight: '90vh',
+                objectFit: 'contain',
+                borderRadius: '8px'
+              }}
+            />
+
+            {/* Caption */}
+            {albumPhotos[lightboxIndex].caption && (
+              <div style={{
+                position: 'absolute',
+                bottom: '-60px',
+                left: 0,
+                right: 0,
+                color: 'white',
+                textAlign: 'center',
+                fontSize: '16px',
+                lineHeight: '1.5',
+                padding: '0 20px'
+              }}>
+                {albumPhotos[lightboxIndex].caption}
+              </div>
+            )}
+
+            {/* Counter */}
+            <div style={{
+              position: 'absolute',
+              top: '-50px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              color: 'white',
+              fontSize: '16px',
+              fontWeight: '600',
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              padding: '8px 16px',
+              borderRadius: '20px'
+            }}>
+              {lightboxIndex + 1} / {albumPhotos.length}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Footer */}

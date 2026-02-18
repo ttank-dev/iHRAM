@@ -95,6 +95,14 @@ export default function AdminDashboardPage() {
 
   const statCards = [
     {
+      title: 'Verifikasi Pending',
+      value: stats.pendingVerifications,
+      icon: '✅',
+      color: '#06B6D4',
+      link: '/admin/verifikasi',
+      change: 'Perlu review'
+    },
+    {
       title: 'Total Agensi',
       value: stats.totalAgencies,
       icon: '🏢',
@@ -117,14 +125,6 @@ export default function AdminDashboardPage() {
       color: '#F59E0B',
       link: '/admin/ulasan',
       change: `${stats.pendingReviews} pending`
-    },
-    {
-      title: 'Verifikasi Pending',
-      value: stats.pendingVerifications,
-      icon: '✅',
-      color: '#06B6D4',
-      link: '/admin/verifikasi',
-      change: 'Perlu review'
     },
     {
       title: 'WhatsApp Leads',
@@ -273,86 +273,6 @@ export default function AdminDashboardPage() {
         gap: '24px'
       }}>
         
-        {/* RECENT LEADS */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '16px',
-          padding: '24px',
-          border: '1px solid #E5E5E0'
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: '20px'
-          }}>
-            <h2 style={{
-              fontSize: '18px',
-              fontWeight: 'bold',
-              color: '#2C2C2C'
-            }}>
-              🎯 Recent Leads
-            </h2>
-            <Link
-              href="/admin/leads"
-              style={{
-                fontSize: '13px',
-                color: '#B8936D',
-                textDecoration: 'none',
-                fontWeight: '600'
-              }}
-            >
-              View All →
-            </Link>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {stats.recentLeads.map((lead) => (
-              <div
-                key={lead.id}
-                style={{
-                  padding: '12px',
-                  backgroundColor: '#F5F5F0',
-                  borderRadius: '8px'
-                }}
-              >
-                <div style={{
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  color: '#2C2C2C',
-                  marginBottom: '4px'
-                }}>
-                  {lead.package}
-                </div>
-                <div style={{
-                  fontSize: '12px',
-                  color: '#666',
-                  marginBottom: '4px'
-                }}>
-                  {lead.agency}
-                </div>
-                <div style={{
-                  fontSize: '11px',
-                  color: '#999'
-                }}>
-                  {lead.timestamp}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {stats.recentLeads.length === 0 && (
-            <div style={{
-              padding: '40px',
-              textAlign: 'center',
-              color: '#999'
-            }}>
-              <div style={{ fontSize: '32px', marginBottom: '8px' }}>📭</div>
-              <div style={{ fontSize: '13px' }}>No recent leads</div>
-            </div>
-          )}
-        </div>
-
         {/* PENDING VERIFICATIONS */}
         <div style={{
           backgroundColor: 'white',
@@ -542,6 +462,86 @@ export default function AdminDashboardPage() {
             }}>
               <div style={{ fontSize: '32px', marginBottom: '8px' }}>✅</div>
               <div style={{ fontSize: '13px' }}>All caught up!</div>
+            </div>
+          )}
+        </div>
+
+        {/* RECENT LEADS */}
+        <div style={{
+          backgroundColor: 'white',
+          borderRadius: '16px',
+          padding: '24px',
+          border: '1px solid #E5E5E0'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '20px'
+          }}>
+            <h2 style={{
+              fontSize: '18px',
+              fontWeight: 'bold',
+              color: '#2C2C2C'
+            }}>
+              🎯 Recent Leads
+            </h2>
+            <Link
+              href="/admin/leads"
+              style={{
+                fontSize: '13px',
+                color: '#B8936D',
+                textDecoration: 'none',
+                fontWeight: '600'
+              }}
+            >
+              View All →
+            </Link>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {stats.recentLeads.map((lead) => (
+              <div
+                key={lead.id}
+                style={{
+                  padding: '12px',
+                  backgroundColor: '#F5F5F0',
+                  borderRadius: '8px'
+                }}
+              >
+                <div style={{
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#2C2C2C',
+                  marginBottom: '4px'
+                }}>
+                  {lead.package}
+                </div>
+                <div style={{
+                  fontSize: '12px',
+                  color: '#666',
+                  marginBottom: '4px'
+                }}>
+                  {lead.agency}
+                </div>
+                <div style={{
+                  fontSize: '11px',
+                  color: '#999'
+                }}>
+                  {lead.timestamp}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {stats.recentLeads.length === 0 && (
+            <div style={{
+              padding: '40px',
+              textAlign: 'center',
+              color: '#999'
+            }}>
+              <div style={{ fontSize: '32px', marginBottom: '8px' }}>📭</div>
+              <div style={{ fontSize: '13px' }}>No recent leads</div>
             </div>
           )}
         </div>
