@@ -16,7 +16,7 @@ export default async function GaleriPage() {
     .from('photo_albums')
     .select(`
       *,
-      agencies:agency_id (name)
+      agencies:agency_id (id, name)
     `)
     .order('created_at', { ascending: false })
 

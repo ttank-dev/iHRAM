@@ -11,6 +11,37 @@ export default function GaleriClient({ initialAlbums }: { initialAlbums: any[] }
   const [selectedAlbum, setSelectedAlbum] = useState<any>(null)
   const [albumPhotos, setAlbumPhotos] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
+  
+  // Delete modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [photoToDelete, setPhotoToDelete] = useState<any>(null)
+  const [deleteReason, setDeleteReason] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  
+  // Search & Filter states
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'draft'>('all')
+  const [agencyFilter, setAgencyFilter] = useState<string>('all')
+  
+  // Get unique agencies
+  const agencies = Array.from(new Set(albums.map(a => a.agencies?.name).filter(Boolean)))
+
+  // Filter albums
+  const filteredAlbums = albums.filter(album => {
+    const matchesSearch = !searchTerm || 
+      album.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      album.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      album.agencies?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    
+    const matchesStatus = statusFilter === 'all' ||
+      (statusFilter === 'published' && album.is_published) ||
+      (statusFilter === 'draft' && !album.is_published)
+    
+    const matchesAgency = agencyFilter === 'all' ||
+      album.agencies?.name === agencyFilter
+    
+    return matchesSearch && matchesStatus && matchesAgency
+  })
 
   const openAlbum = async (album: any) => {
     setLoading(true)
@@ -26,18 +57,51 @@ export default function GaleriClient({ initialAlbums }: { initialAlbums: any[] }
     setLoading(false)
   }
 
-  const handleDeletePhoto = async (photoId: string) => {
-    if (!confirm('Delete this photo?')) return
+  const openDeletePhotoModal = (photo: any) => {
+    setPhotoToDelete(photo)
+    setDeleteReason('')
+    setShowDeleteModal(true)
+  }
+
+  const handleDeletePhoto = async () => {
+    if (!deleteReason.trim()) {
+      alert('Please enter a reason for deletion')
+      return
+    }
+
+    if (!photoToDelete) return
+
+    setDeleting(true)
 
     try {
+      // Log to moderation_logs
+      await supabase.from('moderation_logs').insert({
+        content_type: 'photo_album',
+        content_id: photoToDelete.id,
+        content_title: `Photo from ${selectedAlbum?.title}`,
+        agency_id: selectedAlbum?.agency_id,
+        agency_name: selectedAlbum?.agencies?.name,
+        action: 'delete',
+        reason: deleteReason,
+        admin_name: 'Admin',
+        metadata: {
+          album_id: selectedAlbum?.id,
+          album_title: selectedAlbum?.title,
+          photo_url: photoToDelete.photo_url
+        }
+      })
+
+      // Delete photo
       const { error } = await supabase
         .from('album_photos')
         .delete()
-        .eq('id', photoId)
+        .eq('id', photoToDelete.id)
 
       if (error) throw error
       
       alert('✅ Photo deleted!')
+      
+      // Refresh photos
       if (selectedAlbum) {
         const { data } = await supabase
           .from('album_photos')
@@ -46,8 +110,14 @@ export default function GaleriClient({ initialAlbums }: { initialAlbums: any[] }
           .order('photo_order')
         setAlbumPhotos(data || [])
       }
+
+      setShowDeleteModal(false)
+      setPhotoToDelete(null)
+      setDeleteReason('')
     } catch (error: any) {
       alert(`❌ Error: ${error.message}`)
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -58,7 +128,7 @@ export default function GaleriClient({ initialAlbums }: { initialAlbums: any[] }
   }
 
   if (!selectedAlbum) {
-    // ALBUMS LIST
+    // ALBUMS LIST VIEW
     return (
       <div>
         <div style={{ marginBottom: '32px' }}>
@@ -70,6 +140,7 @@ export default function GaleriClient({ initialAlbums }: { initialAlbums: any[] }
           </p>
         </div>
 
+        {/* STATS */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '32px' }}>
           <div style={{ backgroundColor: 'white', borderRadius: '16px', padding: '24px', border: '1px solid #E5E5E0' }}>
             <div style={{ fontSize: '13px', color: '#999', fontWeight: '600', marginBottom: '8px' }}>Total Albums</div>
@@ -85,19 +156,128 @@ export default function GaleriClient({ initialAlbums }: { initialAlbums: any[] }
           </div>
         </div>
 
+        {/* SEARCH & FILTERS */}
+        <div style={{
+          backgroundColor: 'white',
+          borderRadius: '16px',
+          padding: '24px',
+          border: '1px solid #E5E5E0',
+          marginBottom: '24px'
+        }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '2fr 1fr 1fr',
+            gap: '16px'
+          }}>
+            <div>
+              <label style={{
+                display: 'block',
+                fontSize: '13px',
+                fontWeight: '600',
+                color: '#2C2C2C',
+                marginBottom: '8px'
+              }}>
+                🔍 Search
+              </label>
+              <input
+                type="text"
+                placeholder="Search albums..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px 16px',
+                  border: '1px solid #E5E5E0',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  outline: 'none'
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{
+                display: 'block',
+                fontSize: '13px',
+                fontWeight: '600',
+                color: '#2C2C2C',
+                marginBottom: '8px'
+              }}>
+                Status
+              </label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as any)}
+                style={{
+                  width: '100%',
+                  padding: '10px 16px',
+                  border: '1px solid #E5E5E0',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  outline: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="all">All Status</option>
+                <option value="published">✅ Published</option>
+                <option value="draft">📝 Draft</option>
+              </select>
+            </div>
+
+            <div>
+              <label style={{
+                display: 'block',
+                fontSize: '13px',
+                fontWeight: '600',
+                color: '#2C2C2C',
+                marginBottom: '8px'
+              }}>
+                Agency
+              </label>
+              <select
+                value={agencyFilter}
+                onChange={(e) => setAgencyFilter(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px 16px',
+                  border: '1px solid #E5E5E0',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  outline: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="all">All Agencies</option>
+                {agencies.map(agency => (
+                  <option key={agency} value={agency}>{agency}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div style={{ marginTop: '16px', fontSize: '14px', color: '#666' }}>
+            Showing <strong>{filteredAlbums.length}</strong> of <strong>{albums.length}</strong> albums
+          </div>
+        </div>
+
+        {/* ALBUMS LIST */}
         <div style={{ backgroundColor: 'white', borderRadius: '16px', border: '1px solid #E5E5E0', overflow: 'hidden' }}>
           <div style={{ padding: '24px', borderBottom: '1px solid #E5E5E0' }}>
             <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#2C2C2C' }}>All Albums</h2>
           </div>
 
-          {albums.length === 0 ? (
+          {filteredAlbums.length === 0 ? (
             <div style={{ padding: '80px 40px', textAlign: 'center' }}>
               <div style={{ fontSize: '64px', marginBottom: '16px' }}>🖼️</div>
-              <div style={{ fontSize: '20px', fontWeight: '600', color: '#2C2C2C', marginBottom: '8px' }}>No Albums Yet</div>
+              <div style={{ fontSize: '20px', fontWeight: '600', color: '#2C2C2C', marginBottom: '8px' }}>
+                {searchTerm || statusFilter !== 'all' || agencyFilter !== 'all'
+                  ? 'No albums match your filters'
+                  : 'No Albums Yet'}
+              </div>
             </div>
           ) : (
             <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {albums.map((album) => (
+              {filteredAlbums.map((album) => (
                 <div key={album.id} style={{ padding: '20px', backgroundColor: '#F5F5F0', borderRadius: '12px', display: 'flex', gap: '16px' }}>
                   <div
                     onClick={() => openAlbum(album)}
@@ -138,7 +318,7 @@ export default function GaleriClient({ initialAlbums }: { initialAlbums: any[] }
                         backgroundColor: album.is_published ? '#ECFDF5' : '#FEE2E2',
                         color: album.is_published ? '#10B981' : '#F59E0B'
                       }}>
-                        {album.is_published ? '✓ Published' : '✗ Draft'}
+                        {album.is_published ? '✅ Published' : '📝 Draft'}
                       </span>
                     </div>
 
@@ -187,7 +367,7 @@ export default function GaleriClient({ initialAlbums }: { initialAlbums: any[] }
     )
   }
 
-  // ALBUM PHOTOS VIEW
+  // ALBUM PHOTOS VIEW WITH DELETE MODAL
   return (
     <div>
       <div style={{ marginBottom: '32px' }}>
@@ -251,14 +431,13 @@ export default function GaleriClient({ initialAlbums }: { initialAlbums: any[] }
                 }}
               />
 
-              {/* DELETE BUTTON - EXACT MERCHANT PATTERN */}
               <div style={{
                 position: 'absolute',
                 top: '8px',
                 right: '8px'
               }}>
                 <button
-                  onClick={() => handleDeletePhoto(photo.id)}
+                  onClick={() => openDeletePhotoModal(photo)}
                   style={{
                     padding: '8px 12px',
                     backgroundColor: 'rgba(239, 68, 68, 0.95)',
@@ -270,7 +449,7 @@ export default function GaleriClient({ initialAlbums }: { initialAlbums: any[] }
                     cursor: 'pointer'
                   }}
                 >
-                  🗑️
+                  🗑️ Delete
                 </button>
               </div>
 
@@ -303,6 +482,119 @@ export default function GaleriClient({ initialAlbums }: { initialAlbums: any[] }
           <div style={{ fontSize: '64px', marginBottom: '16px' }}>📷</div>
           <div style={{ fontSize: '20px', fontWeight: '600', color: '#2C2C2C', marginBottom: '8px' }}>
             No Photos in Album
+          </div>
+        </div>
+      )}
+
+      {/* DELETE PHOTO MODAL */}
+      {showDeleteModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '16px',
+            padding: '32px',
+            maxWidth: '500px',
+            width: '90%'
+          }}>
+            <h2 style={{
+              fontSize: '24px',
+              fontWeight: 'bold',
+              color: '#2C2C2C',
+              marginBottom: '16px'
+            }}>
+              Delete Photo
+            </h2>
+
+            <p style={{
+              fontSize: '15px',
+              color: '#666',
+              marginBottom: '16px',
+              lineHeight: '1.6'
+            }}>
+              You are about to delete this photo from the album.
+            </p>
+
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#2C2C2C',
+              marginBottom: '8px'
+            }}>
+              Reason for deletion <span style={{ color: 'red' }}>*</span>
+            </label>
+
+            <textarea
+              value={deleteReason}
+              onChange={(e) => setDeleteReason(e.target.value)}
+              placeholder="Enter reason (e.g., Inappropriate content, Low quality, Duplicate...)"
+              rows={4}
+              style={{
+                width: '100%',
+                padding: '12px',
+                border: '1px solid #E5E5E0',
+                borderRadius: '8px',
+                fontSize: '14px',
+                outline: 'none',
+                marginBottom: '16px',
+                resize: 'vertical'
+              }}
+            />
+
+            <div style={{
+              display: 'flex',
+              gap: '12px',
+              justifyContent: 'flex-end'
+            }}>
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false)
+                  setPhotoToDelete(null)
+                  setDeleteReason('')
+                }}
+                disabled={deleting}
+                style={{
+                  padding: '10px 24px',
+                  backgroundColor: 'white',
+                  color: '#2C2C2C',
+                  border: '1px solid #E5E5E0',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: deleting ? 'not-allowed' : 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleDeletePhoto}
+                disabled={deleting || !deleteReason.trim()}
+                style={{
+                  padding: '10px 24px',
+                  backgroundColor: deleting || !deleteReason.trim() ? '#CCC' : '#EF4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: deleting || !deleteReason.trim() ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {deleting ? 'Deleting...' : 'Delete Photo'}
+              </button>
+            </div>
           </div>
         </div>
       )}

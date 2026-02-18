@@ -300,6 +300,22 @@ export default async function AdminLayout({
                 <span>⚙️</span>
                 <span>Settings</span>
               </Link>
+
+              <Link href="/admin/logs" style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '10px 12px',
+                color: 'white',
+                textDecoration: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '500',
+                marginBottom: '4px'
+              }}>
+                <span>📋</span>
+                <span>Moderation Logs</span>
+              </Link>
             </div>
           </nav>
 

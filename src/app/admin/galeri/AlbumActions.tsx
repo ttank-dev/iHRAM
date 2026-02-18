@@ -2,10 +2,12 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import DeleteReasonModal from '../components/DeleteReasonModal'
 
 export default function AlbumActions({ album }: { album: any }) {
   const supabase = createClient()
   const [loading, setLoading] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
 
   const handleToggle = async () => {
     if (!confirm(`${album.is_published ? 'Unpublish' : 'Publish'} this album?`)) return
@@ -13,15 +15,25 @@ export default function AlbumActions({ album }: { album: any }) {
     setLoading(true)
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('photo_albums')
         .update({ is_published: !album.is_published })
         .eq('id', album.id)
-        .select()
 
       if (error) throw error
 
-      alert(`✅ Album ${album.is_published ? 'unpublished' : 'published'} successfully!`)
+      // Log moderation
+      await supabase.from('moderation_logs').insert({
+        content_type: 'photo_album',
+        content_id: album.id,
+        content_title: album.title,
+        agency_id: album.agency_id,
+        agency_name: album.agencies?.name,
+        action: album.is_published ? 'unpublish' : 'publish',
+        admin_name: 'Admin'
+      })
+
+      alert(`✅ Album ${album.is_published ? 'unpublished' : 'published'}!`)
       window.location.reload()
     } catch (error: any) {
       alert(`❌ Error: ${error.message}`)
@@ -30,12 +42,20 @@ export default function AlbumActions({ album }: { album: any }) {
     }
   }
 
-  const handleDelete = async () => {
-    if (!confirm('Delete this album?')) return
-
-    setLoading(true)
-
+  const handleDelete = async (reason: string) => {
     try {
+      // Log before delete
+      await supabase.from('moderation_logs').insert({
+        content_type: 'photo_album',
+        content_id: album.id,
+        content_title: album.title,
+        agency_id: album.agency_id,
+        agency_name: album.agencies?.name,
+        action: 'delete',
+        reason: reason,
+        admin_name: 'Admin'
+      })
+
       const { error } = await supabase
         .from('photo_albums')
         .delete()
@@ -48,47 +68,55 @@ export default function AlbumActions({ album }: { album: any }) {
     } catch (error: any) {
       alert(`❌ Error: ${error.message}`)
     } finally {
-      setLoading(false)
+      setShowDeleteModal(false)
     }
   }
 
   return (
-    <div style={{ display: 'flex', gap: '8px' }}>
-      <button
-        onClick={handleToggle}
-        disabled={loading}
-        style={{
-          padding: '6px 16px',
-          backgroundColor: album.is_published ? '#FEF3C7' : '#ECFDF5',
-          color: album.is_published ? '#F59E0B' : '#10B981',
-          border: 'none',
-          borderRadius: '6px',
-          fontSize: '13px',
-          fontWeight: '600',
-          cursor: loading ? 'not-allowed' : 'pointer',
-          opacity: loading ? 0.5 : 1
-        }}
-      >
-        {loading ? '...' : album.is_published ? 'Unpublish' : 'Publish'}
-      </button>
+    <>
+      <div style={{ display: 'flex', gap: '8px' }}>
+        <button
+          onClick={handleToggle}
+          disabled={loading}
+          style={{
+            padding: '6px 16px',
+            backgroundColor: album.is_published ? '#FEF3C7' : '#ECFDF5',
+            color: album.is_published ? '#F59E0B' : '#10B981',
+            border: 'none',
+            borderRadius: '6px',
+            fontSize: '13px',
+            fontWeight: '600',
+            cursor: loading ? 'not-allowed' : 'pointer'
+          }}
+        >
+          {album.is_published ? 'Unpublish' : 'Publish'}
+        </button>
 
-      <button
-        onClick={handleDelete}
-        disabled={loading}
-        style={{
-          padding: '6px 16px',
-          backgroundColor: '#FEE2E2',
-          color: '#EF4444',
-          border: 'none',
-          borderRadius: '6px',
-          fontSize: '13px',
-          fontWeight: '600',
-          cursor: loading ? 'not-allowed' : 'pointer',
-          opacity: loading ? 0.5 : 1
-        }}
-      >
-        {loading ? '...' : 'Delete'}
-      </button>
-    </div>
+        <button
+          onClick={() => setShowDeleteModal(true)}
+          disabled={loading}
+          style={{
+            padding: '6px 16px',
+            backgroundColor: '#FEE2E2',
+            color: '#EF4444',
+            border: 'none',
+            borderRadius: '6px',
+            fontSize: '13px',
+            fontWeight: '600',
+            cursor: loading ? 'not-allowed' : 'pointer'
+          }}
+        >
+          Delete
+        </button>
+      </div>
+
+      <DeleteReasonModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDelete}
+        contentType="album"
+        contentTitle={album.title}
+      />
+    </>
   )
 }
