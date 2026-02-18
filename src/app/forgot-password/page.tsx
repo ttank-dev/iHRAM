@@ -22,15 +22,21 @@ export default function ForgotPasswordPage() {
     setLoading(true)
 
     try {
+      console.log('🔵 Sending password reset email to:', email)
+      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`
       })
 
-      if (error) throw error
+      if (error) {
+        console.error('❌ Reset error:', error)
+        throw error
+      }
 
+      console.log('✅ Password reset email sent')
       setSent(true)
     } catch (error: any) {
-      console.error('Error:', error)
+      console.error('❌ Error:', error)
       alert(`❌ Ralat: ${error.message}`)
     } finally {
       setLoading(false)
@@ -115,6 +121,22 @@ export default function ForgotPasswordPage() {
               Sila semak email anda dan klik pautan untuk menetapkan kata laluan baharu.
               Pautan ini akan luput dalam masa 1 jam.
             </p>
+
+            <div style={{
+              padding: '16px',
+              backgroundColor: '#FFF8E1',
+              borderRadius: '8px',
+              border: '1px solid #FFD54F',
+              marginBottom: '24px'
+            }}>
+              <div style={{
+                fontSize: '14px',
+                color: '#666',
+                lineHeight: '1.6'
+              }}>
+                💡 Tidak menerima email? Sila semak folder spam atau cuba lagi.
+              </div>
+            </div>
 
             <Link
               href="/admin-login"
@@ -276,33 +298,7 @@ export default function ForgotPasswordPage() {
                   fontWeight: '600'
                 }}
               >
-                ← Kembali ke Login (Admin)
-              </Link>
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <Link
-                href="/merchant/login"
-                style={{
-                  fontSize: '14px',
-                  color: '#B8936D',
-                  textDecoration: 'none',
-                  fontWeight: '600'
-                }}
-              >
-                ← Kembali ke Login (Merchant)
-              </Link>
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <Link
-                href="/"
-                style={{
-                  fontSize: '14px',
-                  color: '#B8936D',
-                  textDecoration: 'none',
-                  fontWeight: '600'
-                }}
-              >
-                ← Kembali ke (Homepage)
+                ← Kembali ke Login
               </Link>
             </div>
           </form>
@@ -334,7 +330,19 @@ export default function ForgotPasswordPage() {
           </div>
         </div>
 
-     
+        {/* Back to Homepage */}
+        <div style={{ textAlign: 'center', marginTop: '24px' }}>
+          <Link 
+            href="/" 
+            style={{ 
+              color: '#666', 
+              fontSize: '14px', 
+              textDecoration: 'none' 
+            }}
+          >
+            ← Kembali ke Homepage
+          </Link>
+        </div>
       </div>
     </div>
   )
