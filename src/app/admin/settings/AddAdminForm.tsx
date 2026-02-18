@@ -9,7 +9,6 @@ export default function AddAdminForm() {
   const [role, setRole] = useState('admin')
   const [loading, setLoading] = useState(false)
 
-  // Check if admin client is available
   if (!isAdminClientAvailable() || !supabaseAdmin) {
     return (
       <div style={{
@@ -81,16 +80,17 @@ export default function AddAdminForm() {
       }
       console.log('✅ Step 2 complete - Role added')
 
-      // 3. Add to admin_users
+      // 3. Add to admin_users (UPDATED - uses id instead of user_id)
       console.log('🔵 Step 3: Adding to admin_users...')
       const { error: userError } = await supabaseAdmin
         .from('admin_users')
         .insert({
-  user_id: authData.user.id,
-  name: fullName,       // ← Or use 'name' instead
-  email: email,
-  role: role
-})
+          id: authData.user.id,        // ← Changed from user_id to id
+          full_name: fullName,
+          email: email,
+          role: role,
+          is_active: true
+        })
 
       if (userError) {
         console.error('❌ User error:', userError)
