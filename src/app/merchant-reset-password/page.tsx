@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
@@ -11,8 +11,26 @@ export default function MerchantResetPasswordPage() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [checking, setChecking] = useState(true)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+
+  // ✅ Check for auth session from URL
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession()
+      
+      if (error || !session) {
+        setError('Auth session missing!')
+        setChecking(false)
+        return
+      }
+      
+      setChecking(false)
+    }
+
+    checkSession()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -39,7 +57,6 @@ export default function MerchantResetPasswordPage() {
 
       setSuccess(true)
 
-      // Redirect after 2 seconds
       setTimeout(() => {
         router.push('/merchant-login')
       }, 2000)
@@ -48,6 +65,23 @@ export default function MerchantResetPasswordPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (checking) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#F5F5F0'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>⏳</div>
+          <p style={{ fontSize: '16px', color: '#666' }}>Loading...</p>
+        </div>
+      </div>
+    )
   }
 
   if (success) {
