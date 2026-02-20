@@ -2,19 +2,14 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  console.log('🔵 Middleware hit:', request.nextUrl.pathname)
-
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseKey) {
-    console.error('Missing Supabase environment variables')
     return NextResponse.next()
   }
 
-  // Skip middleware for admin login (now at /admin-login)
   if (request.nextUrl.pathname === '/admin-login') {
-    console.log('✅ Allowing /admin-login')
     return NextResponse.next()
   }
 
@@ -35,36 +30,28 @@ export async function middleware(request: NextRequest) {
 
   try {
     const { data: { user } } = await supabase.auth.getUser()
-    console.log('User:', user?.email || 'Not logged in')
 
     // Protect admin routes
     if (request.nextUrl.pathname.startsWith('/admin')) {
-      console.log('🔒 Protecting /admin')
-      
       if (!user) {
-        console.log('❌ No user, redirect to /admin-login')
         return NextResponse.redirect(new URL('/admin-login', request.url))
       }
 
-      const { data: adminRole } = await supabase
-        .from('admin_roles')
+      // ✅ FIXED: admin_roles → admin_users, user_id → id
+      const { data: adminUser } = await supabase
+        .from('admin_users')
         .select('role, is_active')
-        .eq('user_id', user.id)
+        .eq('id', user.id)
         .single()
 
-      if (!adminRole?.is_active) {
-        console.log('❌ Not admin')
+      if (!adminUser || !adminUser.is_active) {
         await supabase.auth.signOut()
         return NextResponse.redirect(new URL('/admin-login', request.url))
       }
-
-      console.log('✅ Admin verified')
     }
 
     // Protect merchant dashboard
     if (request.nextUrl.pathname.startsWith('/dashboard')) {
-      console.log('🔒 Protecting /dashboard')
-      
       if (!user) {
         return NextResponse.redirect(new URL('/login', request.url))
       }
