@@ -10,7 +10,8 @@ export default function ReelsActions({ reel }: { reel: any }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
 
   const handleToggle = async () => {
-    if (!confirm(`${reel.is_active ? 'Hide' : 'Show'} this reel?`)) return
+    const action = reel.is_active ? 'Unpublish' : 'Publish'
+    if (!confirm(`${action} this reel?`)) return
 
     setLoading(true)
     try {
@@ -21,18 +22,17 @@ export default function ReelsActions({ reel }: { reel: any }) {
 
       if (error) throw error
 
-      // Log moderation
       await supabase.from('moderation_logs').insert({
         content_type: 'reel',
         content_id: reel.id,
         content_title: reel.title || reel.video_url,
         agency_id: reel.agency_id,
         agency_name: reel.agencies?.name,
-        action: reel.is_active ? 'hide' : 'show',
+        action: reel.is_active ? 'unpublish' : 'publish',
         admin_name: 'Admin'
       })
 
-      alert(`✅ Reel ${reel.is_active ? 'hidden' : 'shown'}!`)
+      alert(`✅ Reel ${reel.is_active ? 'unpublished' : 'published'}!`)
       window.location.reload()
     } catch (error: any) {
       alert(`❌ Error: ${error.message}`)
@@ -43,7 +43,6 @@ export default function ReelsActions({ reel }: { reel: any }) {
 
   const handleDelete = async (reason: string) => {
     try {
-      // Log before delete
       await supabase.from('moderation_logs').insert({
         content_type: 'reel',
         content_id: reel.id,
@@ -55,11 +54,7 @@ export default function ReelsActions({ reel }: { reel: any }) {
         admin_name: 'Admin'
       })
 
-      const { error } = await supabase
-        .from('reels')
-        .delete()
-        .eq('id', reel.id)
-
+      const { error } = await supabase.from('reels').delete().eq('id', reel.id)
       if (error) throw error
 
       alert('✅ Reel deleted!')
@@ -78,36 +73,29 @@ export default function ReelsActions({ reel }: { reel: any }) {
           onClick={handleToggle}
           disabled={loading}
           style={{
-            flex: 1,
-            padding: '6px',
+            flex: 1, padding: '8px 6px',
             backgroundColor: reel.is_active ? '#FEF3C7' : '#ECFDF5',
-            color: reel.is_active ? '#F59E0B' : '#10B981',
-            border: 'none',
-            borderRadius: '6px',
-            fontSize: '12px',
-            fontWeight: '600',
+            color: reel.is_active ? '#D97706' : '#10B981',
+            border: 'none', borderRadius: '6px',
+            fontSize: '12px', fontWeight: '600',
             cursor: loading ? 'not-allowed' : 'pointer'
           }}
         >
-          {reel.is_active ? 'Hide' : 'Show'}
+          {reel.is_active ? '📤 Unpublish' : '📣 Publish'}
         </button>
 
         <button
           onClick={() => setShowDeleteModal(true)}
           disabled={loading}
           style={{
-            flex: 1,
-            padding: '6px',
-            backgroundColor: '#FEE2E2',
-            color: '#EF4444',
-            border: 'none',
-            borderRadius: '6px',
-            fontSize: '12px',
-            fontWeight: '600',
+            flex: 1, padding: '8px 6px',
+            backgroundColor: '#FEE2E2', color: '#EF4444',
+            border: 'none', borderRadius: '6px',
+            fontSize: '12px', fontWeight: '600',
             cursor: loading ? 'not-allowed' : 'pointer'
           }}
         >
-          Delete
+          🗑️ Delete
         </button>
       </div>
 

@@ -1,184 +1,165 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useState } from 'react'
+import { createMerchantStaff } from './createMerchantStaff.action'
 
-export default function AddStaffFormWithInvite() {
-  const supabase = createClient()
+export default function AddStaffForm({ agencyId }: { agencyId: string }) {
   const [loading, setLoading] = useState(false)
-  const [currentAgency, setCurrentAgency] = useState<any>(null)
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    role: 'staff'
-  })
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState<{ email: string; password: string } | null>(null)
 
-  // Get current agency on mount
-  useEffect(() => {
-    async function getAgency() {
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      if (user) {
-        const { data: agency } = await supabase
-          .from('agencies')
-          .select('id, name')
-          .eq('user_id', user.id)
-          .single()
-        
-        if (agency) {
-          setCurrentAgency(agency)
-        }
-      }
-    }
-    
-    getAgency()
-  }, [])
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    role: 'staff' as 'staff' | 'owner'
+  })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    if (!formData.name || !formData.email) {
-      alert('❌ Please fill in all required fields')
-      return
-    }
-
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(formData.email)) {
-      alert('❌ Please enter a valid email address')
-      return
-    }
-
-    if (!currentAgency) {
-      alert('❌ No agency found. Please refresh and try again.')
-      return
-    }
-
-    if (!confirm(`Add new staff member: ${formData.name} (${formData.email})?\n\nAn invitation email will be sent to this address.`)) {
-      return
-    }
-
     setLoading(true)
+    setError('')
+    setSuccess(null)
+
     try {
-      console.log('📧 Creating staff with email invitation...')
-
-      // Check if email already exists in merchant_staff
-      const { data: existingStaff } = await supabase
-        .from('merchant_staff')
-        .select('email')
-        .eq('email', formData.email)
-        .maybeSingle()
-
-      if (existingStaff) {
-        throw new Error('Staff member with this email already exists')
-      }
-
-      console.log('Generating temporary password...')
-      // Generate a secure random password (user will reset via email)
-      const tempPassword = Math.random().toString(36).slice(-12) + 
-                          Math.random().toString(36).slice(-12) + 
-                          'Aa1!'
-
-      console.log('Creating auth user with email invitation...')
-      // Create auth user with email confirmation
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: tempPassword,
-        options: {
-          data: {
-            name: formData.name,
-            role: 'merchant_staff'
-          },
-          emailRedirectTo: `${window.location.origin}/merchant/login`
-        }
+      const result = await createMerchantStaff({
+        ...formData,
+        agencyId
       })
 
-      console.log('SignUp result:', { authData, authError })
-
-      if (authError) {
-        throw new Error(`Failed to create user: ${authError.message}`)
+      if (!result.success) {
+        throw new Error(result.error)
       }
 
-      if (!authData.user) {
-        throw new Error('No user returned from signup')
-      }
+      setSuccess({
+        email: result.email!,
+        password: result.tempPassword!
+      })
 
-      console.log('✅ Auth user created:', authData.user.id)
-      console.log('📝 Adding to merchant_staff table...')
-
-      // Add to merchant_staff table
-      const { error: insertError } = await supabase
-        .from('merchant_staff')
-        .insert({
-          id: authData.user.id,
-          agency_id: currentAgency.id,
-          email: formData.email,
-          name: formData.name,
-          role: formData.role,
-          is_active: true
-        })
-
-      if (insertError) {
-        console.error('Insert error:', insertError)
-        throw new Error(`Failed to add to staff table: ${insertError.message}`)
-      }
-
-      console.log('✅ Staff member created successfully!')
-      
-      alert(`✅ Success!\n\nInvitation email sent to ${formData.email}\n\nThe user will receive an email to confirm and set their password.`)
-      
       // Reset form
       setFormData({
-        name: '',
+        fullName: '',
         email: '',
         role: 'staff'
       })
-
-      // Reload page to show new staff
-      setTimeout(() => {
-        window.location.reload()
-      }, 1000)
-      
     } catch (error: any) {
-      console.error('❌ Error creating staff:', error)
-      alert(`❌ Error: ${error.message}`)
+      setError(error.message)
     } finally {
       setLoading(false)
     }
   }
 
-  if (!currentAgency) {
-    return (
-      <div style={{
-        padding: '24px',
-        backgroundColor: '#FFF8F0',
-        borderRadius: '12px',
-        border: '1px solid #F5E5D3',
-        marginBottom: '24px',
-        textAlign: 'center',
-        color: '#666'
-      }}>
-        ⏳ Loading agency info...
-      </div>
-    )
+  const copyCredentials = () => {
+    const text = `Staff Login Credentials
+Email: ${success?.email}
+Temporary Password: ${success?.password}
+
+Login at: https://ihram.com.my/merchant-login`
+    
+    navigator.clipboard.writeText(text)
+    alert('📋 Copied to clipboard!')
   }
 
   return (
-    <div style={{
-      padding: '24px',
-      backgroundColor: '#FFF8F0',
-      borderRadius: '12px',
-      border: '1px solid #F5E5D3',
-      marginBottom: '24px'
-    }}>
+    <div>
       <div style={{
         fontSize: '16px',
         fontWeight: '600',
         color: '#2C2C2C',
-        marginBottom: '20px'
+        marginBottom: '16px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px'
       }}>
-        ➕ Add Staff Member
+        <span>➕</span>
+        Add Staff Member
       </div>
+
+      {success && (
+        <div style={{
+          padding: '20px',
+          backgroundColor: '#ECFDF5',
+          border: '2px solid #10B981',
+          borderRadius: '12px',
+          marginBottom: '24px'
+        }}>
+          <div style={{
+            fontSize: '16px',
+            fontWeight: '700',
+            color: '#065F46',
+            marginBottom: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            ✅ Staff Created Successfully!
+          </div>
+
+          <div style={{
+            backgroundColor: '#F0FDF4',
+            padding: '16px',
+            borderRadius: '8px',
+            marginBottom: '12px',
+            border: '1px solid #86EFAC'
+          }}>
+            <div style={{ 
+              fontFamily: 'monospace', 
+              fontSize: '14px', 
+              lineHeight: '1.8',
+              color: '#065F46'
+            }}>
+              <div style={{ marginBottom: '8px' }}>
+                <strong style={{ color: '#047857' }}>Email:</strong>{' '}
+                <span style={{ color: '#166534' }}>{success.email}</span>
+              </div>
+              <div>
+                <strong style={{ color: '#047857' }}>Temporary Password:</strong>{' '}
+                <span style={{ color: '#166534', fontWeight: '600' }}>{success.password}</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{
+            fontSize: '13px',
+            color: '#065F46',
+            marginBottom: '12px',
+            lineHeight: '1.6'
+          }}>
+            ⚠️ <strong>Important:</strong> Copy these credentials and share them securely. 
+            They can login immediately at <strong>/merchant-login</strong>
+          </div>
+
+          <button
+            onClick={copyCredentials}
+            style={{
+              width: '100%',
+              padding: '10px',
+              backgroundColor: '#10B981',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer'
+            }}
+          >
+            📋 Copy Credentials
+          </button>
+        </div>
+      )}
+
+      {error && (
+        <div style={{
+          padding: '12px 16px',
+          backgroundColor: '#FEE2E2',
+          border: '1px solid #FCA5A5',
+          borderRadius: '8px',
+          marginBottom: '16px',
+          fontSize: '14px',
+          color: '#DC2626'
+        }}>
+          {error}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit}>
         <div style={{
@@ -187,30 +168,31 @@ export default function AddStaffFormWithInvite() {
           gap: '16px',
           marginBottom: '16px'
         }}>
-          {/* Name */}
+          {/* Full Name */}
           <div>
             <label style={{
               display: 'block',
-              fontSize: '13px',
+              fontSize: '14px',
               fontWeight: '600',
-              color: '#666',
+              color: '#2C2C2C',
               marginBottom: '8px'
             }}>
-              Full Name *
+              Full Name <span style={{ color: '#EF4444' }}>*</span>
             </label>
             <input
               type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({...formData, name: e.target.value})}
+              value={formData.fullName}
+              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
               placeholder="Ahmad bin Ali"
               required
+              disabled={loading}
               style={{
                 width: '100%',
-                padding: '12px',
+                padding: '10px 16px',
                 border: '1px solid #E5E5E0',
                 borderRadius: '8px',
                 fontSize: '14px',
-                backgroundColor: 'white'
+                outline: 'none'
               }}
             />
           </div>
@@ -219,73 +201,77 @@ export default function AddStaffFormWithInvite() {
           <div>
             <label style={{
               display: 'block',
-              fontSize: '13px',
+              fontSize: '14px',
               fontWeight: '600',
-              color: '#666',
+              color: '#2C2C2C',
               marginBottom: '8px'
             }}>
-              Email Address *
+              Email Address <span style={{ color: '#EF4444' }}>*</span>
             </label>
             <input
               type="email"
               value={formData.email}
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               placeholder="staff@example.com"
               required
+              disabled={loading}
               style={{
                 width: '100%',
-                padding: '12px',
+                padding: '10px 16px',
                 border: '1px solid #E5E5E0',
                 borderRadius: '8px',
                 fontSize: '14px',
-                backgroundColor: 'white'
+                outline: 'none'
               }}
             />
           </div>
+        </div>
 
-          {/* Role */}
-          <div style={{ gridColumn: 'span 2' }}>
-            <label style={{
-              display: 'block',
-              fontSize: '13px',
-              fontWeight: '600',
-              color: '#666',
-              marginBottom: '8px'
-            }}>
-              Role *
-            </label>
-            <select
-              value={formData.role}
-              onChange={(e) => setFormData({...formData, role: e.target.value})}
-              required
-              style={{
-                width: '100%',
-                padding: '12px',
-                border: '1px solid #E5E5E0',
-                borderRadius: '8px',
-                fontSize: '14px',
-                backgroundColor: 'white',
-                cursor: 'pointer'
-              }}
-            >
-              <option value="staff">👤 Staff - View only, help with inquiries</option>
-              <option value="manager">👨‍💼 Manager - Can manage packages, news, reels</option>
-            </select>
-          </div>
+        {/* Role */}
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{
+            display: 'block',
+            fontSize: '14px',
+            fontWeight: '600',
+            color: '#2C2C2C',
+            marginBottom: '8px'
+          }}>
+            Role <span style={{ color: '#EF4444' }}>*</span>
+          </label>
+          <select
+            value={formData.role}
+            onChange={(e) => setFormData({ ...formData, role: e.target.value as 'staff' | 'owner' })}
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: '10px 16px',
+              border: '1px solid #E5E5E0',
+              borderRadius: '8px',
+              fontSize: '14px',
+              outline: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            <option value="staff">👤 Staff - View only, help with inquiries</option>
+            <option value="owner">👑 Owner - Full access</option>
+          </select>
         </div>
 
         {/* Info Box */}
         <div style={{
           padding: '12px 16px',
-          backgroundColor: '#E8F4F8',
+          backgroundColor: '#EFF6FF',
           borderRadius: '8px',
-          fontSize: '13px',
-          color: '#666',
           marginBottom: '16px',
-          lineHeight: '1.5'
+          display: 'flex',
+          gap: '12px',
+          alignItems: 'start'
         }}>
-          💡 <strong>Email Invitation:</strong><br/>
-          The staff member will receive an email with a confirmation link. They must click the link and set their password to activate their account.
+          <span style={{ fontSize: '18px' }}>ℹ️</span>
+          <div style={{ fontSize: '13px', color: '#1E40AF', lineHeight: '1.6' }}>
+            <strong>Temporary Password:</strong> The system will generate a temporary password automatically. 
+            The new staff member can use it to login immediately.
+          </div>
         </div>
 
         {/* Submit Button */}
@@ -294,8 +280,8 @@ export default function AddStaffFormWithInvite() {
           disabled={loading}
           style={{
             width: '100%',
-            padding: '14px',
-            backgroundColor: loading ? '#999' : '#B8936D',
+            padding: '12px',
+            backgroundColor: loading ? '#CCC' : '#B8936D',
             color: 'white',
             border: 'none',
             borderRadius: '8px',
@@ -308,7 +294,11 @@ export default function AddStaffFormWithInvite() {
             gap: '8px'
           }}
         >
-          {loading ? '⏳ Sending Invitation...' : '📧 Send Invitation Email'}
+          {loading ? (
+            <>⏳ Creating Staff...</>
+          ) : (
+            <>📧 Create Staff</>
+          )}
         </button>
       </form>
     </div>

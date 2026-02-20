@@ -10,7 +10,8 @@ export default function NewsFeedActions({ post }: { post: any }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
 
   const handleToggle = async () => {
-    if (!confirm(`${post.is_active ? 'Hide' : 'Show'} this post?`)) return
+    const action = post.is_active ? 'Unpublish' : 'Publish'
+    if (!confirm(`${action} this post?`)) return
 
     setLoading(true)
     try {
@@ -21,18 +22,17 @@ export default function NewsFeedActions({ post }: { post: any }) {
 
       if (error) throw error
 
-      // Log moderation
       await supabase.from('moderation_logs').insert({
         content_type: 'news_feed',
         content_id: post.id,
         content_title: post.content?.substring(0, 100),
         agency_id: post.agency_id,
         agency_name: post.agencies?.name,
-        action: post.is_active ? 'hide' : 'show',
-        admin_name: 'Admin' // Get from auth if needed
+        action: post.is_active ? 'unpublish' : 'publish',
+        admin_name: 'Admin'
       })
 
-      alert(`✅ Post ${post.is_active ? 'hidden' : 'shown'}!`)
+      alert(`✅ Post ${post.is_active ? 'unpublished' : 'published'}!`)
       window.location.reload()
     } catch (error: any) {
       alert(`❌ Error: ${error.message}`)
@@ -43,7 +43,6 @@ export default function NewsFeedActions({ post }: { post: any }) {
 
   const handleDelete = async (reason: string) => {
     try {
-      // Log before delete
       await supabase.from('moderation_logs').insert({
         content_type: 'news_feed',
         content_id: post.id,
@@ -55,11 +54,7 @@ export default function NewsFeedActions({ post }: { post: any }) {
         admin_name: 'Admin'
       })
 
-      const { error } = await supabase
-        .from('news_feed')
-        .delete()
-        .eq('id', post.id)
-
+      const { error } = await supabase.from('news_feed').delete().eq('id', post.id)
       if (error) throw error
 
       alert('✅ Post deleted!')
@@ -80,15 +75,13 @@ export default function NewsFeedActions({ post }: { post: any }) {
           style={{
             padding: '6px 16px',
             backgroundColor: post.is_active ? '#FEF3C7' : '#ECFDF5',
-            color: post.is_active ? '#F59E0B' : '#10B981',
-            border: 'none',
-            borderRadius: '6px',
-            fontSize: '13px',
-            fontWeight: '600',
+            color: post.is_active ? '#D97706' : '#10B981',
+            border: 'none', borderRadius: '6px',
+            fontSize: '13px', fontWeight: '600',
             cursor: loading ? 'not-allowed' : 'pointer'
           }}
         >
-          {post.is_active ? 'Hide' : 'Show'}
+          {post.is_active ? '📤 Unpublish' : '📣 Publish'}
         </button>
 
         <button
@@ -96,16 +89,13 @@ export default function NewsFeedActions({ post }: { post: any }) {
           disabled={loading}
           style={{
             padding: '6px 16px',
-            backgroundColor: '#FEE2E2',
-            color: '#EF4444',
-            border: 'none',
-            borderRadius: '6px',
-            fontSize: '13px',
-            fontWeight: '600',
+            backgroundColor: '#FEE2E2', color: '#EF4444',
+            border: 'none', borderRadius: '6px',
+            fontSize: '13px', fontWeight: '600',
             cursor: loading ? 'not-allowed' : 'pointer'
           }}
         >
-          Delete
+          🗑️ Delete
         </button>
       </div>
 

@@ -1,281 +1,117 @@
-import { createClient } from '@/lib/supabase/server'
+import { checkMerchantAccess } from '@/lib/merchant'
 import { redirect } from 'next/navigation'
-import MerchantPasswordChange from './MerchantPasswordChange'
-import MerchantStaffList from './MerchantStaffList'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import AddStaffForm from './AddStaffForm'
+import MerchantStaffList from './MerchantStaffList'
+import MerchantPasswordChange from './MerchantPasswordChange'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
+const getServiceRoleClient = () => {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  )
+}
+
 export default async function MerchantSettingsPage() {
-  const supabase = await createClient()
+  const { isMerchant, user, agencyId: merchantAgencyId, role } = await checkMerchantAccess()
+  if (!isMerchant || !user || !merchantAgencyId) redirect('/merchant/login')
 
-  // Get current user
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/merchant-login')
+  const isOwner = role === 'owner'
+  const adminClient = getServiceRoleClient()
 
-  // Get merchant agency
-  const { data: agency } = await supabase
+  const { data: agencyData } = await adminClient
     .from('agencies')
-    .select('*')
-    .eq('user_id', user.id)
+    .select('name')
+    .eq('id', merchantAgencyId)
     .single()
 
-  if (!agency) redirect('/merchant-login')
+  const agencyName = agencyData?.name || 'Your Agency'
 
-  // Get staff members
-  const { data: staff } = await supabase
-    .from('merchant_staff')
-    .select('*')
-    .eq('agency_id', agency.id)
-    .order('created_at', { ascending: false })
-
-  const safeStaff = Array.isArray(staff) ? staff : []
+  // Staff hanya nampak password change — tak perlu fetch staff list
+  let safeStaffMembers: any[] = []
+  if (isOwner) {
+    const { data: staffMembers } = await adminClient
+      .from('agency_staff')
+      .select('*')
+      .eq('agency_id', merchantAgencyId)
+      .order('created_at', { ascending: false })
+    safeStaffMembers = Array.isArray(staffMembers) ? staffMembers : []
+  }
 
   return (
     <div>
-      {/* PAGE HEADER */}
+      {/* HEADER */}
       <div style={{ marginBottom: '32px' }}>
-        <h1 style={{
-          fontSize: '32px',
-          fontWeight: 'bold',
-          color: '#2C2C2C',
-          marginBottom: '8px'
-        }}>
+        <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '8px' }}>
           Settings
         </h1>
-        <p style={{
-          fontSize: '16px',
-          color: '#666'
-        }}>
-          Manage your account and staff members
+        <p style={{ fontSize: '16px', color: '#666' }}>
+          {isOwner ? 'Manage your account and staff members' : 'Manage your account'}
         </p>
+        <div style={{
+          marginTop: '8px', display: 'inline-flex', alignItems: 'center', gap: '6px',
+          padding: '4px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: '600',
+          backgroundColor: isOwner ? '#FEE2E2' : '#FFF8F0',
+          color: isOwner ? '#EF4444' : '#B8936D'
+        }}>
+          {isOwner ? '👑 Owner' : '👤 Staff'} · {agencyName}
+        </div>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-        
-        {/* ACCOUNT SECURITY */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '16px',
-          padding: '32px',
-          border: '1px solid #E5E5E0'
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            marginBottom: '24px',
-            paddingBottom: '24px',
-            borderBottom: '1px solid #E5E5E0'
-          }}>
-            <div style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '12px',
-              backgroundColor: '#F5F5F0',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '24px'
-            }}>
+
+        {/* ACCOUNT SECURITY - Semua boleh, letak atas sekali untuk staff */}
+        <div style={{ backgroundColor: 'white', borderRadius: '16px', padding: '32px', border: '1px solid #E5E5E0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid #E5E5E0' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: '#F5F5F0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>
               🔐
             </div>
             <div>
-              <h2 style={{
-                fontSize: '20px',
-                fontWeight: 'bold',
-                color: '#2C2C2C',
-                marginBottom: '4px'
-              }}>
-                Account Security
-              </h2>
-              <p style={{ fontSize: '14px', color: '#666' }}>
-                Change your password
-              </p>
+              <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '4px' }}>Account Security</h2>
+              <p style={{ fontSize: '14px', color: '#666' }}>Change your password</p>
             </div>
           </div>
-
           <MerchantPasswordChange />
         </div>
 
-        {/* STAFF MANAGEMENT */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '16px',
-          padding: '32px',
-          border: '1px solid #E5E5E0'
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            marginBottom: '24px',
-            paddingBottom: '24px',
-            borderBottom: '1px solid #E5E5E0'
-          }}>
-            <div style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '12px',
-              backgroundColor: '#F5F5F0',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '24px'
-            }}>
-              👥
+        {/* STAFF MANAGEMENT - Owner sahaja */}
+        {isOwner && (
+          <div style={{ backgroundColor: 'white', borderRadius: '16px', padding: '32px', border: '1px solid #E5E5E0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid #E5E5E0' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: '#F5F5F0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>
+                👥
+              </div>
+              <div>
+                <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '4px' }}>Staff Management</h2>
+                <p style={{ fontSize: '14px', color: '#666' }}>Add and manage staff members</p>
+              </div>
             </div>
-            <div>
-              <h2 style={{
-                fontSize: '20px',
-                fontWeight: 'bold',
-                color: '#2C2C2C',
-                marginBottom: '4px'
-              }}>
-                Staff Management
-              </h2>
-              <p style={{ fontSize: '14px', color: '#666' }}>
-                Add and manage staff members who can access your dashboard
-              </p>
+
+            {/* Stats */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
+              {[
+                { label: 'Total Staff', value: safeStaffMembers.length },
+                { label: 'Owners', value: safeStaffMembers.filter(s => s.role === 'owner').length },
+                { label: 'Active Staff', value: safeStaffMembers.filter(s => s.is_active).length },
+              ].map((stat) => (
+                <div key={stat.label} style={{ padding: '20px', backgroundColor: '#FFF8F0', borderRadius: '12px', border: '1px solid #F5E5D3' }}>
+                  <div style={{ fontSize: '13px', color: '#999', marginBottom: '8px' }}>{stat.label}</div>
+                  <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#B8936D' }}>{stat.value}</div>
+                </div>
+              ))}
+            </div>
+
+            <AddStaffForm agencyId={merchantAgencyId} />
+
+            <div style={{ marginTop: '32px' }}>
+              <MerchantStaffList staff={safeStaffMembers} />
             </div>
           </div>
-
-          {/* Stats */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: '16px',
-            marginBottom: '24px'
-          }}>
-            <div style={{
-              padding: '20px',
-              backgroundColor: '#FFF8F0',
-              borderRadius: '12px',
-              border: '1px solid #F5E5D3'
-            }}>
-              <div style={{ fontSize: '13px', color: '#999', marginBottom: '8px' }}>
-                Total Staff
-              </div>
-              <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#B8936D' }}>
-                {safeStaff.length}
-              </div>
-            </div>
-
-            <div style={{
-              padding: '20px',
-              backgroundColor: '#FFF8F0',
-              borderRadius: '12px',
-              border: '1px solid #F5E5D3'
-            }}>
-              <div style={{ fontSize: '13px', color: '#999', marginBottom: '8px' }}>
-                Active Staff
-              </div>
-              <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#10B981' }}>
-                {safeStaff.filter(s => s.is_active).length}
-              </div>
-            </div>
-          </div>
-
-          {/* Add Staff Form */}
-          <AddStaffForm />
-
-          {/* Staff List */}
-          <div style={{ marginTop: '32px' }}>
-            <MerchantStaffList staff={safeStaff} />
-          </div>
-        </div>
-
-        {/* AGENCY INFO */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '16px',
-          padding: '32px',
-          border: '1px solid #E5E5E0'
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            marginBottom: '24px',
-            paddingBottom: '24px',
-            borderBottom: '1px solid #E5E5E0'
-          }}>
-            <div style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '12px',
-              backgroundColor: '#F5F5F0',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '24px'
-            }}>
-              🏢
-            </div>
-            <div>
-              <h2 style={{
-                fontSize: '20px',
-                fontWeight: 'bold',
-                color: '#2C2C2C',
-                marginBottom: '4px'
-              }}>
-                Agency Information
-              </h2>
-              <p style={{ fontSize: '14px', color: '#666' }}>
-                Your agency details
-              </p>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{
-              padding: '16px',
-              backgroundColor: '#F5F5F0',
-              borderRadius: '12px'
-            }}>
-              <div style={{ fontSize: '13px', color: '#999', marginBottom: '4px' }}>
-                Agency Name
-              </div>
-              <div style={{ fontSize: '16px', fontWeight: '600', color: '#2C2C2C' }}>
-                {agency.name}
-              </div>
-            </div>
-
-            <div style={{
-              padding: '16px',
-              backgroundColor: '#F5F5F0',
-              borderRadius: '12px'
-            }}>
-              <div style={{ fontSize: '13px', color: '#999', marginBottom: '4px' }}>
-                Email
-              </div>
-              <div style={{ fontSize: '16px', fontWeight: '600', color: '#2C2C2C' }}>
-                {agency.email || user.email}
-              </div>
-            </div>
-
-            <div style={{
-              padding: '16px',
-              backgroundColor: '#F5F5F0',
-              borderRadius: '12px'
-            }}>
-              <div style={{ fontSize: '13px', color: '#999', marginBottom: '4px' }}>
-                Status
-              </div>
-              <span style={{
-                padding: '6px 12px',
-                borderRadius: '6px',
-                fontSize: '13px',
-                fontWeight: '700',
-                backgroundColor: agency.is_verified ? '#ECFDF5' : '#FEF3C7',
-                color: agency.is_verified ? '#10B981' : '#F59E0B'
-              }}>
-                {agency.is_verified ? '✓ Verified' : '⏳ Pending Verification'}
-              </span>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   )

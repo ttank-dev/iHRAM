@@ -1,131 +1,66 @@
 'use client'
 
 import { useState } from 'react'
-import { supabaseAdmin, isAdminClientAvailable } from '@/lib/supabase/admin-client'
+import { createAdminUser } from './createAdminUser.action'
 
 export default function AddAdminForm() {
-  const [fullName, setFullName] = useState('')
-  const [email, setEmail] = useState('')
-  const [role, setRole] = useState('admin')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState<{ email: string; password: string } | null>(null)
 
-  if (!isAdminClientAvailable() || !supabaseAdmin) {
-    return (
-      <div style={{
-        padding: '24px',
-        backgroundColor: '#FEE2E2',
-        borderRadius: '12px',
-        border: '1px solid #EF4444',
-        textAlign: 'center'
-      }}>
-        <p style={{ color: '#991B1B', fontWeight: '600', marginBottom: '8px' }}>
-          ⚠️ Admin Client Not Configured
-        </p>
-        <p style={{ color: '#666', fontSize: '14px' }}>
-          Please add NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY to your environment variables.
-        </p>
-      </div>
-    )
-  }
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    role: 'admin' as 'admin' | 'super_admin'
+  })
 
-  const handleCreateAdmin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (!fullName || !email || !role) {
-      alert('❌ Please fill all fields')
-      return
-    }
-
-    if (!supabaseAdmin) {
-      alert('❌ Admin client not available')
-      return
-    }
-
     setLoading(true)
+    setError('')
+    setSuccess(null)
 
     try {
-      console.log('🔵 Starting admin creation...')
-      
-      // 1. Send invitation email (creates auth user)
-      console.log('🔵 Step 1: Sending invitation email...')
-      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
-        email,
-        {
-          data: {
-            full_name: fullName,
-            role: role
-          }
-        }
-      )
+      const result = await createAdminUser(formData)
 
-      if (authError) {
-        console.error('❌ Auth error:', authError)
-        throw authError
+      if (!result.success) {
+        throw new Error(result.error)
       }
-      console.log('✅ Step 1 complete - User created:', authData.user.id)
 
-      // 2. Add to admin_roles
-      console.log('🔵 Step 2: Adding to admin_roles...')
-      const { error: roleError } = await supabaseAdmin
-        .from('admin_roles')
-        .insert({
-          user_id: authData.user.id,
-          role: role,
-          is_active: true
-        })
+      setSuccess({
+        email: result.email!,
+        password: result.tempPassword!
+      })
 
-      if (roleError) {
-        console.error('❌ Role error:', roleError)
-        throw roleError
-      }
-      console.log('✅ Step 2 complete - Role added')
-
-      // 3. Add to admin_users (UPDATED - uses id instead of user_id)
-      console.log('🔵 Step 3: Adding to admin_users...')
-      const { error: userError } = await supabaseAdmin
-        .from('admin_users')
-        .insert({
-          id: authData.user.id,        // ← Changed from user_id to id
-          full_name: fullName,
-          email: email,
-          role: role,
-          is_active: true
-        })
-
-      if (userError) {
-        console.error('❌ User error:', userError)
-        throw userError
-      }
-      console.log('✅ Step 3 complete - User record added')
-
-      alert('✅ Invitation email sent successfully!')
-      
       // Reset form
-      setFullName('')
-      setEmail('')
-      setRole('admin')
-      
-      // Reload page to show new user
-      window.location.reload()
-      
+      setFormData({
+        fullName: '',
+        email: '',
+        role: 'admin'
+      })
     } catch (error: any) {
-      console.error('❌ Error creating admin:', error)
-      alert(`❌ Error: ${error.message}`)
+      setError(error.message)
     } finally {
       setLoading(false)
     }
   }
 
+  const copyCredentials = () => {
+    const text = `Admin Login Credentials
+Email: ${success?.email}
+Temporary Password: ${success?.password}
+
+Login at: https://ihram.com.my/admin-login`
+    
+    navigator.clipboard.writeText(text)
+    alert('📋 Copied to clipboard!')
+  }
+
   return (
-    <div style={{
-      padding: '24px',
-      backgroundColor: '#FFF8F0',
-      borderRadius: '12px',
-      border: '1px solid #F5E5D3'
-    }}>
-      <h3 style={{
-        fontSize: '18px',
-        fontWeight: 'bold',
+    <div>
+      <div style={{
+        fontSize: '16px',
+        fontWeight: '600',
         color: '#2C2C2C',
         marginBottom: '16px',
         display: 'flex',
@@ -133,13 +68,100 @@ export default function AddAdminForm() {
         gap: '8px'
       }}>
         <span>➕</span>
-        <span>Add New Admin User</span>
-      </h3>
+        Add New Admin User
+      </div>
 
-      <form onSubmit={handleCreateAdmin}>
+      {success && (
+        <div style={{
+          padding: '20px',
+          backgroundColor: '#ECFDF5',
+          border: '2px solid #10B981',
+          borderRadius: '12px',
+          marginBottom: '24px'
+        }}>
+          <div style={{
+            fontSize: '16px',
+            fontWeight: '700',
+            color: '#065F46',
+            marginBottom: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            ✅ Admin Created Successfully!
+          </div>
+
+          <div style={{
+            backgroundColor: '#F0FDF4',
+            padding: '16px',
+            borderRadius: '8px',
+            marginBottom: '12px',
+            border: '1px solid #86EFAC'
+          }}>
+            <div style={{ 
+              fontFamily: 'monospace', 
+              fontSize: '14px', 
+              lineHeight: '1.8',
+              color: '#065F46'
+            }}>
+              <div style={{ marginBottom: '8px' }}>
+                <strong style={{ color: '#047857' }}>Email:</strong>{' '}
+                <span style={{ color: '#166534' }}>{success.email}</span>
+              </div>
+              <div>
+                <strong style={{ color: '#047857' }}>Temporary Password:</strong>{' '}
+                <span style={{ color: '#166534', fontWeight: '600' }}>{success.password}</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{
+            fontSize: '13px',
+            color: '#065F46',
+            marginBottom: '12px',
+            lineHeight: '1.6'
+          }}>
+            ⚠️ <strong>Important:</strong> Copy these credentials and share them securely with the admin. 
+            They can login immediately at <strong>/admin-login</strong>
+          </div>
+
+          <button
+            onClick={copyCredentials}
+            style={{
+              width: '100%',
+              padding: '10px',
+              backgroundColor: '#10B981',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer'
+            }}
+          >
+            📋 Copy Credentials
+          </button>
+        </div>
+      )}
+
+      {error && (
+        <div style={{
+          padding: '12px 16px',
+          backgroundColor: '#FEE2E2',
+          border: '1px solid #FCA5A5',
+          borderRadius: '8px',
+          marginBottom: '16px',
+          fontSize: '14px',
+          color: '#DC2626'
+        }}>
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit}>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
+          gridTemplateColumns: 'repeat(2, 1fr)',
           gap: '16px',
           marginBottom: '16px'
         }}>
@@ -152,21 +174,21 @@ export default function AddAdminForm() {
               color: '#2C2C2C',
               marginBottom: '8px'
             }}>
-              Full Name <span style={{ color: 'red' }}>*</span>
+              Full Name <span style={{ color: '#EF4444' }}>*</span>
             </label>
             <input
               type="text"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
+              value={formData.fullName}
+              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
               placeholder="John Doe"
               required
               disabled={loading}
               style={{
                 width: '100%',
-                padding: '12px 16px',
+                padding: '10px 16px',
                 border: '1px solid #E5E5E0',
                 borderRadius: '8px',
-                fontSize: '15px',
+                fontSize: '14px',
                 outline: 'none'
               }}
             />
@@ -181,21 +203,21 @@ export default function AddAdminForm() {
               color: '#2C2C2C',
               marginBottom: '8px'
             }}>
-              Email Address <span style={{ color: 'red' }}>*</span>
+              Email Address <span style={{ color: '#EF4444' }}>*</span>
             </label>
             <input
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               placeholder="admin@ihram.com.my"
               required
               disabled={loading}
               style={{
                 width: '100%',
-                padding: '12px 16px',
+                padding: '10px 16px',
                 border: '1px solid #E5E5E0',
                 borderRadius: '8px',
-                fontSize: '15px',
+                fontSize: '14px',
                 outline: 'none'
               }}
             />
@@ -211,59 +233,41 @@ export default function AddAdminForm() {
             color: '#2C2C2C',
             marginBottom: '8px'
           }}>
-            Role <span style={{ color: 'red' }}>*</span>
+            Role <span style={{ color: '#EF4444' }}>*</span>
           </label>
           <select
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
+            value={formData.role}
+            onChange={(e) => setFormData({ ...formData, role: e.target.value as 'admin' | 'super_admin' })}
             disabled={loading}
             style={{
               width: '100%',
-              padding: '12px 16px',
+              padding: '10px 16px',
               border: '1px solid #E5E5E0',
               borderRadius: '8px',
-              fontSize: '15px',
+              fontSize: '14px',
               outline: 'none',
-              backgroundColor: 'white',
               cursor: 'pointer'
             }}
           >
             <option value="admin">🔧 Admin - Content management only</option>
-            <option value="super_admin">👑 Super Admin - Full system access</option>
+            <option value="super_admin">👑 Super Admin - Full access</option>
           </select>
         </div>
 
         {/* Info Box */}
         <div style={{
           padding: '12px 16px',
-          backgroundColor: '#E3F2FD',
+          backgroundColor: '#EFF6FF',
           borderRadius: '8px',
-          border: '1px solid #90CAF9',
-          marginBottom: '16px'
+          marginBottom: '16px',
+          display: 'flex',
+          gap: '12px',
+          alignItems: 'start'
         }}>
-          <div style={{
-            display: 'flex',
-            gap: '12px',
-            alignItems: 'start'
-          }}>
-            <span style={{ fontSize: '18px' }}>📧</span>
-            <div>
-              <div style={{
-                fontSize: '13px',
-                fontWeight: '600',
-                color: '#2C2C2C',
-                marginBottom: '4px'
-              }}>
-                Email Invitation:
-              </div>
-              <div style={{
-                fontSize: '12px',
-                color: '#666',
-                lineHeight: '1.5'
-              }}>
-                The user will receive an email with a confirmation link. They must click the link and set their password to activate their account.
-              </div>
-            </div>
+          <span style={{ fontSize: '18px' }}>ℹ️</span>
+          <div style={{ fontSize: '13px', color: '#1E40AF', lineHeight: '1.6' }}>
+            <strong>Temporary Password:</strong> The system will generate a temporary password automatically. 
+            The new admin can use it to login immediately.
           </div>
         </div>
 
@@ -273,12 +277,12 @@ export default function AddAdminForm() {
           disabled={loading}
           style={{
             width: '100%',
-            padding: '14px',
+            padding: '12px',
             backgroundColor: loading ? '#CCC' : '#B8936D',
             color: 'white',
             border: 'none',
             borderRadius: '8px',
-            fontSize: '16px',
+            fontSize: '15px',
             fontWeight: '600',
             cursor: loading ? 'not-allowed' : 'pointer',
             display: 'flex',
@@ -288,15 +292,9 @@ export default function AddAdminForm() {
           }}
         >
           {loading ? (
-            <>
-              <span>⏳</span>
-              <span>Sending Invitation...</span>
-            </>
+            <>⏳ Creating Admin...</>
           ) : (
-            <>
-              <span>📧</span>
-              <span>Send Invitation Email</span>
-            </>
+            <>📧 Create Admin</>
           )}
         </button>
       </form>

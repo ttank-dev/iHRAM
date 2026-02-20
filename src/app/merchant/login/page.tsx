@@ -19,40 +19,83 @@ export default function MerchantLoginPage() {
     setLoading(true)
 
     try {
+      console.log('🔵 Starting merchant login for:', email)
+      
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
-      if (signInError) throw signInError
+      if (signInError) {
+        console.error('❌ Auth error:', signInError)
+        throw signInError
+      }
+
+      console.log('✅ Auth success! User ID:', data.user?.id)
 
       if (data.user) {
-        // Check if user is a merchant
-        const { data: agency } = await supabase
+        console.log('🔍 Checking agency_staff table...')
+        
+        // Check agency_staff table first (for staff members)
+        const { data: staffMember, error: staffError } = await supabase
+          .from('agency_staff')
+          .select('*, agencies(name)')
+          .eq('id', data.user.id)
+          .single()
+
+        console.log('📊 Staff query result:', staffMember)
+        console.log('📊 Staff query error:', staffError)
+
+        if (staffMember) {
+          if (!staffMember.is_active) {
+            console.error('❌ Staff account is inactive')
+            setError('Your account is inactive.')
+            await supabase.auth.signOut()
+            setLoading(false)
+            return
+          }
+
+          console.log('✅ Staff member found! Redirecting to /merchant/dashboard')
+          router.push('/merchant/dashboard')
+          router.refresh()
+          return
+        }
+
+        console.log('🔍 Not in agency_staff, checking agencies table...')
+
+        // If not in agency_staff, check agencies table (old owners)
+        const { data: agency, error: agencyError } = await supabase
           .from('agencies')
-          .select('is_active')
+          .select('*')
           .eq('user_id', data.user.id)
           .single()
 
+        console.log('📊 Agency query result:', agency)
+        console.log('📊 Agency query error:', agencyError)
+
         if (!agency) {
-          setError('Akaun ini bukan akaun merchant')
+          console.error('❌ User not found in agency_staff or agencies')
+          setError('This account is not a merchant account.')
           await supabase.auth.signOut()
           setLoading(false)
           return
         }
 
         if (!agency.is_active) {
-          setError('Akaun anda telah digantung. Sila hubungi admin.')
+          console.error('❌ Agency account is inactive')
+          setError('Your agency account is inactive.')
           await supabase.auth.signOut()
           setLoading(false)
           return
         }
 
+        console.log('✅ Agency owner found! Redirecting to /merchant/dashboard')
         router.push('/merchant/dashboard')
         router.refresh()
       }
     } catch (err: any) {
-      setError(err.message || 'Login gagal. Sila cuba lagi.')
+      console.error('❌ Login error:', err)
+      setError(err.message || 'Login failed. Please try again.')
       setLoading(false)
     }
   }
@@ -67,7 +110,6 @@ export default function MerchantLoginPage() {
       padding: '40px' 
     }}>
       <div style={{ width: '100%', maxWidth: '480px' }}>
-        {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <Link href="/">
             <img 
@@ -81,33 +123,38 @@ export default function MerchantLoginPage() {
           </Link>
         </div>
 
-        {/* Login Card */}
         <div style={{ 
           backgroundColor: 'white', 
           borderRadius: '16px', 
           padding: '48px', 
           boxShadow: '0 8px 32px rgba(0,0,0,0.12)' 
         }}>
-          {/* Header */}
-          <h1 style={{ 
-            fontSize: '32px', 
-            fontWeight: 'bold', 
-            color: '#2C2C2C', 
-            marginBottom: '8px', 
-            fontFamily: 'Georgia, serif', 
-            textAlign: 'center' 
-          }}>
-            Merchant Dashboard
-          </h1>
-          <p style={{ 
-            color: '#666', 
-            marginBottom: '32px', 
-            textAlign: 'center' 
-          }}>
-            Log masuk untuk mengurus pakej umrah anda
-          </p>
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <div style={{ 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              width: '64px', 
+              height: '64px', 
+              backgroundColor: '#B8936D', 
+              borderRadius: '50%', 
+              marginBottom: '16px' 
+            }}>
+              <span style={{ fontSize: '32px' }}>🏢</span>
+            </div>
+            <h1 style={{ 
+              fontSize: '32px', 
+              fontWeight: 'bold', 
+              color: '#2C2C2C', 
+              fontFamily: 'Georgia, serif' 
+            }}>
+              Merchant Dashboard
+            </h1>
+            <p style={{ color: '#666' }}>
+              Log masuk untuk mengurus pakej umrah anda
+            </p>
+          </div>
 
-          {/* Error Message */}
           {error && (
             <div style={{ 
               padding: '12px 16px', 
@@ -122,9 +169,7 @@ export default function MerchantLoginPage() {
             </div>
           )}
 
-          {/* Login Form */}
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {/* Email Field */}
             <div>
               <label style={{ 
                 display: 'block', 
@@ -139,7 +184,7 @@ export default function MerchantLoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="merchant@example.com"
+                placeholder="agency@example.com"
                 required
                 disabled={loading}
                 style={{ 
@@ -153,7 +198,6 @@ export default function MerchantLoginPage() {
               />
             </div>
 
-            {/* Password Field */}
             <div>
               <label style={{ 
                 display: 'block', 
@@ -182,7 +226,6 @@ export default function MerchantLoginPage() {
               />
             </div>
 
-            {/* Forgot Password Link */}
             <div style={{ textAlign: 'right', marginTop: '-8px' }}>
               <Link
                 href="/merchant-forgot-password"
@@ -197,7 +240,6 @@ export default function MerchantLoginPage() {
               </Link>
             </div>
 
-            {/* Login Button */}
             <button
               type="submit"
               disabled={loading}

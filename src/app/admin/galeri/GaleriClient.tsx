@@ -185,7 +185,7 @@ export default function GaleriClient({ initialAlbums }: { initialAlbums: any[] }
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 style={{
-                  width: '100%',
+                  width: '90%',
                   padding: '10px 16px',
                   border: '1px solid #E5E5E0',
                   borderRadius: '8px',
