@@ -87,7 +87,7 @@ export default function AdminForgotPasswordPage() {
             color: '#999',
             marginBottom: '24px'
           }}>
-            Check your inbox and click the link to reset your password.
+            Please check your <strong>Inbox or Spam Box</strong> and click the link to reset your password.
           </p>
 
           <Link href="/admin-login">
@@ -174,7 +174,7 @@ export default function AdminForgotPasswordPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              placeholder="admin@ihram.com.my"
+              placeholder="your@email.com"
               style={{
                 width: '100%',
                 padding: '12px',

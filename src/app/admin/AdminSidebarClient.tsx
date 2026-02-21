@@ -1,74 +1,56 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { useRouter, usePathname } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-
-type UserRole = 'owner' | 'staff' | null
+import LogoutButton from './LogoutButton'
 
 /* ───────────────────────────── NAV DATA ───────────────────────────── */
-type NavItem = {
-  href: string
-  icon: string
-  label: string
-  ownerOnly?: boolean
-  staffBadge?: string
-}
+type NavItem = { href: string; icon: string; label: string; indent?: boolean }
 type NavSection = { title: string; items: NavItem[] }
 
 const navSections: NavSection[] = [
   {
     title: '',
     items: [
-      { href: '/merchant/dashboard', icon: '📊', label: 'Dashboard' },
+      { href: '/admin', icon: '📊', label: 'Dashboard' },
     ],
   },
   {
     title: 'MANAGEMENT',
     items: [
-      { href: '/merchant/dashboard/pakej', icon: '📦', label: 'Pakej Saya' },
-      { href: '/merchant/dashboard/ulasan', icon: '⭐', label: 'Ulasan' },
-      { href: '/merchant/dashboard/profil', icon: '🏢', label: 'Profil Agensi', ownerOnly: true },
-      { href: '/merchant/dashboard/verifikasi', icon: '✅', label: 'Mohon Verifikasi', ownerOnly: true },
+      { href: '/admin/agensi', icon: '🏢', label: 'Agensi' },
+      { href: '/admin/verifikasi', icon: '✅', label: 'Review Verifikasi' },
+      { href: '/admin/pakej', icon: '📦', label: 'Pakej' },
+      { href: '/admin/ulasan', icon: '⭐', label: 'Ulasan' },
+      { href: '/admin/panduan', icon: '📚', label: 'Panduan' },
+      { href: '/admin/panduan/categories', icon: '🏷️', label: 'Categories', indent: true },
+      { href: '/admin/leads', icon: '🎯', label: 'Leads' },
     ],
   },
   {
     title: 'CONTENT',
     items: [
-      { href: '/merchant/dashboard/newsfeed', icon: '📰', label: 'News Feed' },
-      { href: '/merchant/dashboard/reels', icon: '🎬', label: 'Reels' },
-      { href: '/merchant/dashboard/galeri', icon: '🖼️', label: 'Galeri' },
+      { href: '/admin/newsfeed', icon: '📰', label: 'News Feed' },
+      { href: '/admin/reels', icon: '🎬', label: 'Reels' },
+      { href: '/admin/galeri', icon: '🖼️', label: 'Galeri' },
     ],
   },
   {
     title: 'SETTINGS',
     items: [
-      { href: '/merchant/dashboard/settings', icon: '⚙️', label: 'Settings', staffBadge: 'PW' },
+      { href: '/admin/sumbangan', icon: '💰', label: 'Sumbangan' },
+      { href: '/admin/settings', icon: '⚙️', label: 'Settings' },
+      { href: '/admin/logs', icon: '📋', label: 'Moderation Logs' },
     ],
   },
 ]
 
 /* ───────────────────────────── COMPONENT ───────────────────────────── */
-export default function MerchantDashboardLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  const [loading, setLoading] = useState(true)
-  const [agencyName, setAgencyName] = useState('')
-  const [userRole, setUserRole] = useState<UserRole>(null)
-  const [error, setError] = useState('')
+export default function AdminSidebarClient({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
-  const router = useRouter()
-  const pathname = usePathname()
-  const supabase = createClient()
-
-  // Auth check
-  useEffect(() => {
-    checkAuth()
-  }, [])
 
   // Responsive detection
   useEffect(() => {
@@ -93,138 +75,37 @@ export default function MerchantDashboardLayout({
     return () => { document.body.style.overflow = '' }
   }, [isMobile, sidebarOpen])
 
-  const checkAuth = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { router.push('/merchant/login'); return }
-
-      const res = await fetch('/api/merchant/me')
-      if (!res.ok) { setError('no-agency'); setLoading(false); return }
-
-      const data = await res.json()
-      if (!data.agencyId) { setError('no-agency'); setLoading(false); return }
-
-      setAgencyName(data.agencyName || 'Your Agency')
-      setUserRole(data.role || 'staff')
-      setLoading(false)
-    } catch {
-      setError('no-agency')
-      setLoading(false)
-    }
-  }
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-    router.push('/merchant/login')
-  }
-
   const isActive = (href: string) => {
-    if (href === '/merchant/dashboard') return pathname === '/merchant/dashboard'
+    if (href === '/admin') return pathname === '/admin'
     return pathname.startsWith(href)
   }
 
-  const owner = userRole === 'owner'
-
-  /* ── LOADING STATE ── */
-  if (loading) {
-    return (
-      <div className="merchant-loading">
-        <div className="loading-spinner" />
-        <p className="loading-text">Memuatkan dashboard...</p>
-        <style dangerouslySetInnerHTML={{ __html: `
-          .merchant-loading {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            min-height: 100vh; background: #F5F5F0; gap: 16px;
-          }
-          .loading-spinner {
-            width: 40px; height: 40px; border: 3px solid #e5e5e5;
-            border-top-color: #B8936D; border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-          }
-          .loading-text { font-size: 14px; color: #999; font-weight: 500; }
-          @keyframes spin { to { transform: rotate(360deg); } }
-        `}} />
-      </div>
-    )
-  }
-
-  /* ── ERROR STATE ── */
-  if (error === 'no-agency') {
-    return (
-      <div className="merchant-error">
-        <div className="error-card">
-          <div className="error-icon">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
-            </svg>
-          </div>
-          <h1 className="error-title">Tiada Agensi Ditemui</h1>
-          <p className="error-desc">Akaun anda tidak dikaitkan dengan mana-mana agensi. Sila hubungi admin untuk bantuan.</p>
-          <button onClick={handleLogout} className="error-btn">
-            Kembali ke Log Masuk
-          </button>
-        </div>
-        <style dangerouslySetInnerHTML={{ __html: `
-          .merchant-error {
-            display: flex; align-items: center; justify-content: center;
-            min-height: 100vh; background: #F5F5F0; padding: 20px;
-          }
-          .error-card {
-            background: white; padding: 48px; border-radius: 16px;
-            text-align: center; max-width: 420px; width: 100%;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.06);
-          }
-          .error-icon { margin-bottom: 20px; }
-          .error-title { font-size: 22px; font-weight: 700; color: #2C2C2C; margin: 0 0 12px; }
-          .error-desc { font-size: 15px; color: #666; margin: 0 0 28px; line-height: 1.5; }
-          .error-btn {
-            padding: 12px 32px; background: #B8936D; color: white; border: none;
-            border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;
-            transition: background 0.2s;
-          }
-          .error-btn:hover { background: #a07d5a; }
-        `}} />
-      </div>
-    )
-  }
-
-  /* ── MAIN LAYOUT ── */
   return (
     <>
-      <div className="merchant-layout">
-        {/* Overlay (mobile) */}
+      <div className="admin-layout">
+        {/* ── OVERLAY (mobile) ── */}
         {isMobile && sidebarOpen && (
           <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />
         )}
 
         {/* ── SIDEBAR ── */}
-        <aside className={`merchant-sidebar ${isMobile ? (sidebarOpen ? 'open' : 'closed') : ''}`}>
+        <aside className={`admin-sidebar ${isMobile ? (sidebarOpen ? 'open' : 'closed') : ''}`}>
           {/* Logo */}
           <div className="sidebar-header">
-            <Link href="/merchant/dashboard" className="logo-link">
+            <Link href="/admin" className="logo-link">
               <div className="logo-icon">🕌</div>
               <div>
                 <div className="logo-title">iHRAM</div>
-                <div className="logo-sub">Merchant Dashboard</div>
+                <div className="logo-sub">Admin Dashboard</div>
               </div>
             </Link>
+            {/* Close button mobile */}
             {isMobile && (
               <button className="close-btn" onClick={() => setSidebarOpen(false)} aria-label="Close sidebar">
                 ✕
               </button>
             )}
           </div>
-
-          {/* Agency badge */}
-          {agencyName && (
-            <div className="agency-badge">
-              <div className="agency-label">AGENSI</div>
-              <div className="agency-name">{agencyName}</div>
-              <div className={`role-badge ${owner ? 'owner' : 'staff'}`}>
-                {owner ? '👑 OWNER' : '👤 STAFF'}
-              </div>
-            </div>
-          )}
 
           {/* Nav */}
           <nav className="sidebar-nav">
@@ -233,30 +114,15 @@ export default function MerchantDashboardLayout({
                 {section.title && <div className="nav-section-title">{section.title}</div>}
                 {section.items.map((item) => {
                   const active = isActive(item.href)
-                  const locked = item.ownerOnly && !owner
-
-                  if (locked) {
-                    return (
-                      <div key={item.href} className="nav-link disabled">
-                        <span className="nav-icon">{item.icon}</span>
-                        <span className="nav-label">{item.label}</span>
-                        <span className="owner-tag">OWNER</span>
-                      </div>
-                    )
-                  }
-
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
-                      className={`nav-link ${active ? 'active' : ''}`}
+                      className={`nav-link ${active ? 'active' : ''} ${item.indent ? 'indented' : ''}`}
                     >
                       <span className="nav-icon">{item.icon}</span>
                       <span className="nav-label">{item.label}</span>
                       {active && <span className="active-dot" />}
-                      {item.staffBadge && !owner && (
-                        <span className="staff-badge">{item.staffBadge}</span>
-                      )}
                     </Link>
                   )
                 })}
@@ -266,15 +132,12 @@ export default function MerchantDashboardLayout({
 
           {/* Logout */}
           <div className="sidebar-footer">
-            <button onClick={handleLogout} className="logout-btn">
-              <span>🚪</span>
-              <span>Log Out</span>
-            </button>
+            <LogoutButton />
           </div>
         </aside>
 
         {/* ── MAIN ── */}
-        <main className="merchant-main">
+        <main className="admin-main">
           {/* Top bar (mobile) */}
           {isMobile && (
             <div className="topbar">
@@ -284,12 +147,12 @@ export default function MerchantDashboardLayout({
               <div className="topbar-logo">
                 <span className="topbar-icon">🕌</span>
                 <span className="topbar-title">iHRAM</span>
-                <span className="topbar-badge">Merchant</span>
+                <span className="topbar-badge">Admin</span>
               </div>
               <div style={{ width: 40 }} />
             </div>
           )}
-          <div className="merchant-content">
+          <div className="admin-content">
             {children}
           </div>
         </main>
@@ -297,15 +160,15 @@ export default function MerchantDashboardLayout({
 
       {/* ── STYLES ── */}
       <style dangerouslySetInnerHTML={{ __html: `
-        /* ===== BASE ===== */
-        .merchant-layout {
+        /* ===== RESET & BASE ===== */
+        .admin-layout {
           display: flex;
           min-height: 100vh;
           background-color: #F5F5F0;
         }
 
         /* ===== SIDEBAR ===== */
-        .merchant-sidebar {
+        .admin-sidebar {
           width: 260px;
           background: linear-gradient(180deg, #1A1A1A 0%, #111111 100%);
           color: white;
@@ -320,11 +183,11 @@ export default function MerchantDashboardLayout({
         }
 
         /* Scrollbar */
-        .merchant-sidebar::-webkit-scrollbar { width: 6px; }
-        .merchant-sidebar::-webkit-scrollbar-track { background: transparent; }
-        .merchant-sidebar::-webkit-scrollbar-thumb { background: rgba(184,147,109,0.3); border-radius: 3px; }
-        .merchant-sidebar::-webkit-scrollbar-thumb:hover { background: rgba(184,147,109,0.5); }
-        .merchant-sidebar { scrollbar-width: thin; scrollbar-color: rgba(184,147,109,0.3) transparent; }
+        .admin-sidebar::-webkit-scrollbar { width: 6px; }
+        .admin-sidebar::-webkit-scrollbar-track { background: transparent; }
+        .admin-sidebar::-webkit-scrollbar-thumb { background: rgba(184,147,109,0.3); border-radius: 3px; }
+        .admin-sidebar::-webkit-scrollbar-thumb:hover { background: rgba(184,147,109,0.5); }
+        .admin-sidebar { scrollbar-width: thin; scrollbar-color: rgba(184,147,109,0.3) transparent; }
 
         /* Header */
         .sidebar-header {
@@ -360,34 +223,6 @@ export default function MerchantDashboardLayout({
         }
         .close-btn:hover { background: rgba(255,255,255,0.15); color: white; }
 
-        /* Agency badge */
-        .agency-badge {
-          padding: 14px 20px;
-          background: rgba(184,147,109,0.06);
-          border-bottom: 1px solid rgba(255,255,255,0.06);
-          flex-shrink: 0;
-        }
-        .agency-label { color: #555; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; margin-bottom: 4px; }
-        .agency-name { font-weight: 600; color: white; font-size: 14px; line-height: 1.3; }
-        .role-badge {
-          margin-top: 8px;
-          font-size: 11px;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          display: inline-block;
-          padding: 2px 8px;
-          border-radius: 4px;
-        }
-        .role-badge.owner {
-          color: #F87171;
-          background: rgba(248,113,113,0.1);
-        }
-        .role-badge.staff {
-          color: #B8936D;
-          background: rgba(184,147,109,0.1);
-        }
-
         /* Nav */
         .sidebar-nav {
           flex: 1;
@@ -418,7 +253,7 @@ export default function MerchantDashboardLayout({
           transition: all 0.2s ease;
           position: relative;
         }
-        .nav-link:hover:not(.disabled) {
+        .nav-link:hover {
           background: rgba(184, 147, 109, 0.08);
           color: #fff;
         }
@@ -427,11 +262,11 @@ export default function MerchantDashboardLayout({
           color: #B8936D;
           font-weight: 600;
         }
-        .nav-link.disabled {
-          color: #444;
-          cursor: not-allowed;
-          opacity: 0.5;
+        .nav-link.indented {
+          padding-left: 44px;
+          font-size: 13px;
         }
+        .nav-link.indented:not(.active) { color: #777; }
         .nav-icon { font-size: 16px; flex-shrink: 0; width: 24px; text-align: center; }
         .nav-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .active-dot {
@@ -443,26 +278,6 @@ export default function MerchantDashboardLayout({
           flex-shrink: 0;
           box-shadow: 0 0 8px rgba(184,147,109,0.5);
         }
-        .owner-tag {
-          font-size: 9px;
-          margin-left: auto;
-          background: #333;
-          padding: 2px 6px;
-          border-radius: 4px;
-          color: #666;
-          font-weight: 600;
-          letter-spacing: 0.5px;
-        }
-        .staff-badge {
-          font-size: 10px;
-          margin-left: auto;
-          background: rgba(184,147,109,0.1);
-          border: 1px solid rgba(184,147,109,0.2);
-          padding: 2px 6px;
-          border-radius: 4px;
-          color: #B8936D;
-          font-weight: 600;
-        }
 
         /* Footer */
         .sidebar-footer {
@@ -470,33 +285,16 @@ export default function MerchantDashboardLayout({
           border-top: 1px solid rgba(255,255,255,0.06);
           flex-shrink: 0;
         }
-        .logout-btn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          padding: 10px 12px;
-          color: white;
-          width: 100%;
-          border: none;
-          background: #DC2626;
-          cursor: pointer;
-          border-radius: 8px;
-          font-size: 14px;
-          font-weight: 600;
-          transition: background 0.2s;
-        }
-        .logout-btn:hover { background: #b91c1c; }
 
         /* ===== MAIN ===== */
-        .merchant-main {
+        .admin-main {
           margin-left: 260px;
           flex: 1;
           min-height: 100vh;
           display: flex;
           flex-direction: column;
         }
-        .merchant-content {
+        .admin-content {
           padding: 32px 40px;
           flex: 1;
         }
@@ -531,6 +329,7 @@ export default function MerchantDashboardLayout({
           height: 2px;
           background: #B8936D;
           border-radius: 2px;
+          transition: all 0.3s;
         }
         .topbar-logo {
           display: flex;
@@ -564,35 +363,43 @@ export default function MerchantDashboardLayout({
           from { opacity: 0; }
           to { opacity: 1; }
         }
+        @keyframes slideIn {
+          from { transform: translateX(-100%); }
+          to { transform: translateX(0); }
+        }
+        @keyframes slideOut {
+          from { transform: translateX(0); }
+          to { transform: translateX(-100%); }
+        }
 
         /* ===== RESPONSIVE ===== */
 
         /* Tablet: < 1024px */
         @media (max-width: 1023px) {
-          .merchant-sidebar {
+          .admin-sidebar {
             transform: translateX(-100%);
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             width: 280px;
             box-shadow: 4px 0 24px rgba(0,0,0,0.3);
           }
-          .merchant-sidebar.open {
+          .admin-sidebar.open {
             transform: translateX(0);
           }
-          .merchant-main {
+          .admin-main {
             margin-left: 0;
           }
           .topbar {
             display: flex;
           }
-          .merchant-content {
+          .admin-content {
             padding: 24px 20px;
           }
         }
 
         /* Mobile: < 640px */
         @media (max-width: 639px) {
-          .merchant-sidebar { width: 280px; }
-          .merchant-content {
+          .admin-sidebar { width: 280px; }
+          .admin-content {
             padding: 16px 12px;
           }
           .topbar {

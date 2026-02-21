@@ -41,25 +41,15 @@ export default function AdminDashboardPage() {
 
   const fetchStats = async () => {
     try {
-      // Fetch pending verifications
-      const { data: verifications, error: verError } = await supabase
+      const { data: verifications } = await supabase
         .from('verification_requests')
-        .select(`
-          *,
-          agencies (
-            id,
-            name,
-            logo_url
-          )
-        `)
+        .select(`*, agencies ( id, name, logo_url )`)
         .eq('status', 'pending')
         .order('created_at', { ascending: false })
         .limit(3)
 
       const pendingVerifCount = verifications?.length || 0
 
-      // TODO: Fetch other real data from Supabase
-      // For now, using mock data for the rest
       setStats({
         totalAgencies: 24,
         totalPackages: 156,
@@ -94,647 +84,357 @@ export default function AdminDashboardPage() {
   }
 
   const statCards = [
-    {
-      title: 'Verifikasi Pending',
-      value: stats.pendingVerifications,
-      icon: '✅',
-      color: '#06B6D4',
-      link: '/admin/verifikasi',
-      change: 'Perlu review'
-    },
-    {
-      title: 'Total Agensi',
-      value: stats.totalAgencies,
-      icon: '🏢',
-      color: '#3B82F6',
-      link: '/admin/agensi',
-      change: '+3 bulan ini'
-    },
-    {
-      title: 'Pakej Umrah',
-      value: stats.totalPackages,
-      icon: '📦',
-      color: '#8B5CF6',
-      link: '/admin/pakej',
-      change: '+12 bulan ini'
-    },
-    {
-      title: 'Total Ulasan',
-      value: stats.totalReviews,
-      icon: '⭐',
-      color: '#F59E0B',
-      link: '/admin/ulasan',
-      change: `${stats.pendingReviews} pending`
-    },
-    {
-      title: 'WhatsApp Leads',
-      value: stats.totalLeads,
-      icon: '🎯',
-      color: '#10B981',
-      link: '/admin/leads',
-      change: '+45 minggu ini'
-    },
-    {
-      title: 'Panduan',
-      value: stats.totalGuides,
-      icon: '📚',
-      color: '#B8936D',
-      link: '/admin/panduan',
-      change: 'All published'
-    },
+    { title: 'Verifikasi Pending', value: stats.pendingVerifications, icon: '✅', color: '#06B6D4', link: '/admin/verifikasi', change: 'Perlu review' },
+    { title: 'Total Agensi', value: stats.totalAgencies, icon: '🏢', color: '#3B82F6', link: '/admin/agensi', change: '+3 bulan ini' },
+    { title: 'Pakej Umrah', value: stats.totalPackages, icon: '📦', color: '#8B5CF6', link: '/admin/pakej', change: '+12 bulan ini' },
+    { title: 'Total Ulasan', value: stats.totalReviews, icon: '⭐', color: '#F59E0B', link: '/admin/ulasan', change: `${stats.pendingReviews} pending` },
+    { title: 'WhatsApp Leads', value: stats.totalLeads, icon: '🎯', color: '#10B981', link: '/admin/leads', change: '+45 minggu ini' },
+    { title: 'Panduan', value: stats.totalGuides, icon: '📚', color: '#B8936D', link: '/admin/panduan', change: 'All published' },
   ]
 
+  /* ── LOADING ── */
   if (loading) {
     return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '400px',
-        color: '#666'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>⏳</div>
-          <div style={{ fontSize: '16px', fontWeight: '600' }}>Loading dashboard...</div>
-        </div>
+      <div className="ad-loading">
+        <div className="ad-loading-spinner" />
+        <p className="ad-loading-text">Memuatkan dashboard...</p>
+        <style dangerouslySetInnerHTML={{ __html: `
+          .ad-loading { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:400px; gap:16px; }
+          .ad-loading-spinner { width:40px; height:40px; border:3px solid #e5e5e5; border-top-color:#B8936D; border-radius:50%; animation:adspin .8s linear infinite; }
+          .ad-loading-text { font-size:14px; color:#999; font-weight:500; }
+          @keyframes adspin { to { transform:rotate(360deg); } }
+        `}} />
       </div>
     )
   }
 
   return (
-    <div>
-      
-      {/* PAGE HEADER */}
-      <div style={{ marginBottom: '32px' }}>
-        <h1 style={{
-          fontSize: '32px',
-          fontWeight: 'bold',
-          color: '#2C2C2C',
-          marginBottom: '8px'
-        }}>
-          Dashboard Overview
-        </h1>
-        <p style={{
-          fontSize: '16px',
-          color: '#666'
-        }}>
-          Welcome back, Admin! Here's what's happening with iHRAM today.
-        </p>
-      </div>
+    <>
+      <div className="ad-page">
 
-      {/* 🔥 NEW: LICENSE EXPIRY ALERTS - FULL WIDTH */}
-      <div style={{ marginBottom: '32px' }}>
-        <LicenseExpiryAlerts />
-      </div>
-
-      {/* STATS GRID */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: '24px',
-        marginBottom: '40px'
-      }}>
-        {statCards.map((card, index) => (
-          <Link
-            key={index}
-            href={card.link}
-            style={{
-              backgroundColor: 'white',
-              borderRadius: '16px',
-              padding: '24px',
-              textDecoration: 'none',
-              border: '1px solid #E5E5E0',
-              transition: 'all 0.3s',
-              cursor: 'pointer'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-4px)'
-              e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)'
-              e.currentTarget.style.boxShadow = 'none'
-            }}
-          >
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: '16px'
-            }}>
-              <div style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '12px',
-                backgroundColor: `${card.color}15`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '24px'
-              }}>
-                {card.icon}
-              </div>
-              <div style={{
-                fontSize: '12px',
-                fontWeight: '600',
-                color: card.color,
-                backgroundColor: `${card.color}10`,
-                padding: '4px 12px',
-                borderRadius: '12px'
-              }}>
-                {card.change}
-              </div>
-            </div>
-
-            <div style={{
-              fontSize: '14px',
-              color: '#666',
-              marginBottom: '8px',
-              fontWeight: '500'
-            }}>
-              {card.title}
-            </div>
-
-            <div style={{
-              fontSize: '36px',
-              fontWeight: 'bold',
-              color: '#2C2C2C'
-            }}>
-              {card.value.toLocaleString()}
-            </div>
-          </Link>
-        ))}
-      </div>
-
-      {/* THREE COLUMN LAYOUT */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: '24px'
-      }}>
-        
-        {/* PENDING VERIFICATIONS */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '16px',
-          padding: '24px',
-          border: '1px solid #E5E5E0'
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: '20px'
-          }}>
-            <h2 style={{
-              fontSize: '18px',
-              fontWeight: 'bold',
-              color: '#2C2C2C'
-            }}>
-              ✅ Pending Verifications
-            </h2>
-            <Link
-              href="/admin/verifikasi"
-              style={{
-                fontSize: '13px',
-                color: '#B8936D',
-                textDecoration: 'none',
-                fontWeight: '600'
-              }}
-            >
-              View All →
-            </Link>
+        {/* ── HEADER ── */}
+        <div className="ad-header">
+          <div>
+            <h1 className="ad-title">Dashboard Overview</h1>
+            <p className="ad-subtitle">Selamat kembali, Admin! Ringkasan iHRAM hari ini.</p>
           </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {stats.recentVerifications.map((verification) => (
-              <div
-                key={verification.id}
-                style={{
-                  padding: '12px',
-                  backgroundColor: '#E0F2FE',
-                  borderRadius: '8px',
-                  borderLeft: '3px solid #06B6D4'
-                }}
-              >
-                <div style={{
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  color: '#2C2C2C',
-                  marginBottom: '4px'
-                }}>
-                  {verification.company}
-                </div>
-                <div style={{
-                  fontSize: '12px',
-                  color: '#666',
-                  marginBottom: '4px'
-                }}>
-                  License: {verification.license}
-                </div>
-                <div style={{
-                  fontSize: '11px',
-                  color: '#999'
-                }}>
-                  {verification.timestamp}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {stats.recentVerifications.length === 0 && (
-            <div style={{
-              padding: '40px',
-              textAlign: 'center',
-              color: '#999'
-            }}>
-              <div style={{ fontSize: '32px', marginBottom: '8px' }}>✅</div>
-              <div style={{ fontSize: '13px' }}>All caught up!</div>
-            </div>
-          )}
         </div>
 
-        {/* PENDING REVIEWS */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '16px',
-          padding: '24px',
-          border: '1px solid #E5E5E0'
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: '20px'
-          }}>
-            <h2 style={{
-              fontSize: '18px',
-              fontWeight: 'bold',
-              color: '#2C2C2C'
-            }}>
-              ⏳ Pending Reviews
-            </h2>
-            <Link
-              href="/admin/ulasan?status=pending"
-              style={{
-                fontSize: '13px',
-                color: '#B8936D',
-                textDecoration: 'none',
-                fontWeight: '600'
-              }}
-            >
-              View All →
-            </Link>
-          </div>
+        {/* ── LICENSE ALERTS ── */}
+        <div className="ad-license-section">
+          <LicenseExpiryAlerts />
+        </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {stats.recentReviews.map((review) => (
-              <div
-                key={review.id}
-                style={{
-                  padding: '12px',
-                  backgroundColor: '#FFF7ED',
-                  borderRadius: '8px',
-                  borderLeft: '3px solid #F59E0B'
-                }}
-              >
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  marginBottom: '6px'
-                }}>
-                  <div style={{
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    color: '#2C2C2C'
-                  }}>
-                    {review.reviewer}
+        {/* ── STATS GRID ── */}
+        <div className="ad-stats-grid">
+          {statCards.map((card, index) => (
+            <Link key={index} href={card.link} className="ad-stat-card">
+              <div className="ad-stat-top">
+                <div className="ad-stat-icon" style={{ background: `${card.color}12` }}>
+                  {card.icon}
+                </div>
+                <span className="ad-stat-change" style={{ color: card.color, background: `${card.color}10` }}>
+                  {card.change}
+                </span>
+              </div>
+              <div className="ad-stat-label">{card.title}</div>
+              <div className="ad-stat-value">{card.value.toLocaleString()}</div>
+            </Link>
+          ))}
+        </div>
+
+        {/* ── THREE COLUMN: VERIFICATIONS / REVIEWS / LEADS ── */}
+        <div className="ad-panels-grid">
+
+          {/* Pending Verifications */}
+          <div className="ad-panel">
+            <div className="ad-panel-header">
+              <h2 className="ad-panel-title">✅ Pending Verifications</h2>
+              <Link href="/admin/verifikasi" className="ad-panel-link">View All →</Link>
+            </div>
+            {stats.recentVerifications.length > 0 ? (
+              <div className="ad-panel-list">
+                {stats.recentVerifications.map((v) => (
+                  <div key={v.id} className="ad-panel-item verif">
+                    <div className="ad-item-title">{v.company}</div>
+                    <div className="ad-item-sub">License: {v.license}</div>
+                    <div className="ad-item-meta">{v.timestamp}</div>
                   </div>
-                  <div style={{ display: 'flex', gap: '1px', fontSize: '12px' }}>
-                    {'⭐'.repeat(review.rating)}
-                  </div>
-                </div>
-                <div style={{
-                  fontSize: '12px',
-                  color: '#666',
-                  marginBottom: '8px'
-                }}>
-                  {review.package}
-                </div>
-                <div style={{
-                  display: 'flex',
-                  gap: '6px'
-                }}>
-                  <button style={{
-                    padding: '4px 12px',
-                    backgroundColor: '#10B981',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    fontSize: '11px',
-                    fontWeight: '600',
-                    cursor: 'pointer'
-                  }}>
-                    ✓ Approve
-                  </button>
-                  <button style={{
-                    padding: '4px 12px',
-                    backgroundColor: 'transparent',
-                    color: '#EF4444',
-                    border: '1px solid #EF4444',
-                    borderRadius: '4px',
-                    fontSize: '11px',
-                    fontWeight: '600',
-                    cursor: 'pointer'
-                  }}>
-                    ✕ Reject
-                  </button>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-
-          {stats.recentReviews.length === 0 && (
-            <div style={{
-              padding: '40px',
-              textAlign: 'center',
-              color: '#999'
-            }}>
-              <div style={{ fontSize: '32px', marginBottom: '8px' }}>✅</div>
-              <div style={{ fontSize: '13px' }}>All caught up!</div>
-            </div>
-          )}
-        </div>
-
-        {/* RECENT LEADS */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '16px',
-          padding: '24px',
-          border: '1px solid #E5E5E0'
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: '20px'
-          }}>
-            <h2 style={{
-              fontSize: '18px',
-              fontWeight: 'bold',
-              color: '#2C2C2C'
-            }}>
-              🎯 Recent Leads
-            </h2>
-            <Link
-              href="/admin/leads"
-              style={{
-                fontSize: '13px',
-                color: '#B8936D',
-                textDecoration: 'none',
-                fontWeight: '600'
-              }}
-            >
-              View All →
-            </Link>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {stats.recentLeads.map((lead) => (
-              <div
-                key={lead.id}
-                style={{
-                  padding: '12px',
-                  backgroundColor: '#F5F5F0',
-                  borderRadius: '8px'
-                }}
-              >
-                <div style={{
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  color: '#2C2C2C',
-                  marginBottom: '4px'
-                }}>
-                  {lead.package}
-                </div>
-                <div style={{
-                  fontSize: '12px',
-                  color: '#666',
-                  marginBottom: '4px'
-                }}>
-                  {lead.agency}
-                </div>
-                <div style={{
-                  fontSize: '11px',
-                  color: '#999'
-                }}>
-                  {lead.timestamp}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {stats.recentLeads.length === 0 && (
-            <div style={{
-              padding: '40px',
-              textAlign: 'center',
-              color: '#999'
-            }}>
-              <div style={{ fontSize: '32px', marginBottom: '8px' }}>📭</div>
-              <div style={{ fontSize: '13px' }}>No recent leads</div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* QUICK ACTIONS */}
-      <div style={{
-        marginTop: '40px',
-        backgroundColor: 'white',
-        borderRadius: '16px',
-        padding: '32px',
-        border: '1px solid #E5E5E0'
-      }}>
-        <h2 style={{
-          fontSize: '20px',
-          fontWeight: 'bold',
-          color: '#2C2C2C',
-          marginBottom: '24px'
-        }}>
-          ⚡ Quick Actions
-        </h2>
-
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: '16px'
-        }}>
-          {/* Verification Quick Action */}
-          <Link
-            href="/admin/verifikasi"
-            style={{
-              padding: '20px',
-              backgroundColor: stats.pendingVerifications > 0 ? '#E0F2FE' : '#F5F5F0',
-              borderRadius: '12px',
-              textDecoration: 'none',
-              textAlign: 'center',
-              transition: 'all 0.2s',
-              position: 'relative'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#06B6D4'
-              const icon = e.currentTarget.querySelector('.icon') as HTMLElement
-              const text = e.currentTarget.querySelector('.text') as HTMLElement
-              if (icon) icon.style.transform = 'scale(1.2)'
-              if (text) text.style.color = 'white'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = stats.pendingVerifications > 0 ? '#E0F2FE' : '#F5F5F0'
-              const icon = e.currentTarget.querySelector('.icon') as HTMLElement
-              const text = e.currentTarget.querySelector('.text') as HTMLElement
-              if (icon) icon.style.transform = 'scale(1)'
-              if (text) text.style.color = '#2C2C2C'
-            }}
-          >
-            {stats.pendingVerifications > 0 && (
-              <div style={{
-                position: 'absolute',
-                top: '12px',
-                right: '12px',
-                backgroundColor: '#EF4444',
-                color: 'white',
-                fontSize: '11px',
-                fontWeight: '700',
-                padding: '4px 8px',
-                borderRadius: '12px'
-              }}>
-                {stats.pendingVerifications}
+            ) : (
+              <div className="ad-panel-empty">
+                <div className="ad-empty-icon">✅</div>
+                <div className="ad-empty-text">All caught up!</div>
               </div>
             )}
-            <div className="icon" style={{ fontSize: '32px', marginBottom: '8px', transition: 'transform 0.2s' }}>
-              ✅
-            </div>
-            <div className="text" style={{ fontSize: '14px', fontWeight: '600', color: '#2C2C2C', transition: 'color 0.2s' }}>
-              Review Verifikasi
-            </div>
-          </Link>
+          </div>
 
-          <Link
-            href="/admin/panduan/new"
-            style={{
-              padding: '20px',
-              backgroundColor: '#F5F5F0',
-              borderRadius: '12px',
-              textDecoration: 'none',
-              textAlign: 'center',
-              transition: 'all 0.2s'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#B8936D'
-              const icon = e.currentTarget.querySelector('.icon') as HTMLElement
-              const text = e.currentTarget.querySelector('.text') as HTMLElement
-              if (icon) icon.style.transform = 'scale(1.2)'
-              if (text) text.style.color = 'white'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#F5F5F0'
-              const icon = e.currentTarget.querySelector('.icon') as HTMLElement
-              const text = e.currentTarget.querySelector('.text') as HTMLElement
-              if (icon) icon.style.transform = 'scale(1)'
-              if (text) text.style.color = '#2C2C2C'
-            }}
-          >
-            <div className="icon" style={{ fontSize: '32px', marginBottom: '8px', transition: 'transform 0.2s' }}>
-              📝
+          {/* Pending Reviews */}
+          <div className="ad-panel">
+            <div className="ad-panel-header">
+              <h2 className="ad-panel-title">⏳ Pending Reviews</h2>
+              <Link href="/admin/ulasan?status=pending" className="ad-panel-link">View All →</Link>
             </div>
-            <div className="text" style={{ fontSize: '14px', fontWeight: '600', color: '#2C2C2C', transition: 'color 0.2s' }}>
-              New Panduan
-            </div>
-          </Link>
-
-          <Link
-            href="/admin/agensi"
-            style={{
-              padding: '20px',
-              backgroundColor: '#F5F5F0',
-              borderRadius: '12px',
-              textDecoration: 'none',
-              textAlign: 'center',
-              transition: 'all 0.2s'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#B8936D'
-              const icon = e.currentTarget.querySelector('.icon') as HTMLElement
-              const text = e.currentTarget.querySelector('.text') as HTMLElement
-              if (icon) icon.style.transform = 'scale(1.2)'
-              if (text) text.style.color = 'white'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#F5F5F0'
-              const icon = e.currentTarget.querySelector('.icon') as HTMLElement
-              const text = e.currentTarget.querySelector('.text') as HTMLElement
-              if (icon) icon.style.transform = 'scale(1)'
-              if (text) text.style.color = '#2C2C2C'
-            }}
-          >
-            <div className="icon" style={{ fontSize: '32px', marginBottom: '8px', transition: 'transform 0.2s' }}>
-              🏢
-            </div>
-            <div className="text" style={{ fontSize: '14px', fontWeight: '600', color: '#2C2C2C', transition: 'color 0.2s' }}>
-              Manage Agensi
-            </div>
-          </Link>
-
-          <Link
-            href="/admin/ulasan?status=pending"
-            style={{
-              padding: '20px',
-              backgroundColor: '#FFF7ED',
-              borderRadius: '12px',
-              textDecoration: 'none',
-              textAlign: 'center',
-              transition: 'all 0.2s',
-              position: 'relative'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#F59E0B'
-              const icon = e.currentTarget.querySelector('.icon') as HTMLElement
-              const text = e.currentTarget.querySelector('.text') as HTMLElement
-              if (icon) icon.style.transform = 'scale(1.2)'
-              if (text) text.style.color = 'white'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#FFF7ED'
-              const icon = e.currentTarget.querySelector('.icon') as HTMLElement
-              const text = e.currentTarget.querySelector('.text') as HTMLElement
-              if (icon) icon.style.transform = 'scale(1)'
-              if (text) text.style.color = '#2C2C2C'
-            }}
-          >
-            {stats.pendingReviews > 0 && (
-              <div style={{
-                position: 'absolute',
-                top: '12px',
-                right: '12px',
-                backgroundColor: '#EF4444',
-                color: 'white',
-                fontSize: '11px',
-                fontWeight: '700',
-                padding: '4px 8px',
-                borderRadius: '12px'
-              }}>
-                {stats.pendingReviews}
+            {stats.recentReviews.length > 0 ? (
+              <div className="ad-panel-list">
+                {stats.recentReviews.map((review) => (
+                  <div key={review.id} className="ad-panel-item review">
+                    <div className="ad-review-top">
+                      <div className="ad-item-title">{review.reviewer}</div>
+                      <div className="ad-review-stars">
+                        {[1,2,3,4,5].map(s => (
+                          <span key={s} style={{ color: s <= review.rating ? '#F59E0B' : '#ddd' }}>★</span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="ad-item-sub">{review.package}</div>
+                    <div className="ad-review-actions">
+                      <button className="ad-btn-approve">✓ Approve</button>
+                      <button className="ad-btn-reject">✕ Reject</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="ad-panel-empty">
+                <div className="ad-empty-icon">✅</div>
+                <div className="ad-empty-text">All caught up!</div>
               </div>
             )}
-            <div className="icon" style={{ fontSize: '32px', marginBottom: '8px', transition: 'transform 0.2s' }}>
-              ⏳
+          </div>
+
+          {/* Recent Leads */}
+          <div className="ad-panel">
+            <div className="ad-panel-header">
+              <h2 className="ad-panel-title">🎯 Recent Leads</h2>
+              <Link href="/admin/leads" className="ad-panel-link">View All →</Link>
             </div>
-            <div className="text" style={{ fontSize: '14px', fontWeight: '600', color: '#2C2C2C', transition: 'color 0.2s' }}>
-              Review Ulasan
-            </div>
-          </Link>
+            {stats.recentLeads.length > 0 ? (
+              <div className="ad-panel-list">
+                {stats.recentLeads.map((lead) => (
+                  <div key={lead.id} className="ad-panel-item lead">
+                    <div className="ad-item-title">{lead.package}</div>
+                    <div className="ad-item-sub">{lead.agency}</div>
+                    <div className="ad-item-meta">{lead.timestamp}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="ad-panel-empty">
+                <div className="ad-empty-icon">📭</div>
+                <div className="ad-empty-text">No recent leads</div>
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* ── QUICK ACTIONS ── */}
+        <div className="ad-actions-section">
+          <h2 className="ad-section-title">Tindakan Pantas</h2>
+          <div className="ad-actions-grid">
+            {[
+              { href: '/admin/verifikasi', icon: '✅', label: 'Review Verifikasi', badge: stats.pendingVerifications, accent: '#06B6D4' },
+              { href: '/admin/panduan/new', icon: '📝', label: 'Panduan Baru', badge: 0, accent: '#B8936D' },
+              { href: '/admin/agensi', icon: '🏢', label: 'Urus Agensi', badge: 0, accent: '#3B82F6' },
+              { href: '/admin/ulasan?status=pending', icon: '⏳', label: 'Review Ulasan', badge: stats.pendingReviews, accent: '#F59E0B' },
+            ].map((action) => (
+              <Link key={action.href} href={action.href} className="ad-action-card">
+                {action.badge > 0 && <span className="ad-action-badge">{action.badge}</span>}
+                <div className="ad-action-icon">{action.icon}</div>
+                <div className="ad-action-label">{action.label}</div>
+              </Link>
+            ))}
+          </div>
+        </div>
+
       </div>
-    </div>
+
+      {/* ── STYLES ── */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        .ad-page { max-width: 1200px; margin: 0 auto; }
+
+        /* ── Header ── */
+        .ad-header { margin-bottom: 24px; }
+        .ad-title { font-size: 28px; font-weight: 700; color: #2C2C2C; margin: 0 0 6px; }
+        .ad-subtitle { font-size: 15px; color: #888; margin: 0; }
+        .ad-license-section { margin-bottom: 28px; }
+
+        /* ── Stats ── */
+        .ad-stats-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 16px;
+          margin-bottom: 28px;
+        }
+        .ad-stat-card {
+          background: white;
+          border-radius: 12px;
+          padding: 20px;
+          text-decoration: none;
+          border: 1px solid #E5E5E0;
+          transition: all 0.2s ease;
+          display: block;
+        }
+        .ad-stat-card:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 8px 24px rgba(0,0,0,0.07);
+        }
+        .ad-stat-top {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 14px;
+        }
+        .ad-stat-icon {
+          width: 44px;
+          height: 44px;
+          border-radius: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 20px;
+        }
+        .ad-stat-change {
+          font-size: 11px;
+          font-weight: 600;
+          padding: 3px 10px;
+          border-radius: 10px;
+        }
+        .ad-stat-label { font-size: 13px; color: #888; font-weight: 500; margin-bottom: 6px; }
+        .ad-stat-value { font-size: 32px; font-weight: 700; color: #2C2C2C; line-height: 1; }
+
+        /* ── Panels (3 col) ── */
+        .ad-panels-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 16px;
+          margin-bottom: 28px;
+        }
+        .ad-panel {
+          background: white;
+          border-radius: 12px;
+          padding: 20px;
+          border: 1px solid #E5E5E0;
+          display: flex;
+          flex-direction: column;
+        }
+        .ad-panel-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 16px;
+        }
+        .ad-panel-title { font-size: 16px; font-weight: 700; color: #2C2C2C; margin: 0; }
+        .ad-panel-link { font-size: 13px; color: #B8936D; text-decoration: none; font-weight: 600; white-space: nowrap; }
+        .ad-panel-link:hover { text-decoration: underline; }
+        .ad-panel-list { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+
+        .ad-panel-item {
+          padding: 12px;
+          border-radius: 8px;
+          border-left: 3px solid transparent;
+          transition: background 0.15s;
+        }
+        .ad-panel-item.verif { background: #E0F2FE; border-left-color: #06B6D4; }
+        .ad-panel-item.review { background: #FFF7ED; border-left-color: #F59E0B; }
+        .ad-panel-item.lead { background: #F5F5F0; border-left-color: #10B981; }
+        .ad-panel-item:hover { filter: brightness(0.97); }
+
+        .ad-item-title { font-size: 14px; font-weight: 600; color: #2C2C2C; margin-bottom: 3px; }
+        .ad-item-sub { font-size: 12px; color: #666; margin-bottom: 3px; }
+        .ad-item-meta { font-size: 11px; color: #999; }
+
+        .ad-review-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .ad-review-stars { font-size: 13px; letter-spacing: 1px; }
+        .ad-review-actions { display: flex; gap: 6px; margin-top: 8px; }
+        .ad-btn-approve {
+          padding: 4px 12px; background: #10B981; color: white; border: none;
+          border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer;
+          transition: background 0.15s;
+        }
+        .ad-btn-approve:hover { background: #059669; }
+        .ad-btn-reject {
+          padding: 4px 12px; background: transparent; color: #EF4444;
+          border: 1px solid #EF4444; border-radius: 4px; font-size: 11px;
+          font-weight: 600; cursor: pointer; transition: all 0.15s;
+        }
+        .ad-btn-reject:hover { background: #FEE2E2; }
+
+        .ad-panel-empty { padding: 32px; text-align: center; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .ad-empty-icon { font-size: 28px; margin-bottom: 8px; }
+        .ad-empty-text { font-size: 13px; color: #999; }
+
+        /* ── Quick Actions ── */
+        .ad-actions-section {
+          background: white;
+          border-radius: 12px;
+          padding: 24px;
+          border: 1px solid #E5E5E0;
+        }
+        .ad-section-title { font-size: 18px; font-weight: 700; color: #2C2C2C; margin: 0 0 20px; }
+        .ad-actions-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 12px;
+        }
+        .ad-action-card {
+          padding: 20px;
+          background: #F5F5F0;
+          border-radius: 10px;
+          text-decoration: none;
+          text-align: center;
+          transition: all 0.2s;
+          position: relative;
+        }
+        .ad-action-card:hover {
+          background: #B8936D;
+          transform: translateY(-2px);
+        }
+        .ad-action-card:hover .ad-action-icon { transform: scale(1.15); }
+        .ad-action-card:hover .ad-action-label { color: white; }
+        .ad-action-badge {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          background: #EF4444;
+          color: white;
+          font-size: 11px;
+          font-weight: 700;
+          padding: 2px 8px;
+          border-radius: 10px;
+          min-width: 20px;
+          text-align: center;
+        }
+        .ad-action-icon { font-size: 28px; margin-bottom: 8px; transition: transform 0.2s; }
+        .ad-action-label { font-size: 14px; font-weight: 600; color: #2C2C2C; transition: color 0.2s; }
+
+        /* ── RESPONSIVE ── */
+
+        @media (max-width: 1023px) {
+          .ad-stats-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+          .ad-panels-grid { grid-template-columns: 1fr; }
+          .ad-actions-grid { grid-template-columns: repeat(4, 1fr); }
+          .ad-title { font-size: 24px; }
+        }
+
+        @media (max-width: 767px) {
+          .ad-stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+          .ad-stat-card { padding: 16px; }
+          .ad-stat-value { font-size: 26px; }
+          .ad-stat-icon { width: 38px; height: 38px; font-size: 18px; }
+          .ad-actions-grid { grid-template-columns: repeat(2, 1fr); }
+          .ad-action-card { padding: 16px; }
+          .ad-title { font-size: 22px; }
+          .ad-panel { padding: 16px; }
+        }
+
+        @media (max-width: 480px) {
+          .ad-stats-grid { grid-template-columns: repeat(2, 1fr); }
+          .ad-actions-grid { grid-template-columns: repeat(2, 1fr); }
+          .ad-stat-change { display: none; }
+        }
+      `}} />
+    </>
   )
 }
