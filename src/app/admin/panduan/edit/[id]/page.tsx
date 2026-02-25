@@ -2,7 +2,7 @@ import { checkAdminAccess } from '@/lib/admin'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import EditGuideForm from './EditGuideForm'
+import EditGuideFormWrapper from './EditGuideFormWrapper'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -11,23 +11,18 @@ export default async function EditPanduanPage({ params }: { params: Promise<{ id
   const { isAdmin } = await checkAdminAccess()
   if (!isAdmin) redirect('/admin-login')
 
-  // Await params in Next.js 15+
   const { id } = await params
 
   const supabase = await createClient()
   
-  // Fetch the guide
   const { data: guide, error: guideError } = await supabase
     .from('guides')
     .select('*')
     .eq('id', id)
     .single()
 
-  if (guideError || !guide) {
-    redirect('/admin/panduan')
-  }
+  if (guideError || !guide) redirect('/admin/panduan')
 
-  // Fetch categories from database
   const { data: categories } = await supabase
     .from('categories')
     .select('*')
@@ -38,53 +33,51 @@ export default async function EditPanduanPage({ params }: { params: Promise<{ id
 
   return (
     <div>
-      {/* PAGE HEADER */}
-      <div style={{ marginBottom: '32px' }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <div>
-            <h1 style={{
-              fontSize: '32px',
-              fontWeight: 'bold',
-              color: '#2C2C2C',
-              marginBottom: '8px'
-            }}>
-              Edit Panduan
-            </h1>
-            <p style={{
-              fontSize: '16px',
-              color: '#666'
-            }}>
-              Update guide details and content
-            </p>
-          </div>
+      <style>{`
+        .egp-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 32px;
+          gap: 16px;
+        }
+        .egp-title { font-size: 32px; font-weight: bold; color: #2C2C2C; margin-bottom: 8px; }
+        .egp-sub { font-size: 16px; color: #666; }
+        .egp-back {
+          padding: 10px 20px;
+          background: transparent;
+          color: #666;
+          border: 1px solid #E5E5E0;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 600;
+          text-decoration: none;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          white-space: nowrap;
+          flex-shrink: 0;
+        }
+        @media (max-width: 639px) {
+          .egp-header { flex-direction: column; align-items: flex-start; margin-bottom: 20px; }
+          .egp-title { font-size: 22px; }
+          .egp-sub { font-size: 14px; }
+          .egp-back { font-size: 13px; padding: 8px 14px; }
+        }
+        @media (min-width: 640px) and (max-width: 1023px) {
+          .egp-title { font-size: 26px; }
+        }
+      `}</style>
 
-          <Link
-            href="/admin/panduan"
-            style={{
-              padding: '10px 20px',
-              backgroundColor: 'transparent',
-              color: '#666',
-              border: '1px solid #E5E5E0',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: '600',
-              textDecoration: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}
-          >
-            ← Back to Panduan
-          </Link>
+      <div className="egp-header">
+        <div>
+          <h1 className="egp-title">Edit Panduan</h1>
+          <p className="egp-sub">Update guide details and content</p>
         </div>
+        <Link href="/admin/panduan" className="egp-back">← Back to Panduan</Link>
       </div>
 
-      {/* FORM COMPONENT */}
-      <EditGuideForm guide={guide} categories={safeCategories} />
+      <EditGuideFormWrapper guide={guide} categories={safeCategories} />
     </div>
   )
 }

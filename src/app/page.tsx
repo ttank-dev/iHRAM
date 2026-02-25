@@ -64,7 +64,7 @@ export default async function HomePage() {
             لَبَّيْكَ اللَّهُمَّ لَبَّيْك
           </p>
           <h1 className="hp-hero-title" style={{ color: 'white', fontSize: '64px', fontWeight: 'bold', marginBottom: '24px', fontFamily: 'Georgia, serif', maxWidth: '1000px', lineHeight: '1.2' }}>
-            Platform Pakej-Pakej Umrah
+            Platform Carian Pakej Umrah
           </h1>
           <p className="hp-hero-sub" style={{ color: 'white', fontSize: '20px', marginBottom: '40px', maxWidth: '800px', lineHeight: '1.6' }}>
             Temui pakej umrah yang sesuai dengan anda dari agensi-agensi Umrah di Malaysia.

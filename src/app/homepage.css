@@ -151,7 +151,7 @@
     height: 420px !important;
   }
   .hp-arabic {
-    font-size: 18px !important;
+    font-size: 30px !important;
     margin-bottom: 12px !important;
   }
   .hp-hero-title {
@@ -159,7 +159,7 @@
     margin-bottom: 12px !important;
   }
   .hp-hero-sub {
-    font-size: 14px !important;
+    font-size: 16px !important;
     margin-bottom: 16px !important;
   }
 
@@ -169,7 +169,7 @@
     grid-template-columns: unset !important;
     overflow-x: auto !important;
     gap: 10px !important;
-    bottom: -100px !important;
+    bottom: -115px !important;
     width: calc(100% - 32px) !important;
     padding: 0 0 8px !important;
     -webkit-overflow-scrolling: touch;

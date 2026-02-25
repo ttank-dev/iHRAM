@@ -11,70 +11,48 @@ export default async function EditCategoryPage({ params }: { params: Promise<{ i
   const { isAdmin } = await checkAdminAccess()
   if (!isAdmin) redirect('/admin-login')
 
-  // Await params in Next.js 15+
   const { id } = await params
 
   const supabase = await createClient()
-  
-  // Fetch the category
   const { data: category, error } = await supabase
     .from('categories')
     .select('*')
     .eq('id', id)
     .single()
 
-  if (error || !category) {
-    redirect('/admin/panduan/categories')
-  }
+  if (error || !category) redirect('/admin/panduan/categories')
 
   return (
     <div>
-      {/* PAGE HEADER */}
-      <div style={{ marginBottom: '32px' }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <div>
-            <h1 style={{
-              fontSize: '32px',
-              fontWeight: 'bold',
-              color: '#2C2C2C',
-              marginBottom: '8px'
-            }}>
-              Edit Category
-            </h1>
-            <p style={{
-              fontSize: '16px',
-              color: '#666'
-            }}>
-              Update category details
-            </p>
-          </div>
+      <style>{`
+        .cep-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; gap: 16px; }
+        .cep-title { font-size: 32px; font-weight: bold; color: #2C2C2C; margin-bottom: 8px; }
+        .cep-sub { font-size: 16px; color: #666; }
+        .cep-back {
+          padding: 10px 20px; background: transparent; color: #666;
+          border: 1px solid #E5E5E0; border-radius: 8px; font-size: 14px;
+          font-weight: 600; text-decoration: none; display: flex;
+          align-items: center; gap: 8px; white-space: nowrap; flex-shrink: 0;
+        }
+        @media (max-width: 639px) {
+          .cep-header { flex-direction: column; align-items: flex-start; margin-bottom: 20px; }
+          .cep-title { font-size: 22px; }
+          .cep-sub { font-size: 14px; }
+          .cep-back { font-size: 13px; padding: 8px 14px; }
+        }
+        @media (min-width: 640px) and (max-width: 1023px) {
+          .cep-title { font-size: 26px; }
+        }
+      `}</style>
 
-          <Link
-            href="/admin/panduan/categories"
-            style={{
-              padding: '10px 20px',
-              backgroundColor: 'transparent',
-              color: '#666',
-              border: '1px solid #E5E5E0',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: '600',
-              textDecoration: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}
-          >
-            ← Back to Categories
-          </Link>
+      <div className="cep-header">
+        <div>
+          <h1 className="cep-title">Edit Category</h1>
+          <p className="cep-sub">Update category details</p>
         </div>
+        <Link href="/admin/panduan/categories" className="cep-back">← Back to Categories</Link>
       </div>
 
-      {/* FORM */}
       <CategoryForm category={category} />
     </div>
   )
