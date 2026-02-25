@@ -1,6 +1,293 @@
-/* Homepage CSS - Hover Effects for Category Cards */
+/* ═══════════════════════════════════════
+   iHRAM Homepage — Responsive
+   Uses className hooks added to JSX
+   Desktop = inline styles (untouched)
+   Tablet/Mobile = CSS overrides via !important
+   ═══════════════════════════════════════ */
 
+/* Card hover */
 .category-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+}
+.hp-pkg-card:hover > div {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+/* ── Mobile Nav (hidden on desktop) ── */
+.hp-burger {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+}
+.hp-burger span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: #2C2C2C;
+  margin: 5px 0;
+  border-radius: 2px;
+}
+.hp-mob-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  flex-direction: column;
+  background: #fff;
+  padding: 8px 16px 16px;
+  border-bottom: 1px solid #E5E5E0;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  z-index: 99;
+}
+.hp-mob-menu.open { display: flex; }
+.hp-mob-menu a {
+  padding: 14px 0;
+  color: #2C2C2C;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 500;
+  border-bottom: 1px solid #f0f0ec;
+}
+.hp-mob-menu a:last-child {
+  border-bottom: none;
+  margin-top: 10px;
+  padding: 14px;
+  background: #B8936D;
+  color: #fff;
+  text-align: center;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+
+/* ═══════════════════════════════════════
+   TABLET  640 – 1023px
+   ═══════════════════════════════════════ */
+@media (max-width: 1023px) {
+  .hp-nav-inner {
+    padding: 0 20px !important;
+    height: 64px !important;
+  }
+  .hp-desktop-links {
+    gap: 16px !important;
+  }
+  .hp-desktop-links a {
+    font-size: 13px !important;
+  }
+  .hp-hero {
+    height: 550px !important;
+  }
+  .hp-hero-title {
+    font-size: 44px !important;
+  }
+  .hp-arabic {
+    font-size: 30px !important;
+  }
+  .hp-hero-sub {
+    font-size: 16px !important;
+  }
+  .hp-cats {
+    gap: 14px !important;
+    bottom: -45px !important;
+  }
+  .hp-cats .category-card {
+    height: 150px !important;
+  }
+  .hp-cats h3 {
+    font-size: 22px !important;
+  }
+  .hp-about {
+    padding: 0 24px !important;
+  }
+  .hp-about-grid {
+    gap: 40px !important;
+  }
+  .hp-section-title {
+    font-size: 36px !important;
+  }
+  .hp-section-sub {
+    font-size: 16px !important;
+  }
+  .hp-pkg-grid {
+    gap: 20px !important;
+  }
+  .hp-svc-grid {
+    gap: 20px !important;
+  }
+  .hp-footer-grid {
+    gap: 32px !important;
+  }
+}
+
+
+/* ═══════════════════════════════════════
+   MOBILE  < 640px
+   ═══════════════════════════════════════ */
+@media (max-width: 639px) {
+
+  /* ── NAV ── */
+  .hp-nav-inner {
+    padding: 0 16px !important;
+    height: 56px !important;
+    position: relative !important;
+  }
+  .hp-desktop-links {
+    display: none !important;
+  }
+  .hp-burger {
+    display: block !important;
+  }
+  .hp-logo-img {
+    height: 38px !important;
+  }
+
+  /* ── HERO ── */
+  .hp-hero {
+    height: 420px !important;
+  }
+  .hp-arabic {
+    font-size: 18px !important;
+    margin-bottom: 12px !important;
+  }
+  .hp-hero-title {
+    font-size: 28px !important;
+    margin-bottom: 12px !important;
+  }
+  .hp-hero-sub {
+    font-size: 14px !important;
+    margin-bottom: 16px !important;
+  }
+
+  /* ── CATEGORY CARDS → horizontal scroll ── */
+  .hp-cats {
+    display: flex !important;
+    grid-template-columns: unset !important;
+    overflow-x: auto !important;
+    gap: 10px !important;
+    bottom: -100px !important;
+    width: calc(100% - 32px) !important;
+    padding: 0 0 8px !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .hp-cats .category-card {
+    min-width: 200px !important;
+    height: 120px !important;
+    flex-shrink: 0 !important;
+  }
+  .hp-cats h3 {
+    font-size: 18px !important;
+  }
+
+  /* ── SPACER ── */
+  .hp-spacer {
+    height: 56px !important;
+  }
+
+  /* ── ABOUT → stacked ── */
+  .hp-about {
+    margin: 60px auto 40px !important;
+    padding: 0 16px !important;
+  }
+  .hp-about-grid {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+    text-align: center !important;
+  }
+ .hp-about-img-wrap {
+    width: 260px !important;
+    height: 260px !important;
+    max-width: 260px !important;
+    margin: 0 auto !important;
+  }
+  .hp-about-img-wrap > div {
+    width: 100% !important;
+    height: 100% !important;
+    aspect-ratio: auto !important;
+  }
+  .hp-about p {
+    font-size: 15px !important;
+    text-align: left !important;
+  }
+  .hp-about p {
+    font-size: 14px !important;
+  }
+
+  /* ── SECTION TITLES ── */
+  .hp-section-title {
+    font-size: 26px !important;
+  }
+  .hp-section-sub {
+    font-size: 14px !important;
+  }
+
+  /* ── PACKAGES → 1 column ── */
+  .hp-pkg-section {
+    padding: 40px 16px !important;
+  }
+  .hp-pkg-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .hp-pkg-img {
+    height: 200px !important;
+  }
+  .hp-pkg-price {
+    font-size: 16px !important;
+  }
+  .hp-btn-primary {
+    padding: 12px 32px !important;
+    font-size: 14px !important;
+  }
+
+  /* ── SERVICES → 1 column ── */
+  .hp-svc-section {
+    padding: 0 16px !important;
+    margin: 40px auto !important;
+  }
+  .hp-svc-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .hp-svc-card {
+    padding: 24px !important;
+  }
+  .hp-svc-card h3 {
+    font-size: 18px !important;
+  }
+  .hp-svc-card p {
+    font-size: 14px !important;
+  }
+
+  /* ── FAQ ── */
+  .hp-faq-section {
+    padding: 40px 16px !important;
+  }
+  .hp-faq-section summary {
+    font-size: 14px !important;
+    padding: 14px 16px !important;
+  }
+  .hp-faq-section details > div {
+    font-size: 13px !important;
+    padding: 0 16px 16px !important;
+  }
+
+  /* ── FOOTER → stacked ── */
+  footer {
+    padding: 32px 16px 16px !important;
+  }
+  .hp-footer-grid {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+  footer h3 {
+    font-size: 17px !important;
+  }
+  footer p, footer a {
+    font-size: 14px !important;
+  }
 }
