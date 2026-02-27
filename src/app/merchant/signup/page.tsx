@@ -83,21 +83,20 @@ export default function MerchantSignupPage() {
   }
 
   return (
-    <div style={{ 
+    <div className="ms-wrapper" style={{ 
       minHeight: '100vh',
       background: 'linear-gradient(135deg, #B8936D 0%, #8B6F47 100%)',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center',
-      padding: '40px'
+      justifyContent: 'center'
     }}>
-      <div style={{ 
+      <div className="ms-card" style={{ 
         backgroundColor: 'white',
         borderRadius: '24px',
-        padding: '60px',
         maxWidth: '500px',
         width: '100%',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+        boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+        boxSizing: 'border-box' as const
       }}>
         
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
@@ -156,6 +155,7 @@ export default function MerchantSignupPage() {
               required
               style={{ 
                 width: '100%',
+                boxSizing: 'border-box' as const,
                 padding: '14px 16px',
                 fontSize: '15px',
                 border: '2px solid #E5E5E0',
@@ -184,6 +184,7 @@ export default function MerchantSignupPage() {
               required
               style={{ 
                 width: '100%',
+                boxSizing: 'border-box' as const,
                 padding: '14px 16px',
                 fontSize: '15px',
                 border: '2px solid #E5E5E0',
@@ -212,6 +213,7 @@ export default function MerchantSignupPage() {
               required
               style={{ 
                 width: '100%',
+                boxSizing: 'border-box' as const,
                 padding: '14px 16px',
                 fontSize: '15px',
                 border: '2px solid #E5E5E0',
@@ -240,6 +242,7 @@ export default function MerchantSignupPage() {
               required
               style={{ 
                 width: '100%',
+                boxSizing: 'border-box' as const,
                 padding: '14px 16px',
                 fontSize: '15px',
                 border: '2px solid #E5E5E0',
@@ -268,6 +271,7 @@ export default function MerchantSignupPage() {
               required
               style={{ 
                 width: '100%',
+                boxSizing: 'border-box' as const,
                 padding: '14px 16px',
                 fontSize: '15px',
                 border: '2px solid #E5E5E0',

@@ -101,13 +101,12 @@ export default function MerchantLoginPage() {
   }
 
   return (
-    <div style={{ 
+    <div className="ml-wrapper" style={{ 
       backgroundColor: '#F5F5F0', 
       minHeight: '100vh', 
       display: 'flex', 
       alignItems: 'center', 
-      justifyContent: 'center', 
-      padding: '40px' 
+      justifyContent: 'center'
     }}>
       <div style={{ width: '100%', maxWidth: '480px' }}>
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
@@ -123,11 +122,11 @@ export default function MerchantLoginPage() {
           </Link>
         </div>
 
-        <div style={{ 
+        <div className="ml-card" style={{ 
           backgroundColor: 'white', 
           borderRadius: '16px', 
-          padding: '48px', 
-          boxShadow: '0 8px 32px rgba(0,0,0,0.12)' 
+          boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+          boxSizing: 'border-box' as const
         }}>
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
             <div style={{ 
@@ -188,7 +187,8 @@ export default function MerchantLoginPage() {
                 required
                 disabled={loading}
                 style={{ 
-                  width: '100%', 
+                  width: '100%',
+                  boxSizing: 'border-box' as const,
                   padding: '12px 16px', 
                   border: '1px solid #E5E5E0', 
                   borderRadius: '8px', 
@@ -216,7 +216,8 @@ export default function MerchantLoginPage() {
                 required
                 disabled={loading}
                 style={{ 
-                  width: '100%', 
+                  width: '100%',
+                  boxSizing: 'border-box' as const,
                   padding: '12px 16px', 
                   border: '1px solid #E5E5E0', 
                   borderRadius: '8px', 

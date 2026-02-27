@@ -328,13 +328,13 @@ export default async function SumbanganPage() {
         </div>
 
         {/* FAQ Section */}
-        <div className="sb-card" style={{ 
+        <div className="sb-faq-card" style={{ 
           backgroundColor: 'white',
           borderRadius: '20px',
           marginBottom: '48px',
           border: '1px solid #E5E5E0',
           boxShadow: '0 8px 32px rgba(0,0,0,0.08)'
-        }} className="sb-faq-card">
+        }}>
           <h2 style={{ 
             fontSize: '32px',
             fontWeight: 'bold',

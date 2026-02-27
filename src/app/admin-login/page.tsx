@@ -58,7 +58,7 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div style={{ backgroundColor: '#F5F5F0', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
+    <div className="al-wrapper" style={{ backgroundColor: '#F5F5F0', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ width: '100%', maxWidth: '480px' }}>
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <Link href="/">
@@ -66,7 +66,7 @@ export default function AdminLoginPage() {
           </Link>
         </div>
 
-        <div style={{ backgroundColor: 'white', borderRadius: '16px', padding: '48px', boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
+        <div className="al-card" style={{ backgroundColor: 'white', borderRadius: '16px', boxShadow: '0 8px 32px rgba(0,0,0,0.12)', boxSizing: 'border-box' as const }}>
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '64px', height: '64px', backgroundColor: '#B8936D', borderRadius: '50%', marginBottom: '16px' }}>
               <span style={{ fontSize: '32px' }}>🔐</span>
@@ -85,13 +85,13 @@ export default function AdminLoginPage() {
             <div>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#2C2C2C', marginBottom: '8px' }}>Email</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@ihram.com.my" required disabled={loading}
-                style={{ width: '100%', padding: '12px 16px', border: '1px solid #E5E5E0', borderRadius: '8px', fontSize: '16px', outline: 'none' }} />
+                style={{ width: '100%', boxSizing: 'border-box' as const, padding: '12px 16px', border: '1px solid #E5E5E0', borderRadius: '8px', fontSize: '16px', outline: 'none' }} />
             </div>
 
             <div>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#2C2C2C', marginBottom: '8px' }}>Password</label>
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required disabled={loading}
-                style={{ width: '100%', padding: '12px 16px', border: '1px solid #E5E5E0', borderRadius: '8px', fontSize: '16px', outline: 'none' }} />
+                style={{ width: '100%', boxSizing: 'border-box' as const, padding: '12px 16px', border: '1px solid #E5E5E0', borderRadius: '8px', fontSize: '16px', outline: 'none' }} />
             </div>
 
             <div style={{ textAlign: 'right', marginTop: '-8px' }}>

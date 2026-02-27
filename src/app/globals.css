@@ -379,3 +379,54 @@
   .sb-donation-form { padding: 20px !important; }
   .sb-preset-grid { grid-template-columns: repeat(2, 1fr) !important; }
 }
+
+/* ═══════════════════════════════════════
+   MERCHANT SIGNUP PAGE
+   ═══════════════════════════════════════ */
+.ms-wrapper { padding: 40px; }
+.ms-card { padding: 60px; }
+.ms-card input, .ms-card select { box-sizing: border-box; max-width: 100%; width: 100%; }
+
+@media (max-width: 1023px) {
+  .ms-wrapper { padding: 24px; }
+  .ms-card { padding: 40px; border-radius: 20px !important; }
+}
+
+@media (max-width: 639px) {
+  .ms-wrapper { padding: 16px; padding-top: 32px; align-items: flex-start; }
+  .ms-card { padding: 24px; border-radius: 16px !important; }
+}
+
+/* ═══════════════════════════════════════
+   MERCHANT LOGIN PAGE
+   ═══════════════════════════════════════ */
+.ml-wrapper { padding: 40px; }
+.ml-card { padding: 48px; }
+.ml-card input { box-sizing: border-box; max-width: 100%; width: 100%; }
+
+@media (max-width: 1023px) {
+  .ml-wrapper { padding: 24px; }
+  .ml-card { padding: 36px; }
+}
+
+@media (max-width: 639px) {
+  .ml-wrapper { padding: 16px; padding-top: 32px; align-items: flex-start; }
+  .ml-card { padding: 24px; border-radius: 12px !important; }
+}
+
+/* ═══════════════════════════════════════
+   ADMIN LOGIN PAGE
+   ═══════════════════════════════════════ */
+.al-wrapper { padding: 40px; }
+.al-card { padding: 48px; }
+.al-card input { box-sizing: border-box; max-width: 100%; width: 100%; }
+
+@media (max-width: 1023px) {
+  .al-wrapper { padding: 24px; }
+  .al-card { padding: 36px; }
+}
+
+@media (max-width: 639px) {
+  .al-wrapper { padding: 16px; padding-top: 32px; align-items: flex-start; }
+  .al-card { padding: 24px; border-radius: 12px !important; }
+}
