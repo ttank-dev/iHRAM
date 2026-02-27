@@ -1,5 +1,6 @@
 'use client'
 
+import Footer from '@/app/Footer'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -636,56 +637,7 @@ export default function AgensiClient({
         )}
       </div>
 
-      {/* Footer */}
-      <footer style={{ backgroundColor: '#B8936D', color: 'white', padding: '60px 40px 30px', marginTop: '100px' }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          <div className="ac-footer-grid">
-            
-            <div>
-              <div style={{ marginBottom: '20px' }}>
-                <img 
-                  src="/logo.png" 
-                  alt="iHRAM" 
-                  style={{ 
-                    height: '50px',
-                    filter: 'brightness(0) invert(1)'
-                  }} 
-                />
-              </div>
-              <p style={{ fontSize: '15px', lineHeight: '1.7', color: 'rgba(255,255,255,0.9)' }}>
-                Platform discovery pakej umrah pertama di Malaysia yang memudahkan umat Islam mencari pakej yang sesuai.
-              </p>
-            </div>
-
-            <div>
-              <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', fontFamily: 'Georgia, serif' }}>
-                Pautan Pantas
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <Link href="/" style={{ color: 'rgba(255,255,255,0.9)', textDecoration: 'none', fontSize: '15px' }}>Home</Link>
-                <Link href="/pakej" style={{ color: 'rgba(255,255,255,0.9)', textDecoration: 'none', fontSize: '15px' }}>Pakej Umrah</Link>
-                <Link href="/agensi" style={{ color: 'rgba(255,255,255,0.9)', textDecoration: 'none', fontSize: '15px' }}>Agensi</Link>
-                <Link href="/panduan" style={{ color: 'rgba(255,255,255,0.9)', textDecoration: 'none', fontSize: '15px' }}>Panduan</Link>
-                <Link href="/ulasan" style={{ color: 'rgba(255,255,255,0.9)', textDecoration: 'none', fontSize: '15px' }}>Ulasan</Link>
-              </div>
-            </div>
-
-            <div>
-              <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '20px', fontFamily: 'Georgia, serif' }}>
-                Hubungi Kami
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '15px', color: 'rgba(255,255,255,0.9)' }}>
-                <div>📧 info@ihram.com.my</div>
-                <div>📞 +60 12-345 6789</div>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '30px', textAlign: 'center', fontSize: '14px', color: 'rgba(255,255,255,0.8)' }}>
-            <p>© 2026 iHRAM - Think Tank Sdn Bhd</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }

@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import MobileNav from '@/app/MobileNav'
+import Footer from '@/app/Footer'
 
 export default function TentangPage() {
   return (
@@ -6,18 +8,19 @@ export default function TentangPage() {
       
       {/* Navigation */}
       <nav style={{ backgroundColor: 'white', borderBottom: '1px solid #E5E5E0', position: 'sticky', top: 0, zIndex: 100 }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '80px' }}>
+        <div className="hp-nav-inner" style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '80px' }}>
           <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
             <img 
               src="/logo.png" 
-              alt="iHRAM" 
+              alt="iHRAM"
+              className="hp-logo-img"
               style={{ 
                 height: '50px',
                 filter: 'brightness(0) saturate(100%) invert(56%) sepia(35%) saturate(643%) hue-rotate(358deg) brightness(95%) contrast(92%) drop-shadow(2px 2px 4px rgba(184,147,109,0.3))'
               }} 
             />
           </Link>
-          <div style={{ display: 'flex', gap: '40px', alignItems: 'center' }}>
+          <div className="hp-desktop-links" style={{ display: 'flex', gap: '40px', alignItems: 'center' }}>
             <Link href="/" style={{ color: '#2C2C2C', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Home</Link>
             <Link href="/pakej" style={{ color: '#2C2C2C', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Pakej Umrah</Link>
             <Link href="/agensi" style={{ color: '#2C2C2C', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Agensi</Link>
@@ -28,18 +31,17 @@ export default function TentangPage() {
               HUBUNGI KAMI
             </Link>
           </div>
+          <MobileNav />
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section style={{ 
+      <section className="tn-hero" style={{ 
         background: 'linear-gradient(135deg, #B8936D 0%, #8B6F47 100%)',
-        padding: '100px 40px',
         textAlign: 'center'
       }}>
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-          <h1 style={{ 
-            fontSize: '56px',
+          <h1 className="tn-hero-title" style={{ 
             fontWeight: 'bold',
             color: 'white',
             marginBottom: '24px',
@@ -47,8 +49,7 @@ export default function TentangPage() {
           }}>
             Tentang iHRAM
           </h1>
-          <p style={{ 
-            fontSize: '20px',
+          <p className="tn-hero-sub" style={{ 
             color: 'rgba(255,255,255,0.95)',
             lineHeight: '1.8',
             maxWidth: '700px',
@@ -60,17 +61,16 @@ export default function TentangPage() {
       </section>
 
       {/* Main Content */}
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '80px 40px' }}>
+      <div className="tn-main" style={{ maxWidth: '1200px', margin: '0 auto', padding: '80px 40px' }}>
         
         {/* Story Section */}
         <div style={{ 
           backgroundColor: 'white',
           borderRadius: '20px',
-          padding: '60px',
           marginBottom: '48px',
           border: '1px solid #E5E5E0',
           boxShadow: '0 8px 32px rgba(0,0,0,0.06)'
-        }}>
+        }} className="tn-card">
           <div style={{ 
             fontSize: '48px',
             textAlign: 'center',
@@ -112,7 +112,7 @@ export default function TentangPage() {
         </div>
 
         {/* Mission & Vision Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px', marginBottom: '48px' }}>
+        <div className="tn-mv-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px', marginBottom: '48px' }}>
           
           {/* Mission */}
           <div style={{ 
@@ -201,11 +201,10 @@ export default function TentangPage() {
         <div style={{ 
           backgroundColor: 'white',
           borderRadius: '20px',
-          padding: '60px',
           marginBottom: '48px',
           border: '1px solid #E5E5E0',
           boxShadow: '0 8px 32px rgba(0,0,0,0.06)'
-        }}>
+        }} className="tn-card">
           <h2 style={{ 
             fontSize: '36px',
             fontWeight: 'bold',
@@ -217,7 +216,7 @@ export default function TentangPage() {
             Nilai-Nilai Kami
           </h2>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '40px' }}>
+          <div className="tn-values-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '40px' }}>
             
             {/* Value 1 */}
             <div style={{ textAlign: 'center' }}>
@@ -375,11 +374,10 @@ export default function TentangPage() {
         <div style={{ 
           backgroundColor: 'white',
           borderRadius: '20px',
-          padding: '60px',
           marginBottom: '48px',
           border: '1px solid #E5E5E0',
           boxShadow: '0 8px 32px rgba(0,0,0,0.06)'
-        }}>
+        }} className="tn-card">
           <h2 style={{ 
             fontSize: '36px',
             fontWeight: 'bold',
@@ -391,7 +389,7 @@ export default function TentangPage() {
             Apa Yang Kami Buat
           </h2>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+          <div className="tn-features-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
             
             {/* Feature 1 */}
             <div style={{ 
@@ -512,10 +510,9 @@ export default function TentangPage() {
         </div>
 
         {/* Stats Section */}
-        <div style={{ 
+        <div className="tn-stats-section" style={{ 
           background: 'linear-gradient(135deg, #B8936D 0%, #8B6F47 100%)',
           borderRadius: '20px',
-          padding: '60px',
           marginBottom: '48px',
           textAlign: 'center'
         }}>
@@ -529,7 +526,7 @@ export default function TentangPage() {
             Pencapaian Kami
           </h2>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '40px' }}>
+          <div className="tn-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '40px' }}>
             
             <div>
               <div style={{ 
@@ -648,10 +645,9 @@ export default function TentangPage() {
         </div>
 
         {/* CTA Section */}
-        <div style={{ 
+        <div className="tn-cta" style={{ 
           background: 'linear-gradient(135deg, #FFF8F0 0%, #FFEFDB 100%)',
           borderRadius: '20px',
-          padding: '60px',
           textAlign: 'center',
           border: '2px solid #B8936D'
         }}>
@@ -712,66 +708,7 @@ export default function TentangPage() {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer style={{ backgroundColor: '#B8936D', color: 'white', padding: '60px 40px 30px' }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '60px', marginBottom: '40px' }}>
-            
-            <div>
-              <div style={{ marginBottom: '20px' }}>
-                <img 
-                  src="/logo.png" 
-                  alt="iHRAM" 
-                  style={{ 
-                    height: '50px',
-                    filter: 'brightness(0) invert(1) drop-shadow(2px 2px 4px rgba(255,255,255,0.2))'
-                  }} 
-                />
-              </div>
-              <p style={{ fontSize: '16px', lineHeight: '1.7', color: 'rgba(255,255,255,0.9)' }}>
-                Platform discovery pakej umrah pertama di Malaysia yang memudahkan umat Islam mencari pakej yang sesuai dengan keperluan mereka.
-              </p>
-            </div>
-
-            <div>
-              <h3 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '20px', fontFamily: 'Georgia, serif' }}>
-                Pautan Pantas
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <Link href="/" style={{ color: 'rgba(255,255,255,0.9)', textDecoration: 'none', fontSize: '16px' }}>Home</Link>
-                <Link href="/pakej" style={{ color: 'rgba(255,255,255,0.9)', textDecoration: 'none', fontSize: '16px' }}>Pakej Umrah</Link>
-                <Link href="/agensi" style={{ color: 'rgba(255,255,255,0.9)', textDecoration: 'none', fontSize: '16px' }}>Agensi</Link>
-                <Link href="/panduan" style={{ color: 'rgba(255,255,255,0.9)', textDecoration: 'none', fontSize: '16px' }}>Panduan</Link>
-                <Link href="/ulasan" style={{ color: 'rgba(255,255,255,0.9)', textDecoration: 'none', fontSize: '16px' }}>Ulasan</Link>
-              </div>
-            </div>
-
-            <div>
-              <h3 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '20px', fontFamily: 'Georgia, serif' }}>
-                Hubungi Kami
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '16px', color: 'rgba(255,255,255,0.9)' }}>
-                <div>
-                  <strong>Email:</strong><br/>
-                  info@ihram.com.my
-                </div>
-                <div>
-                  <strong>WhatsApp:</strong><br/>
-                  +60 12-345 6789
-                </div>
-                <div>
-                  <strong>Waktu Operasi:</strong><br/>
-                  Isnin - Jumaat: 9:00 AM - 6:00 PM
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '30px', textAlign: 'center', fontSize: '14px', color: 'rgba(255,255,255,0.8)' }}>
-            <p>© 2026 iHRAM - Think Tank Sdn Bhd. All Rights Reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }

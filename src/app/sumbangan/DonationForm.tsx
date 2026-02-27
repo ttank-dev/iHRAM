@@ -36,10 +36,9 @@ export default function DonationForm() {
   }
 
   return (
-    <div style={{ 
+    <div className="sb-donation-form" style={{ 
       backgroundColor: 'white',
       borderRadius: '20px',
-      padding: '48px',
       border: '2px solid #B8936D',
       boxShadow: '0 8px 32px rgba(0,0,0,0.08)'
     }}>
@@ -88,7 +87,7 @@ export default function DonationForm() {
           }}>
             Pilih Jumlah
           </label>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+          <div className="sb-preset-grid" style={{ display: 'grid', gap: '12px' }}>
             {presetAmounts.map((preset) => (
               <button
                 key={preset}
@@ -297,6 +296,7 @@ export default function DonationForm() {
             required
             style={{ 
               width: '100%',
+              boxSizing: 'border-box' as const,
               padding: '14px 16px',
               fontSize: '15px',
               border: '2px solid #E5E5E0',
@@ -325,6 +325,7 @@ export default function DonationForm() {
             required
             style={{ 
               width: '100%',
+              boxSizing: 'border-box' as const,
               padding: '14px 16px',
               fontSize: '15px',
               border: '2px solid #E5E5E0',
@@ -352,6 +353,7 @@ export default function DonationForm() {
             placeholder="01X-XXX XXXX"
             style={{ 
               width: '100%',
+              boxSizing: 'border-box' as const,
               padding: '14px 16px',
               fontSize: '15px',
               border: '2px solid #E5E5E0',

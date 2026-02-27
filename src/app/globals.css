@@ -191,3 +191,191 @@
   .ul-footer { padding: 32px 16px 16px !important; }
   .ul-footer-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
 }
+
+/* ═══════════════════════════════════════
+   HANTAR ULASAN PAGE
+   ═══════════════════════════════════════ */
+.hu-hero { padding: 80px 40px; }
+.hu-hero-title { font-size: 48px; }
+.hu-hero-sub { font-size: 18px; }
+.hu-main { max-width: 900px; margin: 48px auto; padding: 0 40px; box-sizing: border-box; }
+.hu-card { padding: 48px; box-sizing: border-box; overflow: hidden; }
+.hu-card input, .hu-card textarea, .hu-card select { box-sizing: border-box; max-width: 100%; }
+.hu-star { font-size: 40px; }
+.hu-footer { padding: 60px 40px 30px; }
+.hu-footer-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 60px; margin-bottom: 40px; }
+
+@media (max-width: 1023px) {
+  .hu-hero { padding: 60px 24px !important; }
+  .hu-hero-title { font-size: 36px !important; }
+  .hu-hero-sub { font-size: 16px !important; }
+  .hu-main { padding: 0 24px !important; margin: 32px auto !important; }
+  .hu-card { padding: 32px !important; }
+  .hu-star { font-size: 32px !important; }
+  .hu-footer { padding: 40px 24px 24px !important; }
+  .hu-footer-grid { grid-template-columns: 1fr 1fr !important; gap: 32px !important; }
+}
+
+@media (max-width: 639px) {
+  .hu-hero { padding: 40px 16px !important; }
+  .hu-hero-title { font-size: 28px !important; }
+  .hu-hero-sub { font-size: 15px !important; }
+  .hu-main { padding: 0 16px !important; margin: 20px auto !important; }
+  .hu-card { padding: 20px !important; }
+  .hu-star { font-size: 28px !important; }
+  .hu-footer { padding: 32px 16px 16px !important; }
+  .hu-footer-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
+}
+
+
+/* ═══════════════════════════════════════
+   SHARED FOOTER COMPONENT
+   ═══════════════════════════════════════ */
+.shared-footer { background-color: #B8936D; color: white; padding: 60px 40px 30px; }
+.shared-footer-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 60px; margin-bottom: 40px; }
+
+@media (max-width: 1023px) {
+  .shared-footer { padding: 40px 24px 24px !important; }
+  .shared-footer-grid { grid-template-columns: 1fr 1fr !important; gap: 32px !important; }
+}
+
+@media (max-width: 639px) {
+  .shared-footer { padding: 32px 16px 16px !important; }
+  .shared-footer-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
+}
+
+/* ═══════════════════════════════════════
+   PAKEJ LISTING PAGE (page.tsx)
+   ═══════════════════════════════════════ */
+.pk-hero { padding: 80px 40px; }
+.pk-hero h1 { font-size: 48px; }
+.pk-hero p { font-size: 18px; }
+.pk-content { max-width: 1400px; margin: 0 auto; padding: 60px 40px; }
+
+@media (max-width: 1023px) {
+  .pk-hero { padding: 60px 24px !important; }
+  .pk-hero h1 { font-size: 36px !important; }
+  .pk-content { padding: 40px 24px !important; }
+}
+
+@media (max-width: 639px) {
+  .pk-hero { padding: 40px 16px !important; }
+  .pk-hero h1 { font-size: 28px !important; margin-bottom: 12px !important; }
+  .pk-hero p { font-size: 15px !important; }
+  .pk-content { padding: 24px 16px !important; }
+}
+/* ═══════════════════════════════════════
+   TENTANG PAGE
+   ═══════════════════════════════════════ */
+.tn-hero { padding: 100px 40px; }
+.tn-hero-title { font-size: 56px; }
+.tn-hero-sub { font-size: 20px; }
+.tn-main { max-width: 1200px; margin: 0 auto; padding: 80px 40px; }
+.tn-card { padding: 60px; }
+.tn-mv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 48px; }
+.tn-values-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; }
+.tn-features-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+.tn-stats-section { padding: 60px; }
+.tn-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; }
+.tn-cta { padding: 60px; }
+
+@media (max-width: 1023px) {
+  .tn-hero { padding: 70px 24px !important; }
+  .tn-hero-title { font-size: 42px !important; }
+  .tn-hero-sub { font-size: 17px !important; }
+  .tn-main { padding: 48px 24px !important; }
+  .tn-card { padding: 40px !important; }
+  .tn-mv-grid { grid-template-columns: 1fr !important; }
+  .tn-values-grid { grid-template-columns: 1fr 1fr !important; gap: 24px !important; }
+  .tn-features-grid { grid-template-columns: 1fr !important; }
+  .tn-stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 24px !important; }
+  .tn-cta { padding: 40px !important; }
+}
+
+@media (max-width: 639px) {
+  .tn-hero { padding: 48px 16px !important; }
+  .tn-hero-title { font-size: 30px !important; }
+  .tn-hero-sub { font-size: 15px !important; }
+  .tn-main { padding: 24px 16px !important; }
+  .tn-card { padding: 24px !important; }
+  .tn-values-grid { grid-template-columns: 1fr !important; }
+  .tn-stats-section { padding: 32px 16px !important; }
+  .tn-stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 20px !important; }
+  .tn-cta { padding: 24px 16px !important; }
+}
+
+/* ═══════════════════════════════════════
+   HUBUNGI PAGE
+   ═══════════════════════════════════════ */
+.hb-hero { padding: 80px 40px; }
+.hb-hero-title { font-size: 48px; }
+.hb-hero-sub { font-size: 18px; }
+.hb-main { max-width: 1200px; margin: -60px auto 0; padding: 0 40px 80px; box-sizing: border-box; }
+.hb-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 32px; }
+.hb-form-card { padding: 48px; box-sizing: border-box; overflow: hidden; }
+.hb-form-card input, .hb-form-card textarea, .hb-form-card select { box-sizing: border-box; max-width: 100%; }
+.hb-faq-card { padding: 60px; }
+.hb-cta { padding: 48px; }
+
+@media (max-width: 1023px) {
+  .hb-hero { padding: 60px 24px !important; }
+  .hb-hero-title { font-size: 36px !important; }
+  .hb-main { padding: 0 24px 60px !important; margin: -40px auto 0 !important; }
+  .hb-grid { grid-template-columns: 1fr !important; }
+  .hb-form-card { padding: 32px !important; }
+  .hb-faq-card { padding: 40px !important; }
+  .hb-cta { padding: 36px !important; }
+}
+
+@media (max-width: 639px) {
+  .hb-hero { padding: 40px 16px !important; }
+  .hb-hero-title { font-size: 28px !important; }
+  .hb-hero-sub { font-size: 15px !important; }
+  .hb-main { padding: 0 16px 40px !important; margin: -24px auto 0 !important; }
+  .hb-form-card { padding: 20px !important; }
+  .hb-faq-card { padding: 20px !important; }
+  .hb-cta { padding: 24px 16px !important; }
+}
+
+/* ═══════════════════════════════════════
+   SUMBANGAN PAGE
+   ═══════════════════════════════════════ */
+.sb-hero { padding: 100px 40px; }
+.sb-hero-title { font-size: 56px; }
+.sb-hero-sub { font-size: 20px; }
+.sb-main { max-width: 1200px; margin: -60px auto 0; padding: 0 40px 80px; box-sizing: border-box; overflow: hidden; }
+.sb-card { padding: 60px; }
+.sb-impact-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; padding: 40px; background-color: #FFF8F0; border-radius: 16px; }
+.sb-options-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px; margin-bottom: 48px; max-width: 900px; margin: 0 auto 48px; }
+.sb-faq-card { padding: 60px; }
+.sb-cta { padding: 60px 40px; }
+.sb-donation-form { padding: 48px; }
+.sb-preset-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+@media (max-width: 1023px) {
+  .sb-hero { padding: 70px 24px !important; }
+  .sb-hero-title { font-size: 42px !important; }
+  .sb-hero-sub { font-size: 17px !important; }
+  .sb-main { padding: 24px 24px 60px !important; margin: 0 auto !important; }
+  .sb-card { padding: 40px !important; }
+  .sb-impact-grid { grid-template-columns: 1fr !important; gap: 20px !important; padding: 28px !important; }
+  .sb-options-grid { grid-template-columns: 1fr !important; }
+  .sb-faq-card { padding: 40px !important; }
+  .sb-cta { padding: 40px 24px !important; }
+  .sb-donation-form { padding: 32px !important; }
+  .sb-preset-grid { grid-template-columns: repeat(3, 1fr) !important; }
+}
+
+@media (max-width: 639px) {
+  .sb-hero { padding: 48px 16px !important; }
+  .sb-hero-title { font-size: 30px !important; }
+  .sb-hero-sub { font-size: 15px !important; }
+  .sb-main { padding: 0 16px 40px !important; margin: 0 auto !important; }
+  .sb-card { padding: 24px !important; }
+  .sb-impact-grid { grid-template-columns: 1fr !important; gap: 16px !important; padding: 20px !important; }
+  .sb-options-grid { grid-template-columns: 1fr !important; }
+  .sb-faq-card { padding: 20px !important; }
+  .sb-cta { padding: 28px 16px !important; }
+  .sb-donation-form { padding: 20px !important; }
+  .sb-preset-grid { grid-template-columns: repeat(2, 1fr) !important; }
+}

@@ -1,24 +1,49 @@
+'use client'
+
+import Footer from '@/app/Footer'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
-import { notFound } from 'next/navigation'
-import MobileNav from '@/app/MobileNav'
+import { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import PakejDetailNavbar from './PakejDetailNavbar'
 
-export default async function PakejDetailPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params
-  const supabase = await createClient()
+export default function PakejDetail() {
+  const params = useParams()
+  const slug = params.slug as string
+  const [pkg, setPkg] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
 
-  const { data: packageData } = await supabase
-    .from('packages')
-    .select('*, agencies(*)')
-    .eq('slug', slug)
-    .eq('status', 'published')
-    .single()
+  useEffect(() => {
+    const fetchPackage = async () => {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('packages')
+        .select('*, agencies(*)')
+        .eq('slug', slug)
+        .eq('status', 'published')
+        .single()
+      
+      if (!data) {
+        window.location.href = '/404'
+        return
+      }
+      setPkg(data)
+      setLoading(false)
+    }
+    fetchPackage()
+  }, [slug])
 
-  if (!packageData) {
-    notFound()
+  if (loading) {
+    return (
+      <div style={{ backgroundColor: '#F5F5F0', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <PakejDetailNavbar />
+        <div style={{ textAlign: 'center', color: '#B8936D', fontSize: '18px' }}>Memuatkan...</div>
+      </div>
+    )
   }
 
-  const pkg = packageData
+  if (!pkg) return null
+
   const phone = pkg.agencies?.phone || ''
   const waNumber = phone.replace(/\D/g, '').replace(/^0/, '60')
   const waMessage = `Salam, saya berminat dengan pakej ${pkg.title} dari iHRAM`
@@ -39,71 +64,10 @@ export default async function PakejDetailPage({ params }: { params: Promise<{ sl
   return (
     <div style={{ backgroundColor: '#F5F5F0', minHeight: '100vh' }}>
 
-      <style>{`
-        .pd-nav-inner { position: relative; }
-        .pd-breadcrumb { padding: 16px 40px; }
-        .pd-main { max-width: 1400px; margin: 48px auto; padding: 0 40px; }
-        .pd-grid { display: grid; grid-template-columns: 1.8fr 1fr; gap: 48px; }
-        .pd-hero-img { height: 480px; }
-        .pd-meta-grid-1 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px; }
-        .pd-meta-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 32px; padding-bottom: 32px; border-bottom: 2px solid #F5F5F0; }
-        .pd-footer-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 60px; margin-bottom: 40px; }
-        .pd-sticky { position: sticky; top: 120px; }
-
-        @media (max-width: 1023px) {
-          .pd-grid { grid-template-columns: 1fr; gap: 32px; }
-          .pd-sticky { position: static; }
-          .pd-main { padding: 0 24px; margin: 32px auto; }
-          .pd-breadcrumb { padding: 16px 24px; }
-          .pd-hero-img { height: 320px !important; }
-          .pd-footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
-        }
-
-        @media (max-width: 639px) {
-          .pd-grid { gap: 20px; }
-          .pd-main { padding: 0 16px; margin: 20px auto; }
-          .pd-breadcrumb { padding: 12px 16px; font-size: 13px !important; }
-          .pd-hero-img { height: 220px !important; }
-          .pd-meta-grid-1 { grid-template-columns: repeat(3, 1fr); gap: 8px; }
-          .pd-meta-grid-1 > div { padding: 12px 8px !important; }
-          .pd-meta-grid-1 > div > div:last-child { font-size: 15px !important; }
-          .pd-meta-grid-2 { grid-template-columns: 1fr; gap: 12px; }
-          .pd-footer-grid { grid-template-columns: 1fr; gap: 24px; }
-          footer { padding: 32px 16px 16px !important; }
-        }
-      `}</style>
-
 
       
       {/* Navigation */}
-      <nav style={{ backgroundColor: 'white', borderBottom: '1px solid #E5E5E0', position: 'sticky', top: 0, zIndex: 100 }}>
-        <div className="hp-nav-inner" style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '80px' }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-            <img 
-              src="/logo.png" 
-              alt="iHRAM" 
-              className="hp-logo-img"
-              style={{ 
-                height: '50px',
-                filter: 'brightness(0) saturate(100%) invert(56%) sepia(35%) saturate(643%) hue-rotate(358deg) brightness(95%) contrast(92%) drop-shadow(2px 2px 4px rgba(184,147,109,0.3))'
-              }} 
-            />
-          </Link>
-
-          <div className="hp-desktop-links" style={{ display: 'flex', gap: '40px', alignItems: 'center' }}>
-            <Link href="/" style={{ color: '#2C2C2C', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Home</Link>
-            <Link href="/pakej" style={{ color: '#B8936D', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Pakej Umrah</Link>
-            <Link href="/agensi" style={{ color: '#2C2C2C', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Agensi</Link>
-            <Link href="/panduan" style={{ color: '#2C2C2C', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Panduan</Link>
-            <Link href="/ulasan" style={{ color: '#2C2C2C', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Ulasan</Link>
-            <Link href="/tentang" style={{ color: '#2C2C2C', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Tentang</Link>
-            <Link href="/hubungi" style={{ padding: '12px 32px', backgroundColor: '#B8936D', color: 'white', textDecoration: 'none', borderRadius: '50px', fontSize: '15px', fontWeight: '600' }}>
-              HUBUNGI KAMI
-            </Link>
-            </div>
-          <MobileNav />
-        </div>
-      </nav>
+      <PakejDetailNavbar />
 
       {/* Breadcrumb */}
       <div style={{ backgroundColor: 'white', borderBottom: '1px solid #E5E5E0' }}>
@@ -379,66 +343,7 @@ export default async function PakejDetailPage({ params }: { params: Promise<{ sl
         </div>
       </div>
 
-      {/* Footer */}
-      <footer style={{ backgroundColor: '#B8936D', color: 'white', padding: '60px 40px 30px' }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          <div className="pd-footer-grid">
-            
-            <div>
-              <div style={{ marginBottom: '20px' }}>
-                <img 
-                  src="/logo.png" 
-                  alt="iHRAM" 
-                  style={{ 
-                    height: '50px',
-                    filter: 'brightness(0) invert(1) drop-shadow(2px 2px 4px rgba(255,255,255,0.2))'
-                  }} 
-                />
-              </div>
-              <p style={{ fontSize: '16px', lineHeight: '1.7', color: 'rgba(255,255,255,0.9)' }}>
-                Platform discovery pakej umrah pertama di Malaysia yang memudahkan umat Islam mencari pakej yang sesuai dengan keperluan mereka.
-              </p>
-            </div>
-
-            <div>
-              <h3 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '20px', fontFamily: 'Georgia, serif' }}>
-                Pautan Pantas
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <Link href="/" style={{ color: 'rgba(255,255,255,0.9)', textDecoration: 'none', fontSize: '16px' }}>Home</Link>
-                <Link href="/pakej" style={{ color: 'rgba(255,255,255,0.9)', textDecoration: 'none', fontSize: '16px' }}>Pakej Umrah</Link>
-                <Link href="/agensi" style={{ color: 'rgba(255,255,255,0.9)', textDecoration: 'none', fontSize: '16px' }}>Agensi</Link>
-                <Link href="/panduan" style={{ color: 'rgba(255,255,255,0.9)', textDecoration: 'none', fontSize: '16px' }}>Panduan</Link>
-                <Link href="/ulasan" style={{ color: 'rgba(255,255,255,0.9)', textDecoration: 'none', fontSize: '16px' }}>Ulasan</Link>
-              </div>
-            </div>
-
-            <div>
-              <h3 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '20px', fontFamily: 'Georgia, serif' }}>
-                Hubungi Kami
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '16px', color: 'rgba(255,255,255,0.9)' }}>
-                <div>
-                  <strong>Email:</strong><br/>
-                  info@ihram.com.my
-                </div>
-                <div>
-                  <strong>WhatsApp:</strong><br/>
-                  +60 12-345 6789
-                </div>
-                <div>
-                  <strong>Waktu Operasi:</strong><br/>
-                  Isnin - Jumaat: 9:00 AM - 6:00 PM
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '30px', textAlign: 'center', fontSize: '14px', color: 'rgba(255,255,255,0.8)' }}>
-            <p>© 2026 iHRAM - Think Tank Sdn Bhd. All Rights Reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }
