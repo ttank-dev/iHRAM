@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import PakejListingClient from './PakejListingClient'
+import MobileNav from '@/app/MobileNav'
 
 export default async function PakejPage() {
   const supabase = await createClient()
@@ -23,21 +24,49 @@ export default async function PakejPage() {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#F5F5F0' }}>
+
+      <style>{`
+        .pk-nav-inner { position: relative; }
+        .pk-hero { padding: 80px 40px; }
+        .pk-hero h1 { font-size: 48px; }
+        .pk-hero p { font-size: 18px; }
+        .pk-content { max-width: 1400px; margin: 0 auto; padding: 60px 40px; }
+        .pk-footer-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 60px; margin-bottom: 40px; }
+
+        @media (max-width: 1023px) {
+          .pk-hero { padding: 60px 24px; }
+          .pk-hero h1 { font-size: 36px !important; }
+          .pk-content { padding: 40px 24px; }
+          .pk-footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+        }
+
+        @media (max-width: 639px) {
+          .pk-hero { padding: 40px 16px; }
+          .pk-hero h1 { font-size: 28px !important; margin-bottom: 12px !important; }
+          .pk-hero p { font-size: 15px !important; }
+          .pk-content { padding: 24px 16px; }
+          .pk-footer-grid { grid-template-columns: 1fr; gap: 24px; }
+          footer { padding: 32px 16px 16px !important; }
+        }
+      `}</style>
+
+
       
       {/* Navigation */}
       <nav style={{ backgroundColor: 'white', borderBottom: '1px solid #E5E5E0', position: 'sticky', top: 0, zIndex: 100 }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '80px' }}>
+        <div className="hp-nav-inner" style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '80px' }}>
           <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
             <img
               src="/logo.png"
               alt="iHRAM"
+              className="hp-logo-img"
               style={{
                 height: '50px',
                 filter: 'brightness(0) saturate(100%) invert(56%) sepia(35%) saturate(643%) hue-rotate(358deg) brightness(95%) contrast(92%) drop-shadow(2px 2px 4px rgba(184,147,109,0.3))'
               }}
             />
           </Link>
-          <div style={{ display: 'flex', gap: '40px', alignItems: 'center' }}>
+          <div className="hp-desktop-links" style={{ display: 'flex', gap: '40px', alignItems: 'center' }}>
             <Link href="/" style={{ color: '#2C2C2C', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Home</Link>
             <Link href="/pakej" style={{ color: '#B8936D', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Pakej Umrah</Link>
             <Link href="/agensi" style={{ color: '#2C2C2C', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Agensi</Link>
@@ -48,13 +77,13 @@ export default async function PakejPage() {
               HUBUNGI KAMI
             </Link>
           </div>
+          <MobileNav />
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section style={{ 
+      <section className="pk-hero" style={{ 
         background: 'linear-gradient(135deg, #B8936D 0%, #8B6F47 100%)',
-        padding: '80px 40px',
         textAlign: 'center'
       }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
@@ -79,7 +108,7 @@ export default async function PakejPage() {
       </section>
 
       {/* Main Content */}
-      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '60px 40px' }}>
+      <div className="pk-content">
       
         {/* Client Component with Filters */}
         <PakejListingClient packages={packages || []} />
@@ -88,7 +117,7 @@ export default async function PakejPage() {
       {/* Footer */}
       <footer style={{ backgroundColor: '#B8936D', color: 'white', padding: '60px 40px 30px' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '60px', marginBottom: '40px' }}>
+          <div className="pk-footer-grid">
             
             <div>
               <div style={{ marginBottom: '20px' }}>

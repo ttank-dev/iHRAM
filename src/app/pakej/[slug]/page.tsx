@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
+import MobileNav from '@/app/MobileNav'
 
 export default async function PakejDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -37,14 +38,51 @@ export default async function PakejDetailPage({ params }: { params: Promise<{ sl
 
   return (
     <div style={{ backgroundColor: '#F5F5F0', minHeight: '100vh' }}>
+
+      <style>{`
+        .pd-nav-inner { position: relative; }
+        .pd-breadcrumb { padding: 16px 40px; }
+        .pd-main { max-width: 1400px; margin: 48px auto; padding: 0 40px; }
+        .pd-grid { display: grid; grid-template-columns: 1.8fr 1fr; gap: 48px; }
+        .pd-hero-img { height: 480px; }
+        .pd-meta-grid-1 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px; }
+        .pd-meta-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 32px; padding-bottom: 32px; border-bottom: 2px solid #F5F5F0; }
+        .pd-footer-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 60px; margin-bottom: 40px; }
+        .pd-sticky { position: sticky; top: 120px; }
+
+        @media (max-width: 1023px) {
+          .pd-grid { grid-template-columns: 1fr; gap: 32px; }
+          .pd-sticky { position: static; }
+          .pd-main { padding: 0 24px; margin: 32px auto; }
+          .pd-breadcrumb { padding: 16px 24px; }
+          .pd-hero-img { height: 320px !important; }
+          .pd-footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+        }
+
+        @media (max-width: 639px) {
+          .pd-grid { gap: 20px; }
+          .pd-main { padding: 0 16px; margin: 20px auto; }
+          .pd-breadcrumb { padding: 12px 16px; font-size: 13px !important; }
+          .pd-hero-img { height: 220px !important; }
+          .pd-meta-grid-1 { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+          .pd-meta-grid-1 > div { padding: 12px 8px !important; }
+          .pd-meta-grid-1 > div > div:last-child { font-size: 15px !important; }
+          .pd-meta-grid-2 { grid-template-columns: 1fr; gap: 12px; }
+          .pd-footer-grid { grid-template-columns: 1fr; gap: 24px; }
+          footer { padding: 32px 16px 16px !important; }
+        }
+      `}</style>
+
+
       
       {/* Navigation */}
       <nav style={{ backgroundColor: 'white', borderBottom: '1px solid #E5E5E0', position: 'sticky', top: 0, zIndex: 100 }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '80px' }}>
+        <div className="hp-nav-inner" style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '80px' }}>
           <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
             <img 
               src="/logo.png" 
               alt="iHRAM" 
+              className="hp-logo-img"
               style={{ 
                 height: '50px',
                 filter: 'brightness(0) saturate(100%) invert(56%) sepia(35%) saturate(643%) hue-rotate(358deg) brightness(95%) contrast(92%) drop-shadow(2px 2px 4px rgba(184,147,109,0.3))'
@@ -52,7 +90,7 @@ export default async function PakejDetailPage({ params }: { params: Promise<{ sl
             />
           </Link>
 
-          <div style={{ display: 'flex', gap: '40px', alignItems: 'center' }}>
+          <div className="hp-desktop-links" style={{ display: 'flex', gap: '40px', alignItems: 'center' }}>
             <Link href="/" style={{ color: '#2C2C2C', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Home</Link>
             <Link href="/pakej" style={{ color: '#B8936D', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Pakej Umrah</Link>
             <Link href="/agensi" style={{ color: '#2C2C2C', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Agensi</Link>
@@ -63,12 +101,13 @@ export default async function PakejDetailPage({ params }: { params: Promise<{ sl
               HUBUNGI KAMI
             </Link>
             </div>
+          <MobileNav />
         </div>
       </nav>
 
       {/* Breadcrumb */}
       <div style={{ backgroundColor: 'white', borderBottom: '1px solid #E5E5E0' }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '16px 40px' }}>
+        <div className="pd-breadcrumb" style={{ maxWidth: '1400px', margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: '#666' }}>
             <Link href="/" style={{ color: '#B8936D', textDecoration: 'none', fontWeight: '500' }}>Home</Link>
             <span>/</span>
@@ -80,8 +119,8 @@ export default async function PakejDetailPage({ params }: { params: Promise<{ sl
       </div>
 
       {/* Main Content */}
-      <div style={{ maxWidth: '1400px', margin: '48px auto', padding: '0 40px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1fr', gap: '48px' }}>
+      <div className="pd-main">
+        <div className="pd-grid">
           
           {/* Left Column */}
           <div>
@@ -89,7 +128,7 @@ export default async function PakejDetailPage({ params }: { params: Promise<{ sl
             {/* Hero Image */}
             <div style={{ backgroundColor: 'white', borderRadius: '16px', overflow: 'hidden', marginBottom: '32px', boxShadow: '0 8px 32px rgba(0,0,0,0.08)', border: '1px solid #E5E5E0' }}>
               {pkg.photos && pkg.photos[0] ? (
-                <div style={{ position: 'relative', height: '480px', backgroundImage: `url(${pkg.photos[0]})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                <div className="pd-hero-img" style={{ position: 'relative', backgroundImage: `url(${pkg.photos[0]})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
                   {pkg.agencies?.is_verified && (
                     <div style={{ position: 'absolute', top: '24px', left: '24px', backgroundColor: '#B8936D', color: 'white', padding: '10px 20px', borderRadius: '50px', fontSize: '13px', fontWeight: '700', letterSpacing: '0.5px', boxShadow: '0 4px 12px rgba(184,147,109,0.4)' }}>
                       ✅ VERIFIED AGENCY
@@ -97,7 +136,7 @@ export default async function PakejDetailPage({ params }: { params: Promise<{ sl
                   )}
                 </div>
               ) : (
-                <div style={{ height: '480px', backgroundColor: '#E5E5E0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '16px' }}>
+                <div className="pd-hero-img" style={{ backgroundColor: '#E5E5E0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '16px' }}>
                   <span style={{ fontSize: '64px', opacity: 0.5 }}>📷</span>
                   <span style={{ fontSize: '16px', color: '#999' }}>Tiada Gambar</span>
                 </div>
@@ -113,7 +152,7 @@ export default async function PakejDetailPage({ params }: { params: Promise<{ sl
               </h1>
 
               {/* Meta Info Grid - Row 1 */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '20px' }}>
+              <div className="pd-meta-grid-1">
                 <div style={{ textAlign: 'center', padding: '20px', backgroundColor: '#F5F5F0', borderRadius: '12px' }}>
                   <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>JENIS PAKEJ</div>
                   <div style={{ fontSize: '20px', fontWeight: '700', color: '#B8936D', textTransform: 'capitalize' }}>
@@ -137,7 +176,7 @@ export default async function PakejDetailPage({ params }: { params: Promise<{ sl
               </div>
 
               {/* Meta Info Grid - Row 2 */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', marginBottom: '32px', paddingBottom: '32px', borderBottom: '2px solid #F5F5F0' }}>
+              <div className="pd-meta-grid-2">
                 {pkg.departure_dates && pkg.departure_dates.length > 0 && (
                   <div style={{ padding: '20px', backgroundColor: '#F5F5F0', borderRadius: '12px' }}>
                     <div style={{ fontSize: '13px', color: '#666', marginBottom: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'center' }}>TARIKH BERLEPAS</div>
@@ -230,7 +269,7 @@ export default async function PakejDetailPage({ params }: { params: Promise<{ sl
 
           {/* Right Column - Sticky Sidebar */}
           <div>
-            <div style={{ position: 'sticky', top: '120px' }}>
+            <div className="pd-sticky">
               
               {/* Price Card */}
               <div style={{ backgroundColor: 'white', borderRadius: '16px', padding: '32px', border: '1px solid #E5E5E0', boxShadow: '0 8px 32px rgba(0,0,0,0.08)', marginBottom: '24px' }}>
@@ -343,7 +382,7 @@ export default async function PakejDetailPage({ params }: { params: Promise<{ sl
       {/* Footer */}
       <footer style={{ backgroundColor: '#B8936D', color: 'white', padding: '60px 40px 30px' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '60px', marginBottom: '40px' }}>
+          <div className="pd-footer-grid">
             
             <div>
               <div style={{ marginBottom: '20px' }}>

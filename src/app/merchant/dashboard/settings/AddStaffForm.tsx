@@ -53,7 +53,7 @@ export default function AddStaffForm({ agencyId }: { agencyId: string }) {
 Email: ${success?.email}
 Temporary Password: ${success?.password}
 
-Login at: https://ihram.com.my/merchant-login`
+Login at: https://ihram.com.my/merchant/login`
     
     navigator.clipboard.writeText(text)
     alert('📋 Copied to clipboard!')
@@ -125,7 +125,7 @@ Login at: https://ihram.com.my/merchant-login`
             lineHeight: '1.6'
           }}>
             ⚠️ <strong>Important:</strong> Copy these credentials and share them securely. 
-            They can login immediately at <strong>/merchant-login</strong>
+            They can login immediately at <strong>/merchant/login</strong>
           </div>
 
           <button

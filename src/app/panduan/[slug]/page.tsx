@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
+import PanduanDetailNavbar from './PanduanDetailNavbar'
 
-export default async function PanduanDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function PanduanDetail({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const supabase = await createClient()
 
@@ -41,35 +42,11 @@ export default async function PanduanDetailPage({ params }: { params: Promise<{ 
     <div style={{ backgroundColor: '#F5F5F0', minHeight: '100vh' }}>
       
       {/* Navigation */}
-      <nav style={{ backgroundColor: 'white', borderBottom: '1px solid #E5E5E0', position: 'sticky', top: 0, zIndex: 100 }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '80px' }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-            <img 
-              src="/logo.png" 
-              alt="iHRAM" 
-              style={{ 
-                height: '50px',
-                filter: 'brightness(0) saturate(100%) invert(56%) sepia(35%) saturate(643%) hue-rotate(358deg) brightness(95%) contrast(92%) drop-shadow(2px 2px 4px rgba(184,147,109,0.3))'
-              }} 
-            />
-          </Link>
-          <div style={{ display: 'flex', gap: '40px', alignItems: 'center' }}>
-            <Link href="/" style={{ color: '#2C2C2C', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Home</Link>
-            <Link href="/pakej" style={{ color: '#2C2C2C', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Pakej Umrah</Link>
-            <Link href="/agensi" style={{ color: '#2C2C2C', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Agensi</Link>
-            <Link href="/panduan" style={{ color: '#B8936D', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Panduan</Link>
-            <Link href="/ulasan" style={{ color: '#2C2C2C', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Ulasan</Link>
-            <Link href="/tentang" style={{ color: '#2C2C2C', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Tentang</Link>
-            <Link href="/hubungi" style={{ padding: '12px 32px', backgroundColor: '#B8936D', color: 'white', textDecoration: 'none', borderRadius: '50px', fontSize: '15px', fontWeight: '600' }}>
-              HUBUNGI KAMI
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <PanduanDetailNavbar />
 
       {/* Breadcrumb */}
       <div style={{ backgroundColor: 'white', borderBottom: '1px solid #E5E5E0' }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '16px 40px' }}>
+        <div className="pd2-breadcrumb" style={{ maxWidth: '1400px', margin: '0 auto', padding: '16px 40px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: '#666' }}>
             <Link href="/" style={{ color: '#B8936D', textDecoration: 'none', fontWeight: '500' }}>Home</Link>
             <span>/</span>
@@ -81,7 +58,7 @@ export default async function PanduanDetailPage({ params }: { params: Promise<{ 
       </div>
 
       {/* Article Content */}
-      <div style={{ maxWidth: '900px', margin: '48px auto', padding: '0 40px' }}>
+      <div className="pd2-main" style={{ maxWidth: '900px', margin: '48px auto', padding: '0 40px' }}>
         
         {/* Article Card */}
         <article style={{ 
@@ -98,6 +75,7 @@ export default async function PanduanDetailPage({ params }: { params: Promise<{ 
             <img 
               src={guide.cover_image}
               alt={guide.title}
+              className="pd2-cover"
               style={{ 
                 width: '100%',
                 height: '400px',
@@ -106,7 +84,7 @@ export default async function PanduanDetailPage({ params }: { params: Promise<{ 
             />
           )}
 
-          <div style={{ padding: '48px' }}>
+          <div className="pd2-article-inner" style={{ padding: '48px' }}>
             
             {/* Category & Date */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
@@ -129,7 +107,7 @@ export default async function PanduanDetailPage({ params }: { params: Promise<{ 
             </div>
 
             {/* Title */}
-            <h1 style={{ 
+            <h1 className="pd2-title" style={{ 
               fontSize: '40px',
               fontWeight: 'bold',
               color: '#2C2C2C',
@@ -216,7 +194,7 @@ export default async function PanduanDetailPage({ params }: { params: Promise<{ 
               Panduan Berkaitan
             </h2>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
+            <div className="pd2-related-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
               {relatedGuides.map((relGuide) => (
                 <Link 
                   key={relGuide.id}
@@ -279,7 +257,7 @@ export default async function PanduanDetailPage({ params }: { params: Promise<{ 
       {/* Footer */}
       <footer style={{ backgroundColor: '#B8936D', color: 'white', padding: '60px 40px 30px' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '60px', marginBottom: '40px' }}>
+          <div className="pd2-footer-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '60px', marginBottom: '40px' }}>
             
             <div>
               <div style={{ marginBottom: '20px' }}>

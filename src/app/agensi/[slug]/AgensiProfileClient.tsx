@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import MobileNav from '@/app/MobileNav'
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -599,20 +600,80 @@ export default function AgensiProfileClient({
 
   return (
     <div style={{ backgroundColor: '#F5F5F0', minHeight: '100vh' }}>
+      {/* ── RESPONSIVE STYLES ── */}
+      <style>{`
+        /* Navbar */
+        .ap-nav-links { display: flex; gap: 40px; align-items: center; }
+
+        /* Cover */
+        .ap-cover { height: 400px; }
+
+        /* Profile row */
+        .ap-profile-row { display: flex; align-items: flex-end; margin-top: -80px; padding-bottom: 24px; gap: 24px; }
+        .ap-logo { width: 168px; height: 168px; border-radius: 50%; border: 6px solid white; background-color: #F5F5F0; background-size: cover; background-position: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; font-size: 64px; flex-shrink: 0; position: relative; z-index: 20; }
+        .ap-agency-info { flex: 1; padding-bottom: 8px; }
+        .ap-agency-name { font-size: 32px; font-weight: bold; color: #2C2C2C; margin-bottom: 8px; }
+        .ap-actions { display: flex; gap: 12px; position: relative; }
+
+        /* Tabs */
+        .ap-tabs { display: flex; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+        .ap-tabs::-webkit-scrollbar { display: none; }
+        .ap-tab-btn { padding: 16px 24px; background: transparent; border: none; border-bottom: 3px solid transparent; font-size: 15px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.3s; }
+
+        /* Content padding */
+        .ap-content-wrap { max-width: 1200px; margin: 0 auto; padding: 0 40px; }
+        .ap-section { padding: 32px 0; }
+
+        /* Packages grid */
+        .ap-pkg-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+
+        /* Footer grid */
+        .ap-footer-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 60px; margin-bottom: 40px; }
+
+        /* ── TABLET ── */
+        @media (max-width: 1023px) {
+          .ap-nav-links { display: none; }
+          .ap-cover { height: 280px; }
+          .ap-profile-row { margin-top: -60px; gap: 16px; }
+          .ap-logo { width: 120px; height: 120px; font-size: 48px; }
+          .ap-agency-name { font-size: 26px; }
+          .ap-content-wrap { padding: 0 24px; }
+          .ap-pkg-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+          .ap-footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+        }
+
+        /* ── MOBILE ── */
+        @media (max-width: 639px) {
+          .ap-cover { height: 200px; }
+          .ap-profile-row { flex-direction: column; align-items: flex-start; margin-top: -48px; gap: 12px; }
+          .ap-logo { width: 96px; height: 96px; font-size: 36px; border-width: 4px; }
+          .ap-agency-name { font-size: 22px; }
+          .ap-actions { width: 100%; }
+          .ap-actions a, .ap-actions button { flex: 1; justify-content: center; padding: 12px 16px !important; font-size: 14px !important; }
+          .ap-content-wrap { padding: 0 16px; }
+          .ap-tab-btn { padding: 12px 16px; font-size: 13px; }
+          .ap-pkg-grid { grid-template-columns: 1fr; gap: 16px; }
+          .ap-footer-grid { grid-template-columns: 1fr; gap: 24px; }
+          .ap-section { padding: 24px 0; }
+        }
+      `}</style>
+
+
       
       <nav style={{ backgroundColor: 'white', borderBottom: '1px solid #E5E5E0', position: 'sticky', top: 0, zIndex: 100 }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '80px' }}>
+        <div className="hp-nav-inner" style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '80px' }}>
           <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
             <img
               src="/logo.png"
               alt="iHRAM"
+              className="hp-logo-img"
               style={{
                 height: '50px',
                 filter: 'brightness(0) saturate(100%) invert(56%) sepia(35%) saturate(643%) hue-rotate(358deg) brightness(95%) contrast(92%) drop-shadow(2px 2px 4px rgba(184,147,109,0.3))'
               }}
             />
           </Link>
-          <div style={{ display: 'flex', gap: '40px', alignItems: 'center' }}>
+          <div className="ap-nav-links hp-desktop-links">
             <Link href="/" style={{ color: '#2C2C2C', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Home</Link>
             <Link href="/pakej" style={{ color: '#2C2C2C', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Pakej Umrah</Link>
             <Link href="/agensi" style={{ color: '#B8936D', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Agensi</Link>
@@ -623,15 +684,15 @@ export default function AgensiProfileClient({
               DAFTAR AGENSI
             </Link>
           </div>
+          <MobileNav />
         </div>
       </nav>
 
       <div style={{ backgroundColor: 'white', borderBottom: '1px solid #E5E5E0' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative' }}>
           
-          <div style={{
-            height: '400px',
-            backgroundImage: agency.cover_url ? `url(${agency.cover_url})` : 'linear-gradient(135deg, #B8936D 0%, #8B6F47 100%)',
+          <div className="ap-cover" style={{
+          backgroundImage: agency.cover_url ? `url(${agency.cover_url})` : 'linear-gradient(135deg, #B8936D 0%, #8B6F47 100%)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             position: 'relative',
@@ -671,30 +732,12 @@ export default function AgensiProfileClient({
             )}
           </div>
 
-          <div style={{ padding: '0 40px' }}>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'flex-end',
-              marginTop: '-80px',
-              paddingBottom: '24px',
-              gap: '24px'
-            }}>
+          <div style={{ padding: '0 24px' }}>
+            <div className="ap-profile-row">
               
-              <div style={{
-                width: '168px',
-                height: '168px',
-                borderRadius: '50%',
-                border: '6px solid white',
+              <div className="ap-logo" style={{
                 backgroundColor: agency.logo_url ? 'white' : '#F5F5F0',
                 backgroundImage: agency.logo_url ? `url(${agency.logo_url})` : 'none',
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '64px',
-                flexShrink: 0,
                 position: 'relative',
                 zIndex: 20
               }}>
@@ -702,12 +745,7 @@ export default function AgensiProfileClient({
               </div>
 
               <div style={{ flex: 1, paddingBottom: '8px' }}>
-                <h1 style={{ 
-                  fontSize: '32px', 
-                  fontWeight: 'bold', 
-                  color: '#2C2C2C',
-                  marginBottom: '8px'
-                }}>
+                <h1 className="ap-agency-name" style={{ fontWeight: 'bold', color: '#2C2C2C', marginBottom: '8px' }}>
                   {agency.name}
                 </h1>
                 
@@ -731,7 +769,7 @@ export default function AgensiProfileClient({
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '12px', position: 'relative' }}>
+              <div className="ap-actions">
                 {agency.phone && (
                   <a
                     href={`https://wa.me/6${agency.phone.replace(/\D/g, '')}`}
@@ -891,16 +929,14 @@ export default function AgensiProfileClient({
               </div>
             </div>
 
-            <div style={{
-              display: 'flex',
-              gap: '8px',
+            <div className="ap-tabs" style={{
               borderBottom: '2px solid #E5E5E0',
               paddingBottom: '0'
             }}>
               <button
                 onClick={() => setActiveTab('pakej')}
                 style={{
-                  padding: '16px 32px',
+                  padding: '16px 24px',
                   backgroundColor: 'transparent',
                   color: activeTab === 'pakej' ? '#B8936D' : '#666',
                   border: 'none',
@@ -917,7 +953,7 @@ export default function AgensiProfileClient({
               <button
                 onClick={() => setActiveTab('newsfeed')}
                 style={{
-                  padding: '16px 32px',
+                  padding: '16px 24px',
                   backgroundColor: 'transparent',
                   color: activeTab === 'newsfeed' ? '#B8936D' : '#666',
                   border: 'none',
@@ -934,7 +970,7 @@ export default function AgensiProfileClient({
               <button
                 onClick={() => setActiveTab('reels')}
                 style={{
-                  padding: '16px 32px',
+                  padding: '16px 24px',
                   backgroundColor: 'transparent',
                   color: activeTab === 'reels' ? '#B8936D' : '#666',
                   border: 'none',
@@ -952,7 +988,7 @@ export default function AgensiProfileClient({
               <button
                 onClick={() => setActiveTab('galeri')}
                 style={{
-                  padding: '16px 32px',
+                  padding: '16px 24px',
                   backgroundColor: 'transparent',
                   color: activeTab === 'galeri' ? '#B8936D' : '#666',
                   border: 'none',
@@ -969,7 +1005,7 @@ export default function AgensiProfileClient({
               <button
                 onClick={() => setActiveTab('tentang')}
                 style={{
-                  padding: '16px 32px',
+                  padding: '16px 24px',
                   backgroundColor: 'transparent',
                   color: activeTab === 'tentang' ? '#B8936D' : '#666',
                   border: 'none',
@@ -986,7 +1022,7 @@ export default function AgensiProfileClient({
               <button
                 onClick={() => setActiveTab('ulasan')}
                 style={{
-                  padding: '16px 32px',
+                  padding: '16px 24px',
                   backgroundColor: 'transparent',
                   color: activeTab === 'ulasan' ? '#B8936D' : '#666',
                   border: 'none',
@@ -1004,7 +1040,7 @@ export default function AgensiProfileClient({
         </div>
       </div>
 
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 40px' }}>
+      <div className="ap-content-wrap">
 
         {activeTab === 'newsfeed' && (
           <div style={{ padding: '32px 0' }}>
@@ -1513,7 +1549,7 @@ export default function AgensiProfileClient({
             </h2>
 
             {packages && packages.length > 0 ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
+              <div className="ap-pkg-grid">
                 {packages.map((pkg) => (
                   <Link
                     key={pkg.id}
@@ -1926,9 +1962,9 @@ export default function AgensiProfileClient({
       )}
 
       {/* Footer */}
-      <footer style={{ backgroundColor: '#B8936D', color: 'white', padding: '60px 40px 30px' }}>
+      <footer style={{ backgroundColor: '#B8936D', color: 'white', padding: '60px 24px 30px' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '60px', marginBottom: '40px' }}>
+          <div className="ap-footer-grid">
             
             <div>
               <div style={{ marginBottom: '20px' }}>

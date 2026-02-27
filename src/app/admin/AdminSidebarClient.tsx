@@ -387,6 +387,8 @@ export default function AdminSidebarClient({ children }: { children: React.React
           }
           .admin-main {
             margin-left: 0;
+            overflow-x: hidden;
+            width: 100%;
           }
           .topbar {
             display: flex;

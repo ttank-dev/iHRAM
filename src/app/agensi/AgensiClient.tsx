@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import Pagination from '@/app/Pagination'
+import MobileNav from '@/app/MobileNav'
 
 interface Agency {
   id: string
@@ -29,12 +32,15 @@ export default function AgensiClient({
   agencies: Agency[]
   ratings: Ratings
 }) {
+  const router = useRouter()
   const searchRef = useRef<HTMLDivElement>(null)
   
   const [filteredAgencies, setFilteredAgencies] = useState<Agency[]>(agencies)
   const [searchTerm, setSearchTerm] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'verified'>('all')
+  const [currentPage, setCurrentPage] = useState(1)
+  const ITEMS_PER_PAGE = 12
 
   useEffect(() => {
     let filtered = agencies
@@ -50,6 +56,7 @@ export default function AgensiClient({
     }
 
     setFilteredAgencies(filtered)
+    setCurrentPage(1)
   }, [searchTerm, agencies, selectedFilter])
 
   useEffect(() => {
@@ -66,36 +73,66 @@ export default function AgensiClient({
   const handleQuickJump = (agency: Agency) => {
     setSearchTerm('')
     setShowSuggestions(false)
-    
-    const element = document.getElementById(`agency-${agency.id}`)
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      element.style.transform = 'scale(1.02)'
-      element.style.boxShadow = '0 8px 32px rgba(184, 147, 109, 0.3)'
-      setTimeout(() => {
-        element.style.transform = ''
-        element.style.boxShadow = ''
-      }, 2000)
-    }
+    router.push(`/agensi/${agency.slug}`)
   }
+
+  const totalPages = Math.ceil(filteredAgencies.length / ITEMS_PER_PAGE)
+  const paginatedAgencies = filteredAgencies.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
 
   return (
     <div style={{ backgroundColor: '#F5F5F0', minHeight: '100vh' }}>
-      
+
+      {/* ── RESPONSIVE STYLES ── */}
+      <style>{`
+        .ac-search-wrap { max-width: 1200px; margin: -40px auto 0; padding: 0 40px; position: relative; z-index: 10; }
+        .ac-search-box { background: white; border-radius: 16px; padding: 32px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); margin-bottom: 40px; }
+        .ac-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #E5E5E0; }
+        .ac-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+        .ac-content-wrap { max-width: 1400px; margin: 0 auto 48px; padding: 0 40px; }
+        .ac-footer-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 60px; margin-bottom: 40px; }
+        .ac-hero { padding: 80px 40px; }
+        .ac-hero h1 { font-size: 48px; }
+        .ac-hero p { font-size: 18px; }
+
+        @media (max-width: 1023px) {
+          .ac-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+          .ac-hero { padding: 60px 24px; }
+          .ac-hero h1 { font-size: 36px; }
+          .ac-search-wrap { padding: 0 24px; }
+          .ac-content-wrap { padding: 0 24px; }
+          .ac-footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+        }
+
+        @media (max-width: 639px) {
+          .ac-grid { grid-template-columns: 1fr; gap: 16px; }
+          .ac-stats-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+          .ac-stats-grid > div > div:first-child { font-size: 22px !important; }
+          .ac-hero { padding: 40px 16px; }
+          .ac-hero h1 { font-size: 28px !important; margin-bottom: 12px !important; }
+          .ac-hero p { font-size: 15px !important; }
+          .ac-search-wrap { padding: 0 16px; margin-top: -24px; }
+          .ac-search-box { padding: 20px 16px; }
+          .ac-content-wrap { padding: 0 16px; }
+          .ac-footer-grid { grid-template-columns: 1fr; gap: 24px; }
+          footer { padding: 32px 16px 16px !important; margin-top: 40px !important; }
+        }
+      `}</style>
+
       {/* Navigation */}
       <nav style={{ backgroundColor: 'white', borderBottom: '1px solid #E5E5E0', position: 'sticky', top: 0, zIndex: 100 }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '80px' }}>
+        <div className="hp-nav-inner" style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '80px' }}>
           <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
             <img 
               src="/logo.png" 
               alt="iHRAM" 
+              className="hp-logo-img"
               style={{ 
                 height: '50px',
                 filter: 'brightness(0) saturate(100%) invert(56%) sepia(35%) saturate(643%) hue-rotate(358deg) brightness(95%) contrast(92%) drop-shadow(2px 2px 4px rgba(184,147,109,0.3))'
               }} 
             />
           </Link>
-          <div style={{ display: 'flex', gap: '40px', alignItems: 'center' }}>
+          <div className="hp-desktop-links" style={{ display: 'flex', gap: '40px', alignItems: 'center' }}>
             <Link href="/" style={{ color: '#2C2C2C', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Home</Link>
             <Link href="/pakej" style={{ color: '#2C2C2C', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Pakej Umrah</Link>
             <Link href="/agensi" style={{ color: '#B8936D', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Agensi</Link>
@@ -106,13 +143,13 @@ export default function AgensiClient({
               HUBUNGI KAMI
             </Link>
           </div>
+          <MobileNav />
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section style={{ 
+      <section className="ac-hero" style={{ 
         background: 'linear-gradient(135deg, #B8936D 0%, #8B6F47 100%)',
-        padding: '80px 40px',
         textAlign: 'center'
       }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
@@ -137,30 +174,11 @@ export default function AgensiClient({
       </section>
 
       {/* ========== SEARCH SECTION (NEW) ========== */}
-      <div style={{
-        maxWidth: '1200px',
-        margin: '-40px auto 0',
-        padding: '0 40px',
-        position: 'relative',
-        zIndex: 10
-      }}>
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '16px',
-          padding: '32px',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
-          marginBottom: '40px'
-        }}>
+      <div className="ac-search-wrap">
+        <div className="ac-search-box">
           
           {/* Stats */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '20px',
-            marginBottom: '32px',
-            paddingBottom: '24px',
-            borderBottom: '1px solid #E5E5E0'
-          }}>
+          <div className="ac-stats-grid">
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#B8936D', marginBottom: '4px' }}>
                 {agencies.length}
@@ -204,7 +222,8 @@ export default function AgensiClient({
                 }}
                 onFocus={() => setShowSuggestions(true)}
                 style={{ 
-                  width: '96%',
+                  width: '100%',
+                  boxSizing: 'border-box' as const,
                   padding: '16px 20px',
                   border: '2px solid #E5E5E0',
                   borderRadius: '12px',
@@ -379,11 +398,12 @@ export default function AgensiClient({
       {/* ========== END SEARCH SECTION ========== */}
 
       {/* Main Content */}
-      <div style={{ maxWidth: '1400px', margin: '0px auto 48px', padding: '0 40px' }}>
+      <div className="ac-content-wrap">
         
         {filteredAgencies && filteredAgencies.length > 0 ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '32px' }}>
-            {filteredAgencies.map((agency) => {
+          <>
+          <div className="ac-grid">
+            {paginatedAgencies.map((agency) => {
               const ratingData = ratings[agency.id]
               const avgRating = ratingData ? (ratingData.total / ratingData.count).toFixed(1) : null
               const reviewCount = ratingData ? ratingData.count : 0
@@ -595,6 +615,8 @@ export default function AgensiClient({
               )
             })}
           </div>
+          <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+          </>
         ) : (
           <div style={{ 
             backgroundColor: 'white',
@@ -617,7 +639,7 @@ export default function AgensiClient({
       {/* Footer */}
       <footer style={{ backgroundColor: '#B8936D', color: 'white', padding: '60px 40px 30px', marginTop: '100px' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '60px', marginBottom: '40px' }}>
+          <div className="ac-footer-grid">
             
             <div>
               <div style={{ marginBottom: '20px' }}>

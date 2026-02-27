@@ -2,6 +2,8 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import MobileNav from '@/app/MobileNav'
+import Pagination from '@/app/Pagination'
 
 interface Guide {
   id: string
@@ -21,29 +23,39 @@ export default function PanduanClient({
   categories?: string[]
 }) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const ITEMS_PER_PAGE = 12
 
-  // Filter guides by category
   const filteredGuides = selectedCategory
     ? guides.filter(g => g.category === selectedCategory)
     : guides
+
+  const totalPages = Math.ceil(filteredGuides.length / ITEMS_PER_PAGE)
+  const paginatedGuides = filteredGuides.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+
+  const handleCategory = (cat: string | null) => {
+    setSelectedCategory(cat)
+    setCurrentPage(1)
+  }
 
   return (
     <div style={{ backgroundColor: '#F5F5F0', minHeight: '100vh' }}>
       
       {/* Navigation */}
       <nav style={{ backgroundColor: 'white', borderBottom: '1px solid #E5E5E0', position: 'sticky', top: 0, zIndex: 100 }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '80px' }}>
+        <div className="hp-nav-inner" style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '80px' }}>
           <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
             <img 
               src="/logo.png" 
-              alt="iHRAM" 
+              alt="iHRAM"
+              className="hp-logo-img"
               style={{ 
                 height: '50px',
                 filter: 'brightness(0) saturate(100%) invert(56%) sepia(35%) saturate(643%) hue-rotate(358deg) brightness(95%) contrast(92%) drop-shadow(2px 2px 4px rgba(184,147,109,0.3))'
               }} 
             />
           </Link>
-          <div style={{ display: 'flex', gap: '40px', alignItems: 'center' }}>
+          <div className="hp-desktop-links" style={{ display: 'flex', gap: '40px', alignItems: 'center' }}>
             <Link href="/" style={{ color: '#2C2C2C', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Home</Link>
             <Link href="/pakej" style={{ color: '#2C2C2C', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Pakej Umrah</Link>
             <Link href="/agensi" style={{ color: '#2C2C2C', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}>Agensi</Link>
@@ -54,6 +66,7 @@ export default function PanduanClient({
               HUBUNGI KAMI
             </Link>
           </div>
+          <MobileNav />
         </div>
       </nav>
 
@@ -96,7 +109,7 @@ export default function PanduanClient({
               
               {/* Semua Button */}
               <button 
-                onClick={() => setSelectedCategory(null)}
+                onClick={() => handleCategory(null)}
                 style={{ 
                   padding: '10px 24px',
                   backgroundColor: selectedCategory === null ? '#B8936D' : 'transparent',
@@ -116,7 +129,7 @@ export default function PanduanClient({
               {categories.map((cat) => (
                 <button 
                   key={cat}
-                  onClick={() => setSelectedCategory(cat)}
+                  onClick={() => handleCategory(cat)}
                   style={{ 
                     padding: '10px 24px',
                     backgroundColor: selectedCategory === cat ? '#B8936D' : 'transparent',
@@ -154,8 +167,8 @@ export default function PanduanClient({
             </div>
 
             {/* Guides Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '32px' }}>
-              {filteredGuides.map((guide) => (
+            <div className="pn-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '32px' }}>
+              {paginatedGuides.map((guide) => (
                 <Link 
                   key={guide.id}
                   href={`/panduan/${guide.slug}`}
@@ -255,6 +268,7 @@ export default function PanduanClient({
                 </Link>
               ))}
             </div>
+            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
           </>
         ) : (
           <div style={{ 
@@ -276,7 +290,7 @@ export default function PanduanClient({
             </p>
             {selectedCategory && (
               <button
-                onClick={() => setSelectedCategory(null)}
+                onClick={() => handleCategory(null)}
                 style={{ 
                   padding: '12px 32px',
                   backgroundColor: '#B8936D',
