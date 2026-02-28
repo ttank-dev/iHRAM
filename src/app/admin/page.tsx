@@ -34,6 +34,7 @@ export default function AdminDashboardPage() {
   })
 
   const [loading, setLoading] = useState(true)
+  const [adminName, setAdminName] = useState('')
 
   useEffect(() => {
     fetchStats()
@@ -41,40 +42,93 @@ export default function AdminDashboardPage() {
 
   const fetchStats = async () => {
     try {
-      const { data: verifications } = await supabase
-        .from('verification_requests')
-        .select(`*, agencies ( id, name, logo_url )`)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false })
-        .limit(3)
+      // Fetch admin name from admin_roles table
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: adminRole } = await supabase
+          .from('admin_roles')
+          .select('name')
+          .eq('user_id', user.id)
+          .single()
+        // Fallback: name from admin_roles → email prefix → 'Admin'
+        const name = adminRole?.name || user.email?.split('@')[0] || 'Admin'
+        setAdminName(name)
+      }
 
-      const pendingVerifCount = verifications?.length || 0
+      // Run all queries in parallel for speed
+      const [
+        { count: totalAgencies },
+        { count: totalPackages },
+        { count: totalReviews },
+        { count: pendingReviews },
+        { count: totalLeads },
+        { count: totalGuides },
+        { data: verifications },
+        { data: recentReviewsData },
+        { data: recentLeadsData },
+      ] = await Promise.all([
+        // Total active agencies
+        supabase.from('agencies').select('*', { count: 'exact', head: true }).eq('is_active', true),
+        // Total published packages
+        supabase.from('packages').select('*', { count: 'exact', head: true }).eq('status', 'published'),
+        // Total approved reviews
+        supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('is_approved', true),
+        // Pending reviews
+        supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('is_approved', false),
+        // Total leads
+        supabase.from('leads').select('*', { count: 'exact', head: true }),
+        // Total published guides
+        supabase.from('guides').select('*', { count: 'exact', head: true }).eq('is_published', true),
+        // Recent pending verifications
+        supabase
+          .from('verification_requests')
+          .select('*, agencies(id, name, logo_url)')
+          .eq('status', 'pending')
+          .order('created_at', { ascending: false })
+          .limit(3),
+        // Recent pending reviews
+        supabase
+          .from('reviews')
+          .select('id, reviewer_name, rating, packages(title)')
+          .eq('is_approved', false)
+          .order('created_at', { ascending: false })
+          .limit(3),
+        // Recent leads
+        supabase
+          .from('leads')
+          .select('id, created_at, packages(title), agencies(name)')
+          .order('created_at', { ascending: false })
+          .limit(3),
+      ])
 
       setStats({
-        totalAgencies: 24,
-        totalPackages: 156,
-        totalReviews: 89,
-        pendingReviews: 12,
-        pendingVerifications: pendingVerifCount,
-        totalLeads: 342,
-        totalGuides: 18,
-        recentLeads: [
-          { id: '1', package: 'Pakej Ramadhan 2026', agency: 'Al-Hijrah Travel', timestamp: '2 min ago' },
-          { id: '2', package: 'Umrah Premium Gold', agency: 'Safa Marwa', timestamp: '15 min ago' },
-          { id: '3', package: 'Ekonomi Makkah', agency: 'Rasikh Tours', timestamp: '1 hour ago' },
-        ],
-        recentReviews: [
-          { id: '1', reviewer: 'Ahmad Abdullah', rating: 5, package: 'Pakej Ramadhan', status: 'pending' },
-          { id: '2', reviewer: 'Fatimah Zahra', rating: 4, package: 'Premium VIP', status: 'pending' },
-          { id: '3', reviewer: 'Zainab Hassan', rating: 5, package: 'Standard Plus', status: 'pending' },
-        ],
+        totalAgencies: totalAgencies || 0,
+        totalPackages: totalPackages || 0,
+        totalReviews: totalReviews || 0,
+        pendingReviews: pendingReviews || 0,
+        pendingVerifications: verifications?.length || 0,
+        totalLeads: totalLeads || 0,
+        totalGuides: totalGuides || 0,
         recentVerifications: verifications?.map(v => ({
           id: v.id,
           company: v.company_name,
           agency: v.agencies?.name || 'Unknown',
           license: v.motac_license_number,
           timestamp: new Date(v.created_at).toLocaleDateString('ms-MY')
-        })) || []
+        })) || [],
+        recentReviews: recentReviewsData?.map(r => ({
+          id: r.id,
+          reviewer: r.reviewer_name || 'Anonymous',
+          rating: r.rating || 0,
+          package: (r.packages as any)?.title || '-',
+          status: 'pending'
+        })) || [],
+        recentLeads: recentLeadsData?.map(l => ({
+          id: l.id,
+          package: (l.packages as any)?.title || 'Unknown Package',
+          agency: (l.agencies as any)?.name || 'Unknown Agency',
+          timestamp: new Date(l.created_at).toLocaleDateString('ms-MY', { day: '2-digit', month: 'short' })
+        })) || [],
       })
     } catch (error) {
       console.error('Error fetching stats:', error)
@@ -85,11 +139,11 @@ export default function AdminDashboardPage() {
 
   const statCards = [
     { title: 'Verifikasi Pending', value: stats.pendingVerifications, icon: '✅', color: '#06B6D4', link: '/admin/verifikasi', change: 'Perlu review' },
-    { title: 'Total Agensi', value: stats.totalAgencies, icon: '🏢', color: '#3B82F6', link: '/admin/agensi', change: '+3 bulan ini' },
-    { title: 'Pakej Umrah', value: stats.totalPackages, icon: '📦', color: '#8B5CF6', link: '/admin/pakej', change: '+12 bulan ini' },
+    { title: 'Total Agensi', value: stats.totalAgencies, icon: '🏢', color: '#3B82F6', link: '/admin/agensi', change: 'Aktif' },
+    { title: 'Pakej Umrah', value: stats.totalPackages, icon: '📦', color: '#8B5CF6', link: '/admin/pakej', change: 'Published' },
     { title: 'Total Ulasan', value: stats.totalReviews, icon: '⭐', color: '#F59E0B', link: '/admin/ulasan', change: `${stats.pendingReviews} pending` },
-    { title: 'WhatsApp Leads', value: stats.totalLeads, icon: '🎯', color: '#10B981', link: '/admin/leads', change: '+45 minggu ini' },
-    { title: 'Panduan', value: stats.totalGuides, icon: '📚', color: '#B8936D', link: '/admin/panduan', change: 'All published' },
+    { title: 'WhatsApp Leads', value: stats.totalLeads, icon: '🎯', color: '#10B981', link: '/admin/leads', change: 'Semua masa' },
+    { title: 'Panduan', value: stats.totalGuides, icon: '📚', color: '#B8936D', link: '/admin/panduan', change: 'Published' },
   ]
 
   /* ── LOADING ── */
@@ -116,7 +170,7 @@ export default function AdminDashboardPage() {
         <div className="ad-header">
           <div>
             <h1 className="ad-title">Dashboard Overview</h1>
-            <p className="ad-subtitle">Selamat kembali, Admin! Ringkasan iHRAM hari ini.</p>
+            <p className="ad-subtitle">Selamat kembali, <strong>{adminName || 'Admin'}</strong>! Ringkasan iHRAM hari ini.</p>
           </div>
         </div>
 

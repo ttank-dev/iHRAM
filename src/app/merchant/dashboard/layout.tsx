@@ -57,6 +57,7 @@ export default function MerchantDashboardLayout({
 }) {
   const [loading, setLoading] = useState(true)
   const [agencyName, setAgencyName] = useState('')
+  const [userName, setUserName] = useState('')
   const [userRole, setUserRole] = useState<UserRole>(null)
   const [error, setError] = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -97,6 +98,12 @@ export default function MerchantDashboardLayout({
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/merchant/login'); return }
+
+      // Get user display name — from user_metadata or email prefix
+      const userName = user.user_metadata?.full_name || 
+                       user.user_metadata?.name || 
+                       user.email?.split('@')[0] || ''
+      setUserName(userName)
 
       const res = await fetch('/api/merchant/me')
       if (!res.ok) { setError('no-agency'); setLoading(false); return }
@@ -215,11 +222,25 @@ export default function MerchantDashboardLayout({
             )}
           </div>
 
-          {/* Agency badge */}
-          {agencyName && (
+          {/* User + Agency badge */}
+          {(userName || agencyName) && (
             <div className="agency-badge">
-              <div className="agency-label">AGENSI</div>
-              <div className="agency-name">{agencyName}</div>
+              {userName && (
+                <div className="user-name-row">
+                  <div className="user-avatar">{userName.charAt(0).toUpperCase()}</div>
+                  <div>
+                    <div className="agency-label">PENGGUNA</div>
+                    <div className="user-name-value">{userName}</div>
+                  </div>
+                </div>
+              )}
+              {agencyName && (
+                <>
+                  <div className="agency-divider" />
+                  <div className="agency-label">AGENSI</div>
+                  <div className="agency-name">{agencyName}</div>
+                </>
+              )}
               <div className={`role-badge ${owner ? 'owner' : 'staff'}`}>
                 {owner ? '👑 OWNER' : '👤 STAFF'}
               </div>
@@ -262,15 +283,16 @@ export default function MerchantDashboardLayout({
                 })}
               </div>
             ))}
+
+            {/* Logout — inside scrollable nav, bottom */}
+            <div className="nav-logout">
+              <button onClick={handleLogout} className="logout-btn">
+                <span>🚪</span>
+                <span>Log Keluar</span>
+              </button>
+            </div>
           </nav>
 
-          {/* Logout */}
-          <div className="sidebar-footer">
-            <button onClick={handleLogout} className="logout-btn">
-              <span>🚪</span>
-              <span>Log Out</span>
-            </button>
-          </div>
         </aside>
 
         {/* ── MAIN ── */}
@@ -464,11 +486,34 @@ export default function MerchantDashboardLayout({
           font-weight: 600;
         }
 
-        /* Footer */
-        .sidebar-footer {
-          padding: 16px 12px;
-          border-top: 1px solid rgba(255,255,255,0.06);
+        /* User name row in badge */
+        .user-name-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 10px;
+        }
+        .user-avatar {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #B8936D, #8B6B4A);
+          color: white;
+          font-size: 14px;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           flex-shrink: 0;
+        }
+        .user-name-value { font-size: 13px; color: #B8936D; font-weight: 600; }
+        .agency-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 10px 0; }
+
+        /* Logout inside nav */
+        .nav-logout {
+          margin-top: 24px;
+          padding-top: 16px;
+          border-top: 1px solid rgba(255,255,255,0.06);
         }
         .logout-btn {
           display: flex;

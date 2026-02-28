@@ -47,7 +47,7 @@ const navSections: NavSection[] = [
 ]
 
 /* ───────────────────────────── COMPONENT ───────────────────────────── */
-export default function AdminSidebarClient({ children }: { children: React.ReactNode }) {
+export default function AdminSidebarClient({ children, adminName }: { children: React.ReactNode; adminName?: string }) {
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -107,6 +107,17 @@ export default function AdminSidebarClient({ children }: { children: React.React
             )}
           </div>
 
+          {/* Admin name badge */}
+          {adminName && (
+            <div className="admin-name-badge">
+              <div className="admin-avatar">{adminName.charAt(0).toUpperCase()}</div>
+              <div>
+                <div className="admin-name-label">Dashboard</div>
+                <div className="admin-name-value">{adminName}</div>
+              </div>
+            </div>
+          )}
+
           {/* Nav */}
           <nav className="sidebar-nav">
             {navSections.map((section, si) => (
@@ -128,12 +139,11 @@ export default function AdminSidebarClient({ children }: { children: React.React
                 })}
               </div>
             ))}
+            {/* Logout - inside scrollable nav, bottom */}
+            <div className="nav-logout">
+              <LogoutButton />
+            </div>
           </nav>
-
-          {/* Logout */}
-          <div className="sidebar-footer">
-            <LogoutButton />
-          </div>
         </aside>
 
         {/* ── MAIN ── */}
@@ -279,11 +289,37 @@ export default function AdminSidebarClient({ children }: { children: React.React
           box-shadow: 0 0 8px rgba(184,147,109,0.5);
         }
 
-        /* Footer */
-        .sidebar-footer {
-          padding: 16px 12px;
-          border-top: 1px solid rgba(255,255,255,0.06);
+        /* Admin name badge */
+        .admin-name-badge {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 12px 20px;
+          background: rgba(184,147,109,0.06);
+          border-bottom: 1px solid rgba(255,255,255,0.06);
           flex-shrink: 0;
+        }
+        .admin-avatar {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #B8936D, #8B6B4A);
+          color: white;
+          font-size: 14px;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+        .admin-name-label { font-size: 10px; color: #555; font-weight: 600; letter-spacing: 0.5px; }
+        .admin-name-value { font-size: 13px; color: #B8936D; font-weight: 600; }
+
+        /* Logout inside nav */
+        .nav-logout {
+          margin-top: 24px;
+          padding-top: 16px;
+          border-top: 1px solid rgba(255,255,255,0.06);
         }
 
         /* ===== MAIN ===== */

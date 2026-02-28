@@ -34,6 +34,12 @@ export default async function MerchantDashboardPage() {
     redirect('/merchant/login')
   }
 
+  // Nama user yang login (bukan nama agensi)
+  const userName = user.user_metadata?.full_name ||
+                   user.user_metadata?.name ||
+                   user.email?.split('@')[0] ||
+                   'Merchant'
+
   // Stats
   const { data: packages } = await adminClient
     .from('packages')
@@ -89,7 +95,7 @@ export default async function MerchantDashboardPage() {
           <div className="md-header-top">
             <div>
               <h1 className="md-title">
-                Selamat kembali, {agency.name}! 👋
+                Selamat kembali, <strong>{userName}</strong>! 👋
               </h1>
               <p className="md-subtitle">
                 Ringkasan aktiviti agensi anda hari ini
@@ -201,7 +207,10 @@ export default async function MerchantDashboardPage() {
               { href: '/merchant/dashboard/newsfeed/new', icon: '📰', label: 'Tulis Berita', desc: 'Kongsi update' },
               { href: '/merchant/dashboard/reels', icon: '🎬', label: 'Reels', desc: 'Video pendek' },
               { href: '/merchant/dashboard/galeri', icon: '🖼️', label: 'Galeri', desc: 'Muat naik gambar' },
-              { href: '/merchant/dashboard/profil', icon: '🏢', label: 'Profil Agensi', desc: 'Kemaskini profil' },
+              // Owner: Profil Agensi | Staff: Tetapan (tukar kata laluan sahaja)
+              role === 'owner'
+                ? { href: '/merchant/dashboard/profil', icon: '🏢', label: 'Profil Agensi', desc: 'Kemaskini profil' }
+                : { href: '/merchant/dashboard/settings', icon: '⚙️', label: 'Tetapan', desc: 'Tukar kata laluan' },
             ].map((action) => (
               <Link key={action.href} href={action.href} className="md-action-card">
                 <div className="md-action-icon">{action.icon}</div>
