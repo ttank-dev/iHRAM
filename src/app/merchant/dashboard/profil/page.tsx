@@ -13,6 +13,8 @@ export default function ProfilAgensiPage() {
   const [message, setMessage] = useState('')
   const [uploadingLogo, setUploadingLogo] = useState(false)
   const [uploadingCover, setUploadingCover] = useState(false)
+  const [removingLogo, setRemovingLogo] = useState(false)
+  const [removingCover, setRemovingCover] = useState(false)
   const [currentLogo, setCurrentLogo] = useState<string | null>(null)
   const [currentCover, setCurrentCover] = useState<string | null>(null)
   const supabase = createClient()
@@ -67,6 +69,24 @@ export default function ProfilAgensiPage() {
     setUploadingCover(false)
   }
 
+  const handleRemoveLogo = async () => {
+    if (!confirm('Remove agency logo?')) return
+    setRemovingLogo(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) await supabase.from('agencies').update({ logo_url: null }).eq('user_id', user.id)
+    setCurrentLogo(null)
+    setRemovingLogo(false)
+  }
+
+  const handleRemoveCover = async () => {
+    if (!confirm('Remove cover photo?')) return
+    setRemovingCover(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) await supabase.from('agencies').update({ cover_url: null }).eq('user_id', user.id)
+    setCurrentCover(null)
+    setRemovingCover(false)
+  }
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
@@ -87,7 +107,7 @@ export default function ProfilAgensiPage() {
   }
 
   const set = (k: string, v: string) => setFormData(p => ({ ...p, [k]: v }))
-  const isBusy = saving || uploadingLogo || uploadingCover
+  const isBusy = saving || uploadingLogo || uploadingCover || removingLogo || removingCover
 
   if (loading) return (
     <>
@@ -127,6 +147,10 @@ export default function ProfilAgensiPage() {
           border-radius:10px;border:2px solid #E5E5E0;margin-bottom:10px;display:block;
         }
         .pp-upload-hint{font-size:12px;color:#B8936D;margin-top:6px;font-weight:500}
+        .pp-img-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px}
+        .pp-remove-btn{padding:6px 12px;background:#FEE2E2;color:#DC2626;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s}
+        .pp-remove-btn:hover:not(:disabled){background:#FECACA}
+        .pp-remove-btn:disabled{opacity:.5;cursor:not-allowed}
 
         /* Form */
         .pp-field{margin-bottom:20px}
@@ -219,16 +243,32 @@ export default function ProfilAgensiPage() {
               <div className="pp-field">
                 <label className="pp-label">Agency Logo</label>
                 {currentLogo && <img src={currentLogo} alt="Logo" className="pp-logo-preview" />}
+                {currentLogo && (
+                  <div className="pp-img-actions">
+                    <button type="button" className="pp-remove-btn"
+                      onClick={handleRemoveLogo} disabled={removingLogo}>
+                      {removingLogo ? '⏳ Removing...' : '🗑 Remove Logo'}
+                    </button>
+                  </div>
+                )}
                 <input type="file" accept="image/*" onChange={handleLogoUpload}
-                  disabled={uploadingLogo} className="pp-input" />
+                  disabled={uploadingLogo} className="pp-input" style={{ marginTop: currentLogo ? '8px' : '0' }} />
                 {uploadingLogo && <p className="pp-upload-hint">⏳ Uploading logo...</p>}
               </div>
 
               <div className="pp-field">
                 <label className="pp-label">Cover Photo</label>
                 {currentCover && <img src={currentCover} alt="Cover" className="pp-img-preview" />}
+                {currentCover && (
+                  <div className="pp-img-actions">
+                    <button type="button" className="pp-remove-btn"
+                      onClick={handleRemoveCover} disabled={removingCover}>
+                      {removingCover ? '⏳ Removing...' : '🗑 Remove Cover'}
+                    </button>
+                  </div>
+                )}
                 <input type="file" accept="image/*" onChange={handleCoverUpload}
-                  disabled={uploadingCover} className="pp-input" />
+                  disabled={uploadingCover} className="pp-input" style={{ marginTop: currentCover ? '8px' : '0' }} />
                 {uploadingCover && <p className="pp-upload-hint">⏳ Uploading cover...</p>}
               </div>
 

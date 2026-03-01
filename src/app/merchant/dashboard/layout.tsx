@@ -540,10 +540,14 @@ export default function MerchantDashboardLayout({
           min-height: 100vh;
           display: flex;
           flex-direction: column;
+          min-width: 0;
+          overflow-x: hidden;
         }
         .merchant-content {
           padding: 32px 40px;
           flex: 1;
+          min-width: 0;
+          overflow-x: hidden;
         }
 
         /* ===== TOP BAR (mobile) ===== */
@@ -638,7 +642,8 @@ export default function MerchantDashboardLayout({
         @media (max-width: 639px) {
           .merchant-sidebar { width: 280px; }
           .merchant-content {
-            padding: 16px 12px;
+            padding: 16px;
+            overflow-x: hidden;
           }
           .topbar {
             padding: 10px 12px;

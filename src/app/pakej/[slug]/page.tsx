@@ -111,7 +111,7 @@ export default function PakejDetail() {
             <div style={{ backgroundColor: 'white', borderRadius: '16px', padding: '40px', border: '1px solid #E5E5E0', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
               
               {/* Title */}
-              <h1 style={{ fontSize: '42px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '32px', fontFamily: 'Georgia, serif', lineHeight: '1.2' }}>
+              <h1 style={{ fontSize: '30px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '32px', fontFamily: 'Arial Rounded MT Bold', lineHeight: '1.2' }}>
                 {pkg.title}
               </h1>
 
@@ -172,7 +172,7 @@ export default function PakejDetail() {
               {/* Description */}
               {pkg.description && (
                 <div style={{ marginBottom: '40px' }}>
-                  <h2 style={{ fontSize: '26px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '20px', fontFamily: 'Georgia, serif' }}>
+                  <h2 style={{ fontSize: '26px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '20px', fontFamily: 'Arial Rounded MT Bold' }}>
                     Penerangan Pakej
                   </h2>
                   <p style={{ fontSize: '16px', lineHeight: '1.9', color: '#4A4A4A', whiteSpace: 'pre-wrap' }}>
@@ -184,8 +184,8 @@ export default function PakejDetail() {
               {/* Itinerary */}
               {pkg.itinerary && (
                 <div style={{ marginBottom: '40px' }}>
-                  <h2 style={{ fontSize: '26px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '20px', fontFamily: 'Georgia, serif' }}>
-                    📋 Itinerari Perjalanan
+                  <h2 style={{ fontSize: '26px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '20px', fontFamily: 'Arial Rounded MT Bold' }}>
+                    Itinerari Perjalanan
                   </h2>
                   <div style={{ padding: '24px', backgroundColor: '#F5F5F0', borderRadius: '12px', borderLeft: '4px solid #B8936D' }}>
                     <p style={{ fontSize: '16px', lineHeight: '1.9', color: '#4A4A4A', whiteSpace: 'pre-wrap' }}>
@@ -198,8 +198,8 @@ export default function PakejDetail() {
               {/* Inclusions */}
               {pkg.inclusions && pkg.inclusions.length > 0 && (
                 <div style={{ marginBottom: '40px' }}>
-                  <h2 style={{ fontSize: '26px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '20px', fontFamily: 'Georgia, serif' }}>
-                    ✓ Termasuk Dalam Pakej
+                  <h2 style={{ fontSize: '26px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '20px', fontFamily: 'Arial Rounded MT Bold' }}>
+                    Termasuk Dalam Pakej
                   </h2>
                   <div style={{ display: 'grid', gap: '12px' }}>
                     {pkg.inclusions.map((item: string, i: number) => (
@@ -215,8 +215,8 @@ export default function PakejDetail() {
               {/* Exclusions */}
               {pkg.exclusions && pkg.exclusions.length > 0 && (
                 <div>
-                  <h2 style={{ fontSize: '26px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '20px', fontFamily: 'Georgia, serif' }}>
-                    ✗ Tidak Termasuk
+                  <h2 style={{ fontSize: '26px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '20px', fontFamily: 'Arial Rounded MT Bold' }}>
+                    Tidak Termasuk
                   </h2>
                   <div style={{ display: 'grid', gap: '12px' }}>
                     {pkg.exclusions.map((item: string, i: number) => (

@@ -65,11 +65,11 @@ export default function UlasanPage() {
     <>
       <style>{`
         .ur-page,.ur-page *{box-sizing:border-box}
-        .ur-page{max-width:900px;width:100%;overflow:hidden}
+        .ur-page{max-width:900px}
         .ur-header{margin-bottom:20px}
         .ur-title{font-size:28px;font-weight:700;color:#2C2C2C;margin:0 0 4px}
         .ur-sub{font-size:14px;color:#888;margin:0}
-        .ur-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;width:100%}
+        .ur-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
         .ur-stat{background:white;border-radius:10px;padding:14px 10px;border:2px solid #E5E5E0;cursor:pointer;text-align:center;transition:border-color .15s}
         .ur-stat:hover{border-color:#ccc}
         .ur-stat.on{border-color:#B8936D}
@@ -77,10 +77,11 @@ export default function UlasanPage() {
         .ur-stat-l{font-size:10px;color:#888;font-weight:500;margin-bottom:2px}
         .ur-stat-v{font-size:20px;font-weight:700;color:#2C2C2C}
         .ur-list{display:flex;flex-direction:column;gap:12px}
-        .ur-card{background:white;border-radius:12px;padding:20px;border:1px solid #E5E5E0}
+        .ur-card{background:white;border-radius:12px;padding:20px;border:1px solid #E5E5E0;transition:box-shadow .15s}
+        .ur-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.06)}
         .ur-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px}
         .ur-card-left{flex:1;min-width:0}
-        .ur-card-name{font-size:15px;font-weight:700;color:#2C2C2C;margin-bottom:4px}
+        .ur-card-name{font-size:17px;font-weight:700;color:#2C2C2C;margin-bottom:6px;line-height:1.3}
         .ur-card-rating{display:flex;align-items:center;gap:6px;margin-bottom:6px}
         .ur-stars{font-size:15px;letter-spacing:1px}
         .ur-rating-num{font-size:13px;color:#888}
@@ -89,9 +90,9 @@ export default function UlasanPage() {
         .ur-badges{display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap;flex-shrink:0}
         .ur-badge{padding:4px 12px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap}
         .ur-badge-approved{background:#ECFDF5;color:#10B981}
-        .ur-badge-pending {background:#FEF3C7;color:#F59E0B}
+        .ur-badge-pending{background:#FEF3C7;color:#F59E0B}
         .ur-badge-verified{background:#EFF6FF;color:#3B82F6}
-        .ur-text{font-size:14px;color:#4A4A4A;line-height:1.6;margin-bottom:12px}
+        .ur-text{font-size:13px;color:#888;line-height:1.5;margin-bottom:12px}
         .ur-photos{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
         .ur-photo{width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #E5E5E0}
         .ur-card-footer{display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid #f0f0ec;font-size:12px;color:#999;gap:8px;flex-wrap:wrap}
@@ -102,22 +103,23 @@ export default function UlasanPage() {
         .ur-empty-sub{font-size:14px;color:#888}
         @media(max-width:1023px){.ur-title{font-size:24px}}
         @media(max-width:639px){
-          .ur-page{width:100%;min-width:0;overflow-x:hidden}
           .ur-title{font-size:20px}
           .ur-sub{font-size:13px}
-          .ur-stats{grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
-          .ur-stat{padding:12px 6px;border-radius:8px;min-width:0;overflow:hidden}
+          .ur-stats{gap:6px;margin-bottom:14px}
+          .ur-stat{padding:10px 4px;border-radius:8px}
+          .ur-stat-i{font-size:12px}
+          .ur-stat-l{font-size:9px}
+          .ur-stat-v{font-size:18px}
           .ur-card{padding:14px;border-radius:10px}
+          .ur-card-name{font-size:15px}
           .ur-card-top{flex-direction:column;gap:8px}
-          .ur-badges{flex-direction:row;flex-wrap:wrap}
-          .ur-text{font-size:13px}
+          .ur-text{font-size:12px}
           .ur-photo{width:64px;height:64px}
           .ur-card-footer{flex-direction:column;align-items:flex-start;gap:4px}
           .ur-list{gap:10px}
         }
         @media(max-width:380px){
           .ur-stats{grid-template-columns:1fr 1fr}
-          .ur-stat-v{font-size:18px}
         }
       `}</style>
 
@@ -133,22 +135,21 @@ export default function UlasanPage() {
             { key: 'approved', icon: '✅', label: 'Approved',   v: stats.approved },
             { key: 'pending',  icon: '⏳', label: 'Pending',    v: stats.pending },
             { key: 'rating',   icon: '⭐', label: 'Avg Rating', v: avgRating },
-          ]).map((s: any) => (
-            s.key === 'rating'
-              ? (
-                <div key="rating" className="ur-stat" style={{ cursor: 'default' }}>
-                  <div className="ur-stat-i">{s.icon}</div>
-                  <div className="ur-stat-l">{s.label}</div>
-                  <div className="ur-stat-v" style={{ color: '#B8936D' }}>{s.v}</div>
-                </div>
-              ) : (
-                <div key={s.key} className={`ur-stat${filter === s.key ? ' on' : ''}`} onClick={() => setFilter(s.key as any)}>
-                  <div className="ur-stat-i">{s.icon}</div>
-                  <div className="ur-stat-l">{s.label}</div>
-                  <div className="ur-stat-v">{s.v}</div>
-                </div>
-              )
-          ))}
+          ] as const).map((s: any) =>
+            s.key === 'rating' ? (
+              <div key="rating" className="ur-stat" style={{ cursor: 'default' }}>
+                <div className="ur-stat-i">{s.icon}</div>
+                <div className="ur-stat-l">{s.label}</div>
+                <div className="ur-stat-v" style={{ color: '#B8936D' }}>{s.v}</div>
+              </div>
+            ) : (
+              <div key={s.key} className={`ur-stat${filter === s.key ? ' on' : ''}`} onClick={() => setFilter(s.key)}>
+                <div className="ur-stat-i">{s.icon}</div>
+                <div className="ur-stat-l">{s.label}</div>
+                <div className="ur-stat-v">{s.v}</div>
+              </div>
+            )
+          )}
         </div>
 
         {filtered.length > 0 ? (
@@ -183,7 +184,7 @@ export default function UlasanPage() {
 
                   <p className="ur-text">{review.review_text}</p>
 
-                  {review.photos && review.photos.length > 0 && (
+                  {review.photos?.length > 0 && (
                     <div className="ur-photos">
                       {review.photos.map((photo: string, i: number) => (
                         <img key={i} src={photo} alt="" className="ur-photo" />

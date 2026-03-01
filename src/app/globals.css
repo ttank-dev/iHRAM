@@ -4,6 +4,8 @@
 
 @import './homepage.css';
 
+body { margin: 0; padding: 0; }
+
 /* ═══════════════════════════════════════
    PAKEJ LISTING PAGE
    ═══════════════════════════════════════ */
