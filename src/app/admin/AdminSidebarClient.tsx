@@ -19,11 +19,11 @@ const navSections: NavSection[] = [
   {
     title: 'MANAGEMENT',
     items: [
-      { href: '/admin/agensi', icon: '🏢', label: 'Agensi' },
-      { href: '/admin/verifikasi', icon: '✅', label: 'Review Verifikasi' },
-      { href: '/admin/pakej', icon: '📦', label: 'Pakej' },
-      { href: '/admin/ulasan', icon: '⭐', label: 'Ulasan' },
-      { href: '/admin/panduan', icon: '📚', label: 'Panduan' },
+      { href: '/admin/agensi', icon: '🏢', label: 'Agencies' },
+      { href: '/admin/verifikasi', icon: '✅', label: 'Verifications' },
+      { href: '/admin/pakej', icon: '📦', label: 'Packages' },
+      { href: '/admin/ulasan', icon: '⭐', label: 'Reviews' },
+      { href: '/admin/panduan', icon: '📚', label: 'Guides' },
       { href: '/admin/panduan/categories', icon: '🏷️', label: 'Categories', indent: true },
       { href: '/admin/leads', icon: '🎯', label: 'Leads' },
     ],
@@ -33,13 +33,13 @@ const navSections: NavSection[] = [
     items: [
       { href: '/admin/newsfeed', icon: '📰', label: 'News Feed' },
       { href: '/admin/reels', icon: '🎬', label: 'Reels' },
-      { href: '/admin/galeri', icon: '🖼️', label: 'Galeri' },
+      { href: '/admin/galeri', icon: '🖼️', label: 'Gallery' },
     ],
   },
   {
     title: 'SETTINGS',
     items: [
-      { href: '/admin/sumbangan', icon: '💰', label: 'Sumbangan' },
+      { href: '/admin/sumbangan', icon: '💰', label: 'Donations' },
       { href: '/admin/settings', icon: '⚙️', label: 'Settings' },
       { href: '/admin/logs', icon: '📋', label: 'Moderation Logs' },
     ],

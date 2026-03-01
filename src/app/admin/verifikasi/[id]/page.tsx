@@ -28,9 +28,9 @@ export default async function VerificationDetailPage({
     if (!request) {
       return (
         <div className="vd-empty">
-          <h2>Permohonan Tidak Ditemui</h2>
+          <h2>Request Not Found</h2>
           <p>ID: {id}</p>
-          <a href="/admin/verifikasi" className="vd-back-btn">← Kembali</a>
+          <a href="/admin/verifikasi" className="vd-back-btn">← Back</a>
           <style dangerouslySetInnerHTML={{ __html: `
             .vd-empty { padding: 60px 20px; text-align: center; }
             .vd-empty h2 { font-size: 22px; margin-bottom: 12px; color: #2C2C2C; }
@@ -57,18 +57,18 @@ export default async function VerificationDetailPage({
     const status = statusMap[request.status] || statusMap.pending
 
     const documents = [
-      { label: '📋 Sijil SSM', url: request.ssm_certificate_url },
-      { label: '🏛️ Lesen MOTAC', url: request.motac_license_url },
-      { label: '📜 Lesen Perniagaan', url: request.business_license_url },
+      { label: '📋 SSM Certificate', url: request.ssm_certificate_url },
+      { label: '🏛️ MOTAC License', url: request.motac_license_url },
+      { label: '📜 Business License', url: request.business_license_url },
     ].filter(d => d.url)
 
     const checklist = [
-      'Sahkan nama syarikat di portal MOTAC',
-      'Semak nombor lesen sepadan',
-      'Pastikan lesen AKTIF (tidak tamat)',
-      'Semak dokumen yang dimuat naik',
-      'Sahkan maklumat perhubungan',
-      'Semak kesahihan nombor SSM',
+      'Verify company name on MOTAC portal',
+      'Check license number matches',
+      'Ensure license is ACTIVE (not expired)',
+      'Check uploaded documents',
+      'Verify contact information',
+      'Check SSM number validity',
     ]
 
     return (
@@ -77,8 +77,8 @@ export default async function VerificationDetailPage({
 
           {/* ── HEADER ── */}
           <div className="vd-header">
-            <a href="/admin/verifikasi" className="vd-breadcrumb">← Kembali ke Senarai Verifikasi</a>
-            <h1 className="vd-title">Semak Permohonan Verifikasi</h1>
+            <a href="/admin/verifikasi" className="vd-breadcrumb">← Back to Verifications</a>
+            <h1 className="vd-title">Review Verification Request</h1>
             <div className="vd-status-badge" style={{ background: status.bg, color: status.color }}>
               {status.label}
             </div>
@@ -92,70 +92,70 @@ export default async function VerificationDetailPage({
 
               {/* Company Details */}
               <div className="vd-card">
-                <h3 className="vd-card-title">📋 Maklumat Syarikat</h3>
+                <h3 className="vd-card-title">📋 Company Details</h3>
                 <div className="vd-fields-2col">
-                  <InfoField label="Nama Syarikat" value={request.company_name} />
+                  <InfoField label="Company Name" value={request.company_name} />
                   <InfoField label="No. SSM" value={request.ssm_number} />
                   <InfoField
-                    label="Tarikh Pendaftaran"
-                    value={request.company_registration_date ? new Date(request.company_registration_date).toLocaleDateString('ms-MY') : '-'}
+                    label="Registration Date"
+                    value={request.company_registration_date ? new Date(request.company_registration_date).toLocaleDateString('en-MY') : '-'}
                   />
-                  <InfoField label="Pemilik/Pengarah" value={request.owner_name || '-'} />
+                  <InfoField label="Owner / Director" value={request.owner_name || '-'} />
                 </div>
               </div>
 
               {/* MOTAC License */}
               <div className="vd-card">
                 <div className="vd-card-header-row">
-                  <h3 className="vd-card-title">🏛️ Lesen MOTAC</h3>
+                  <h3 className="vd-card-title">🏛️ MOTAC License</h3>
                   <a
                     href="https://www.motac.gov.my/kategori-semakan-new/agensi-pelancongan-umrah/"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="vd-motac-link"
                   >
-                    Semak di Portal MOTAC →
+                    Check MOTAC Portal →
                   </a>
                 </div>
                 <div className="vd-fields-2col">
-                  <InfoField label="Nombor Lesen" value={request.motac_license_number} />
+                  <InfoField label="License Number" value={request.motac_license_number} />
                   <InfoField
-                    label="Tarikh Tamat"
-                    value={new Date(request.motac_license_expiry).toLocaleDateString('ms-MY')}
+                    label="Expiry Date"
+                    value={new Date(request.motac_license_expiry).toLocaleDateString('en-MY')}
                     highlight={isExpired}
                   />
                 </div>
                 {isExpired && (
                   <div className="vd-expired-warning">
-                    ⚠️ LESEN TELAH TAMAT — JANGAN LULUSKAN
+                    ⚠️ LICENSE EXPIRED — DO NOT APPROVE
                   </div>
                 )}
               </div>
 
               {/* Contact */}
               <div className="vd-card">
-                <h3 className="vd-card-title">📞 Maklumat Perhubungan</h3>
+                <h3 className="vd-card-title">📞 Contact Information</h3>
                 <div className="vd-fields-stack">
-                  <InfoField label="Telefon" value={request.office_phone} />
-                  <InfoField label="Emel" value={request.office_email} />
-                  <InfoField label="Alamat" value={request.office_address} />
+                  <InfoField label="Phone" value={request.office_phone} />
+                  <InfoField label="Email" value={request.office_email} />
+                  <InfoField label="Address" value={request.office_address} />
                 </div>
               </div>
 
               {/* Documents */}
               <div className="vd-card">
-                <h3 className="vd-card-title">📄 Dokumen Dimuat Naik</h3>
+                <h3 className="vd-card-title">📄 Uploaded Documents</h3>
                 {documents.length > 0 ? (
                   <div className="vd-docs-list">
                     {documents.map((doc, i) => (
                       <a key={i} href={doc.url} target="_blank" rel="noopener noreferrer" className="vd-doc-link">
                         <span>{doc.label}</span>
-                        <span className="vd-doc-view">Lihat →</span>
+                        <span className="vd-doc-view">View →</span>
                       </a>
                     ))}
                   </div>
                 ) : (
-                  <div className="vd-no-docs">Tiada dokumen dimuat naik</div>
+                  <div className="vd-no-docs">No documents uploaded</div>
                 )}
               </div>
             </div>
@@ -166,7 +166,7 @@ export default async function VerificationDetailPage({
               {/* Agency Info */}
               {agency && (
                 <div className="vd-card">
-                  <h3 className="vd-card-title-sm">Maklumat Agensi</h3>
+                  <h3 className="vd-card-title-sm">Agency Info</h3>
                   <div className="vd-agency-avatar" style={{
                     backgroundImage: agency.logo_url ? `url(${agency.logo_url})` : 'none',
                     backgroundColor: agency.logo_url ? 'white' : '#B8936D',
@@ -177,14 +177,14 @@ export default async function VerificationDetailPage({
                   <div className="vd-agency-contact">{agency.email}</div>
                   <div className="vd-agency-contact">{agency.phone}</div>
                   <a href={`/agensi/${agency.slug}`} target="_blank" rel="noopener noreferrer" className="vd-profile-link">
-                    Lihat Profil →
+                    View Profile →
                   </a>
                 </div>
               )}
 
               {/* Checklist */}
               <div className="vd-card">
-                <h3 className="vd-card-title-sm">✅ Senarai Semak</h3>
+                <h3 className="vd-card-title-sm">✅ Review Checklist</h3>
                 <div className="vd-checklist">
                   {checklist.map((item, i) => (
                     <label key={i} className="vd-check-item">
@@ -208,20 +208,20 @@ export default async function VerificationDetailPage({
               {/* Review History */}
               {(request.reviewed_at || request.rejection_reason || request.admin_notes) && (
                 <div className="vd-card">
-                  <h3 className="vd-card-title-sm">📋 Sejarah Semakan</h3>
+                  <h3 className="vd-card-title-sm">📋 Review History</h3>
                   {request.reviewed_at && (
                     <div className="vd-review-date">
-                      Disemak: {new Date(request.reviewed_at).toLocaleDateString('ms-MY', { timeZone: 'Asia/Kuala_Lumpur' })}
+                      Reviewed: {new Date(request.reviewed_at).toLocaleDateString('en-MY', { timeZone: 'Asia/Kuala_Lumpur' })}
                     </div>
                   )}
                   {request.rejection_reason && (
                     <div className="vd-rejection-box">
-                      <strong>Sebab Penolakan:</strong><br />{request.rejection_reason}
+                      <strong>Rejection Reason:</strong><br />{request.rejection_reason}
                     </div>
                   )}
                   {request.admin_notes && (
                     <div className="vd-notes-box">
-                      <strong>Nota Admin:</strong><br />{request.admin_notes}
+                      <strong>Admin Notes:</strong><br />{request.admin_notes}
                     </div>
                   )}
                 </div>
@@ -328,12 +328,12 @@ export default async function VerificationDetailPage({
     console.error('❌ Error loading verification detail:', error)
     return (
       <div style={{ padding: '40px' }}>
-        <h1 style={{ marginBottom: 16 }}>Ralat Memuatkan Halaman</h1>
+        <h1 style={{ marginBottom: 16 }}>Error Loading Page</h1>
         <pre style={{ background: '#f5f5f5', padding: 20, borderRadius: 8, overflow: 'auto', fontSize: 13 }}>
           {JSON.stringify(error, null, 2)}
         </pre>
         <a href="/admin/verifikasi" style={{ marginTop: 20, padding: '12px 24px', background: '#B8936D', color: 'white', textDecoration: 'none', borderRadius: 8, display: 'inline-block', fontWeight: 600 }}>
-          ← Kembali
+          ← Back
         </a>
       </div>
     )

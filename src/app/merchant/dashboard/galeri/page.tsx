@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import Pagination from '@/app/Pagination'
 
 interface Album {
   id: string
@@ -21,26 +22,35 @@ interface AlbumPhoto {
   photo_order: number
 }
 
-export default function MerchantGaleriPage() {
+const ALBUMS_PER_PAGE = 9   // 3×3 grid
+const PHOTOS_PER_PAGE = 12  // 4×3 grid
+
+export default function MerchantGalleryPage() {
   const supabase = createClient()
   const router = useRouter()
-  
+
   const [loading, setLoading] = useState(true)
   const [agencyId, setAgencyId] = useState<string | null>(null)
   const [albums, setAlbums] = useState<Album[]>([])
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null)
   const [albumPhotos, setAlbumPhotos] = useState<AlbumPhoto[]>([])
-  
+
+  const [albumPage, setAlbumPage] = useState(1)
+  const [photoPage, setPhotoPage] = useState(1)
+
   const [showAlbumModal, setShowAlbumModal] = useState(false)
   const [editingAlbum, setEditingAlbum] = useState<Album | null>(null)
   const [albumForm, setAlbumForm] = useState({ title: '', description: '', is_published: true })
-  
+
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [uploadingPhotos, setUploadingPhotos] = useState<File[]>([])
-  const [photoCaptions, setPhotoCaptions] = useState<{[key: number]: string}>({})
+  const [photoCaptions, setPhotoCaptions] = useState<{ [key: number]: string }>({})
   const [uploading, setUploading] = useState(false)
 
   useEffect(() => { init() }, [])
+
+  // Reset photo page when switching albums
+  useEffect(() => { setPhotoPage(1) }, [selectedAlbum])
 
   const init = async () => {
     try {
@@ -50,11 +60,8 @@ export default function MerchantGaleriPage() {
       if (!data.agencyId) { router.push('/merchant/login'); return }
       setAgencyId(data.agencyId)
       await fetchAlbums(data.agencyId)
-    } catch (error) {
-      console.error('Error:', error)
-    } finally {
-      setLoading(false)
-    }
+    } catch (e) { console.error(e) }
+    finally { setLoading(false) }
   }
 
   const fetchAlbums = async (aid: string) => {
@@ -93,40 +100,32 @@ export default function MerchantGaleriPage() {
           .update({ title: albumForm.title, description: albumForm.description || null, is_published: albumForm.is_published, updated_at: new Date().toISOString() })
           .eq('id', editingAlbum.id)
         if (error) throw error
-        // Update selectedAlbum state supaya nama terkini nampak
         setSelectedAlbum(prev => prev ? { ...prev, title: albumForm.title, description: albumForm.description || null, is_published: albumForm.is_published } : null)
-        alert('✅ Album updated!')
       } else {
         const { error } = await supabase.from('photo_albums')
           .insert({ agency_id: agencyId, title: albumForm.title, description: albumForm.description || null, is_published: albumForm.is_published })
         if (error) throw error
-        alert('✅ Album created!')
       }
       setShowAlbumModal(false)
       fetchAlbums(agencyId)
-    } catch (error: any) {
-      alert(`❌ Error: ${error.message}`)
-    }
+    } catch (e: any) { alert(`❌ Error: ${e.message}`) }
   }
 
   const handleDeleteAlbum = async (albumId: string, albumTitle: string) => {
-    if (!confirm(`Delete album "${albumTitle}"? All photos will be deleted.`)) return
+    if (!confirm(`Delete album "${albumTitle}"?\n\nAll photos will be deleted. This cannot be undone.`)) return
     try {
       const { error } = await supabase.from('photo_albums').delete().eq('id', albumId)
       if (error) throw error
-      alert('✅ Album deleted!')
       setSelectedAlbum(null)
       if (agencyId) fetchAlbums(agencyId)
-    } catch (error: any) {
-      alert(`❌ Error: ${error.message}`)
-    }
+    } catch (e: any) { alert(`❌ Error: ${e.message}`) }
   }
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     setUploadingPhotos(files)
-    const captions: {[key: number]: string} = {}
-    files.forEach((_, index) => { captions[index] = '' })
+    const captions: { [key: number]: string } = {}
+    files.forEach((_, i) => { captions[i] = '' })
     setPhotoCaptions(captions)
   }
 
@@ -144,17 +143,14 @@ export default function MerchantGaleriPage() {
         const { error: insertError } = await supabase.from('album_photos').insert({ album_id: selectedAlbum.id, photo_url: publicUrl, caption: photoCaptions[i] || null, photo_order: i })
         if (insertError) throw insertError
       }
-      alert(`✅ ${uploadingPhotos.length} photos uploaded!`)
       setShowUploadModal(false)
       setUploadingPhotos([])
       setPhotoCaptions({})
+      setPhotoPage(1)
       if (agencyId) fetchAlbums(agencyId)
       await fetchAlbumPhotos(selectedAlbum.id)
-    } catch (error: any) {
-      alert(`❌ Error: ${error.message}`)
-    } finally {
-      setUploading(false)
-    }
+    } catch (e: any) { alert(`❌ Error: ${e.message}`) }
+    finally { setUploading(false) }
   }
 
   const handleDeletePhoto = async (photoId: string) => {
@@ -164,136 +160,305 @@ export default function MerchantGaleriPage() {
       if (error) throw error
       if (selectedAlbum) await fetchAlbumPhotos(selectedAlbum.id)
       if (agencyId) fetchAlbums(agencyId)
-    } catch (error: any) {
-      alert(`❌ Error: ${error.message}`)
-    }
+    } catch (e: any) { alert(`❌ Error: ${e.message}`) }
   }
 
+  // Pagination calculations
+  const totalAlbumPages = Math.ceil(albums.length / ALBUMS_PER_PAGE)
+  const paginatedAlbums = albums.slice((albumPage - 1) * ALBUMS_PER_PAGE, albumPage * ALBUMS_PER_PAGE)
+
+  const totalPhotoPages = Math.ceil(albumPhotos.length / PHOTOS_PER_PAGE)
+  const paginatedPhotos = albumPhotos.slice((photoPage - 1) * PHOTOS_PER_PAGE, photoPage * PHOTOS_PER_PAGE)
+
+  /* ── LOADING ── */
   if (loading) return (
-    <div style={{ textAlign: 'center', padding: '80px 0' }}>
-      <div style={{ fontSize: '48px', marginBottom: '16px' }}>⏳</div>
-      <div style={{ fontSize: '16px', color: '#666' }}>Loading galeri...</div>
-    </div>
+    <>
+      <div className="gl-load"><div className="gl-spin" /><p>Loading gallery...</p></div>
+      <style>{`.gl-load{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;gap:16px;color:#999}.gl-spin{width:36px;height:36px;border:3px solid #e5e5e5;border-top-color:#B8936D;border-radius:50%;animation:gls .7s linear infinite}@keyframes gls{to{transform:rotate(360deg)}}`}</style>
+    </>
   )
 
-  // ✅ SINGLE RETURN — semua modal render kat sini, regardless of view
   return (
-    <div>
-      {/* ========== ALBUM DETAIL VIEW ========== */}
-      {selectedAlbum ? (
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
-            <button onClick={() => setSelectedAlbum(null)} style={{ padding: '10px 20px', backgroundColor: '#F5F5F0', color: '#2C2C2C', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
-              ← Back
-            </button>
-            <div style={{ flex: 1 }}>
-              <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '4px' }}>{selectedAlbum.title}</h1>
-              {selectedAlbum.description && <p style={{ fontSize: '15px', color: '#666' }}>{selectedAlbum.description}</p>}
-            </div>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button onClick={() => setShowUploadModal(true)} style={{ padding: '10px 20px', backgroundColor: '#B8936D', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
-                📤 Upload Photos
-              </button>
-              <button onClick={() => openEditAlbumModal(selectedAlbum)} style={{ padding: '10px 20px', backgroundColor: '#F5F5F0', color: '#2C2C2C', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
-                ✏️ Edit Album
-              </button>
-              <button onClick={() => handleDeleteAlbum(selectedAlbum.id, selectedAlbum.title)} style={{ padding: '10px 20px', backgroundColor: '#FEE', color: '#C33', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
-                🗑️ Delete Album
-              </button>
-            </div>
-          </div>
+    <>
+      <style>{`
+        .gl,.gl *{box-sizing:border-box}
+        .gl{max-width:900px;width:100%;overflow:hidden}
 
-          {albumPhotos.length > 0 ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
-              {albumPhotos.map((photo) => (
-                <div key={photo.id} style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', border: '1px solid #E5E5E0' }}>
-                  <img src={photo.photo_url} alt={photo.caption || ''} style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', display: 'block' }} />
-                  {photo.caption && <div style={{ padding: '8px 12px', backgroundColor: 'white', fontSize: '13px', color: '#666' }}>{photo.caption}</div>}
-                  <button onClick={() => handleDeletePhoto(photo.id)} style={{ position: 'absolute', top: '8px', right: '8px', width: '28px', height: '28px', backgroundColor: 'rgba(220,38,38,0.9)', color: 'white', border: 'none', borderRadius: '50%', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div style={{ textAlign: 'center', padding: '80px', backgroundColor: 'white', borderRadius: '16px', border: '1px solid #E5E5E0' }}>
-              <div style={{ fontSize: '64px', marginBottom: '16px' }}>🖼️</div>
-              <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '8px' }}>Tiada Foto</h3>
-              <p style={{ fontSize: '15px', color: '#666', marginBottom: '24px' }}>Upload gambar untuk album ini</p>
-              <button onClick={() => setShowUploadModal(true)} style={{ padding: '12px 24px', backgroundColor: '#B8936D', color: 'white', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: '600', cursor: 'pointer' }}>📤 Upload Photos</button>
-            </div>
-          )}
-        </div>
+        /* ── ALBUM LIST VIEW ── */
+        .gl-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+        .gl-title{font-size:28px;font-weight:700;color:#2C2C2C;margin:0 0 4px}
+        .gl-sub{font-size:14px;color:#888;margin:0}
+        .gl-add{
+          display:inline-flex;align-items:center;gap:6px;
+          padding:12px 22px;background:#B8936D;color:white;
+          border-radius:10px;font-size:14px;font-weight:700;
+          border:none;cursor:pointer;transition:background .15s;white-space:nowrap;flex-shrink:0;
+        }
+        .gl-add:hover{background:#a07d5a}
 
-      ) : (
-        /* ========== ALBUMS LIST VIEW ========== */
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-            <div>
-              <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '8px' }}>Galeri</h1>
-              <p style={{ fontSize: '15px', color: '#666' }}>Urus album foto agensi anda</p>
-            </div>
-            <button onClick={openCreateAlbumModal} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 24px', backgroundColor: '#B8936D', color: 'white', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: '700', cursor: 'pointer' }}>
-              <span>➕</span><span>Buat Album</span>
-            </button>
-          </div>
+        /* Album grid */
+        .gl-album-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+        .gl-album-card{
+          background:white;border-radius:12px;overflow:hidden;
+          border:1px solid #E5E5E0;cursor:pointer;
+          transition:box-shadow .15s,transform .15s;
+        }
+        .gl-album-card:hover{box-shadow:0 6px 20px rgba(0,0,0,.1);transform:translateY(-2px)}
+        .gl-album-thumb{
+          height:180px;background:#F5F5F0;
+          background-size:cover;background-position:center;
+          display:flex;align-items:center;justify-content:center;
+        }
+        .gl-album-thumb-placeholder{font-size:40px;opacity:.25}
+        .gl-album-body{padding:14px}
+        .gl-album-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px}
+        .gl-album-name{font-size:15px;font-weight:700;color:#2C2C2C;line-height:1.3}
+        .gl-badge{padding:3px 10px;border-radius:6px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0}
+        .gl-badge-pub{background:#ECFDF5;color:#10B981}
+        .gl-badge-draft{background:#F5F5F5;color:#888}
+        .gl-album-desc{font-size:12px;color:#888;margin-bottom:6px;line-height:1.4}
+        .gl-album-meta{font-size:11px;color:#aaa}
 
-          {albums.length > 0 ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
-              {albums.map((album) => (
-                <div key={album.id} style={{ backgroundColor: 'white', borderRadius: '12px', overflow: 'hidden', border: '1px solid #E5E5E0', cursor: 'pointer' }} onClick={() => openAlbum(album)}>
-                  <div style={{ height: '200px', backgroundColor: '#F5F5F0', backgroundImage: album.cover_photo_url ? `url(${album.cover_photo_url})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {!album.cover_photo_url && <span style={{ fontSize: '48px', opacity: 0.3 }}>🖼️</span>}
-                  </div>
-                  <div style={{ padding: '16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
-                      <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#2C2C2C' }}>{album.title}</h3>
-                      <span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: '700', backgroundColor: album.is_published ? '#E8F5E9' : '#F5F5F5', color: album.is_published ? '#2E7D32' : '#666' }}>
-                        {album.is_published ? 'LIVE' : 'DRAFT'}
-                      </span>
+        /* ── ALBUM DETAIL VIEW ── */
+        .gl-detail-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+        .gl-back{
+          padding:10px 18px;background:#F5F5F0;color:#2C2C2C;
+          border:none;border-radius:8px;font-size:14px;font-weight:600;
+          cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background .15s;
+        }
+        .gl-back:hover{background:#e8e8e3}
+        .gl-detail-info{flex:1;min-width:0}
+        .gl-detail-title{font-size:24px;font-weight:700;color:#2C2C2C;margin:0 0 4px}
+        .gl-detail-desc{font-size:14px;color:#888;margin:0}
+        .gl-detail-actions{display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0}
+        .gl-btn{
+          padding:9px 16px;border:none;border-radius:8px;
+          font-size:13px;font-weight:600;cursor:pointer;
+          transition:filter .15s;white-space:nowrap;
+        }
+        .gl-btn:hover{filter:brightness(.92)}
+        .gl-btn-gold{background:#B8936D;color:white}
+        .gl-btn-slate{background:#F5F5F0;color:#2C2C2C}
+        .gl-btn-red{background:#FEE2E2;color:#991B1B}
+
+        /* Photo grid */
+        .gl-photo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+        .gl-photo-wrap{position:relative;border-radius:8px;overflow:hidden;border:1px solid #E5E5E0}
+        .gl-photo-img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
+        .gl-photo-caption{padding:6px 10px;background:white;font-size:12px;color:#666;line-height:1.3}
+        .gl-photo-del{
+          position:absolute;top:6px;right:6px;
+          width:26px;height:26px;
+          background:rgba(220,38,38,.9);color:white;
+          border:none;border-radius:50%;font-size:14px;
+          cursor:pointer;display:flex;align-items:center;justify-content:center;
+          transition:background .15s;
+        }
+        .gl-photo-del:hover{background:rgba(185,28,28,.9)}
+
+        /* Empty states */
+        .gl-empty{background:white;border-radius:16px;padding:60px 24px;text-align:center;border:1px solid #E5E5E0}
+        .gl-empty-icon{font-size:48px;margin-bottom:12px}
+        .gl-empty-title{font-size:20px;font-weight:700;color:#2C2C2C;margin-bottom:8px}
+        .gl-empty-sub{font-size:14px;color:#888;margin-bottom:20px}
+
+        /* ── MODALS ── */
+        .gl-modal-overlay{
+          position:fixed;inset:0;background:rgba(0,0,0,.5);
+          z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;
+        }
+        .gl-modal{background:white;border-radius:16px;padding:28px;width:100%;position:relative}
+        .gl-modal-sm{max-width:500px}
+        .gl-modal-lg{max-width:760px;max-height:90vh;overflow-y:auto}
+        .gl-modal-title{font-size:20px;font-weight:700;color:#2C2C2C;margin:0 0 20px}
+        .gl-form-field{margin-bottom:16px}
+        .gl-form-field:last-child{margin-bottom:0}
+        .gl-form-label{display:block;font-size:13px;font-weight:600;color:#555;margin-bottom:6px}
+        .gl-form-input,.gl-form-textarea{
+          width:100%;padding:11px 13px;font-size:14px;
+          border:1.5px solid #E5E5E0;border-radius:8px;
+          outline:none;font-family:inherit;color:#2C2C2C;transition:border-color .15s;
+        }
+        .gl-form-input:focus,.gl-form-textarea:focus{border-color:#B8936D}
+        .gl-form-textarea{resize:vertical}
+        .gl-form-toggle{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+        .gl-form-toggle input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:#B8936D}
+        .gl-form-toggle-label{font-size:14px;color:#2C2C2C}
+        .gl-modal-footer{display:flex;gap:10px;margin-top:20px}
+        .gl-modal-cancel{flex:1;padding:11px;background:white;color:#666;border:1.5px solid #E5E5E0;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
+        .gl-modal-cancel:hover{background:#f8f8f8}
+        .gl-modal-submit{flex:1;padding:11px;background:#B8936D;color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
+        .gl-modal-submit:hover:not(:disabled){background:#a07d5a}
+        .gl-modal-submit:disabled{opacity:.6;cursor:not-allowed}
+        .gl-upload-input{width:100%;padding:12px;margin-bottom:6px;border:2px dashed #B8936D;border-radius:8px;font-size:14px;cursor:pointer}
+        .gl-upload-hint{font-size:12px;color:#aaa;margin-bottom:16px}
+        .gl-upload-list{display:flex;flex-direction:column;gap:12px;margin-bottom:20px}
+        .gl-upload-item{display:flex;gap:12px;padding:12px;background:#F8F8F5;border-radius:8px;align-items:flex-start}
+        .gl-upload-thumb{width:72px;height:72px;object-fit:cover;border-radius:6px;flex-shrink:0}
+        .gl-upload-item-body{flex:1;min-width:0}
+        .gl-upload-fname{font-size:13px;font-weight:600;color:#2C2C2C;margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .gl-caption-input{width:100%;padding:7px 10px;border:1px solid #E5E5E0;border-radius:6px;font-size:13px;font-family:inherit}
+
+        /* ── TABLET ── */
+        @media(max-width:1023px){
+          .gl-title{font-size:24px}
+          .gl-album-grid{grid-template-columns:repeat(2,1fr)}
+          .gl-photo-grid{grid-template-columns:repeat(3,1fr)}
+          .gl-album-thumb{height:160px}
+        }
+
+        /* ── MOBILE ── */
+        @media(max-width:639px){
+          .gl-header{flex-direction:column;align-items:stretch;gap:10px;margin-bottom:16px}
+          .gl-add{width:100%;justify-content:center;padding:13px}
+          .gl-title{font-size:20px}
+          .gl-album-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+          .gl-album-thumb{height:130px}
+          .gl-album-body{padding:10px}
+          .gl-album-name{font-size:13px}
+          .gl-detail-header{flex-direction:column;gap:10px;margin-bottom:14px}
+          .gl-detail-title{font-size:20px}
+          .gl-detail-actions{width:100%;justify-content:stretch}
+          .gl-detail-actions .gl-btn{flex:1;text-align:center;padding:10px 8px;font-size:12px}
+          .gl-photo-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+          .gl-modal{padding:20px}
+          .gl-modal-title{font-size:17px;margin-bottom:16px}
+          .gl-modal-footer{flex-direction:column}
+          .gl-modal-cancel,.gl-modal-submit{flex:none}
+          .gl-upload-item{flex-direction:column;gap:8px}
+          .gl-upload-thumb{width:100%;height:140px;border-radius:8px}
+        }
+
+        /* ── SMALL MOBILE ── */
+        @media(max-width:380px){
+          .gl-album-grid{grid-template-columns:1fr}
+          .gl-photo-grid{grid-template-columns:repeat(2,1fr)}
+        }
+      `}</style>
+
+      <div className="gl">
+
+        {/* ══════════════ ALBUM DETAIL VIEW ══════════════ */}
+        {selectedAlbum ? (
+          <div>
+            <div className="gl-detail-header">
+              <button className="gl-back" onClick={() => setSelectedAlbum(null)}>← Back</button>
+              <div className="gl-detail-info">
+                <h1 className="gl-detail-title">{selectedAlbum.title}</h1>
+                {selectedAlbum.description && <p className="gl-detail-desc">{selectedAlbum.description}</p>}
+              </div>
+              <div className="gl-detail-actions">
+                <button className="gl-btn gl-btn-gold" onClick={() => setShowUploadModal(true)}>📤 Upload Photos</button>
+                <button className="gl-btn gl-btn-slate" onClick={() => openEditAlbumModal(selectedAlbum)}>✏️ Edit Album</button>
+                <button className="gl-btn gl-btn-red" onClick={() => handleDeleteAlbum(selectedAlbum.id, selectedAlbum.title)}>🗑 Delete Album</button>
+              </div>
+            </div>
+
+            {albumPhotos.length > 0 ? (
+              <>
+                <div className="gl-photo-grid">
+                  {paginatedPhotos.map(photo => (
+                    <div key={photo.id} className="gl-photo-wrap">
+                      <img src={photo.photo_url} alt={photo.caption || ''} className="gl-photo-img" />
+                      {photo.caption && <div className="gl-photo-caption">{photo.caption}</div>}
+                      <button className="gl-photo-del" onClick={() => handleDeletePhoto(photo.id)} title="Delete photo">×</button>
                     </div>
-                    {album.description && <p style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>{album.description}</p>}
-                    <div style={{ fontSize: '12px', color: '#999' }}>📷 {album.photo_count || 0} photos · {new Date(album.created_at).toLocaleDateString('ms-MY')}</div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div style={{ backgroundColor: 'white', borderRadius: '16px', padding: '80px 40px', textAlign: 'center', border: '1px solid #E5E5E0' }}>
-              <div style={{ fontSize: '64px', marginBottom: '16px' }}>🖼️</div>
-              <h3 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '12px' }}>Tiada Album Lagi</h3>
-              <p style={{ fontSize: '16px', color: '#666', marginBottom: '24px' }}>Buat album pertama untuk galeri agensi anda</p>
-              <button onClick={openCreateAlbumModal} style={{ padding: '14px 32px', backgroundColor: '#B8936D', color: 'white', border: 'none', borderRadius: '10px', fontSize: '16px', fontWeight: '700', cursor: 'pointer' }}>Buat Album</button>
-            </div>
-          )}
-        </div>
-      )}
+                <Pagination currentPage={photoPage} totalPages={totalPhotoPages} onPageChange={setPhotoPage} />
+              </>
+            ) : (
+              <div className="gl-empty">
+                <div className="gl-empty-icon">🖼️</div>
+                <div className="gl-empty-title">No Photos Yet</div>
+                <p className="gl-empty-sub">Upload photos to this album</p>
+                <button className="gl-add" onClick={() => setShowUploadModal(true)}>📤 Upload Photos</button>
+              </div>
+            )}
+          </div>
 
-      {/* ========== MODALS — render kat luar if/else, always available ========== */}
+        ) : (
+          /* ══════════════ ALBUM LIST VIEW ══════════════ */
+          <div>
+            <div className="gl-header">
+              <div>
+                <h1 className="gl-title">Gallery</h1>
+                <p className="gl-sub">Manage your agency photo albums</p>
+              </div>
+              <button className="gl-add" onClick={openCreateAlbumModal}>➕ Create Album</button>
+            </div>
 
-      {/* Album Create/Edit Modal */}
+            {albums.length > 0 ? (
+              <>
+                <div className="gl-album-grid">
+                  {paginatedAlbums.map(album => (
+                    <div key={album.id} className="gl-album-card" onClick={() => openAlbum(album)}>
+                      <div className="gl-album-thumb"
+                        style={{ backgroundImage: album.cover_photo_url ? `url(${album.cover_photo_url})` : 'none' }}>
+                        {!album.cover_photo_url && <span className="gl-album-thumb-placeholder">🖼️</span>}
+                      </div>
+                      <div className="gl-album-body">
+                        <div className="gl-album-top">
+                          <div className="gl-album-name">{album.title}</div>
+                          <span className={`gl-badge ${album.is_published ? 'gl-badge-pub' : 'gl-badge-draft'}`}>
+                            {album.is_published ? 'PUBLISHED' : 'DRAFT'}
+                          </span>
+                        </div>
+                        {album.description && <p className="gl-album-desc">{album.description}</p>}
+                        <div className="gl-album-meta">
+                          📷 {album.photo_count || 0} photos · {new Date(album.created_at).toLocaleDateString('en-MY', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <Pagination currentPage={albumPage} totalPages={totalAlbumPages} onPageChange={setAlbumPage} />
+              </>
+            ) : (
+              <div className="gl-empty">
+                <div className="gl-empty-icon">🖼️</div>
+                <div className="gl-empty-title">No Albums Yet</div>
+                <p className="gl-empty-sub">Create your first album for your agency gallery</p>
+                <button className="gl-add" onClick={openCreateAlbumModal}>➕ Create Album</button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ══════════════ ALBUM CREATE/EDIT MODAL ══════════════ */}
       {showAlbumModal && (
-        <div onClick={() => setShowAlbumModal(false)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: 'white', borderRadius: '16px', padding: '32px', maxWidth: '500px', width: '100%' }}>
-            <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '24px' }}>
+        <div className="gl-modal-overlay" onClick={() => setShowAlbumModal(false)}>
+          <div className="gl-modal gl-modal-sm" onClick={e => e.stopPropagation()}>
+            <h2 className="gl-modal-title">
               {editingAlbum ? '✏️ Edit Album' : '➕ Create Album'}
             </h2>
             <form onSubmit={handleSaveAlbum}>
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#666', marginBottom: '8px' }}>Album Title *</label>
-                <input type="text" required value={albumForm.title} onChange={(e) => setAlbumForm({...albumForm, title: e.target.value})} placeholder="e.g., Umrah 2024 - Group A" style={{ width: '100%', padding: '12px', border: '1px solid #E5E5E0', borderRadius: '8px', fontSize: '15px' }} />
+              <div className="gl-form-field">
+                <label className="gl-form-label">Album Title *</label>
+                <input type="text" required className="gl-form-input"
+                  value={albumForm.title}
+                  onChange={e => setAlbumForm({ ...albumForm, title: e.target.value })}
+                  placeholder="e.g. Umrah 2024 – Group A" />
               </div>
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#666', marginBottom: '8px' }}>Description</label>
-                <textarea value={albumForm.description} onChange={(e) => setAlbumForm({...albumForm, description: e.target.value})} placeholder="Brief description..." rows={3} style={{ width: '100%', padding: '12px', border: '1px solid #E5E5E0', borderRadius: '8px', fontSize: '15px', fontFamily: 'inherit', resize: 'vertical' }} />
+              <div className="gl-form-field">
+                <label className="gl-form-label">Description</label>
+                <textarea rows={3} className="gl-form-textarea"
+                  value={albumForm.description}
+                  onChange={e => setAlbumForm({ ...albumForm, description: e.target.value })}
+                  placeholder="Brief description..." />
               </div>
-              <div style={{ marginBottom: '24px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={albumForm.is_published} onChange={(e) => setAlbumForm({...albumForm, is_published: e.target.checked})} style={{ width: '18px', height: '18px' }} />
-                  <span style={{ fontSize: '15px', color: '#2C2C2C' }}>Publish album (visible to public)</span>
+              <div className="gl-form-field">
+                <label className="gl-form-toggle">
+                  <input type="checkbox"
+                    checked={albumForm.is_published}
+                    onChange={e => setAlbumForm({ ...albumForm, is_published: e.target.checked })} />
+                  <span className="gl-form-toggle-label">Publish album (visible to public)</span>
                 </label>
               </div>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button type="button" onClick={() => setShowAlbumModal(false)} style={{ flex: 1, padding: '12px', backgroundColor: 'white', color: '#666', border: '2px solid #E5E5E0', borderRadius: '8px', fontSize: '16px', fontWeight: '600', cursor: 'pointer' }}>Cancel</button>
-                <button type="submit" style={{ flex: 1, padding: '12px', backgroundColor: '#B8936D', color: 'white', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: '600', cursor: 'pointer' }}>
+              <div className="gl-modal-footer">
+                <button type="button" className="gl-modal-cancel" onClick={() => setShowAlbumModal(false)}>Cancel</button>
+                <button type="submit" className="gl-modal-submit">
                   {editingAlbum ? 'Save Changes' : 'Create Album'}
                 </button>
               </div>
@@ -302,30 +467,38 @@ export default function MerchantGaleriPage() {
         </div>
       )}
 
-      {/* Upload Photos Modal */}
+      {/* ══════════════ UPLOAD PHOTOS MODAL ══════════════ */}
       {showUploadModal && (
-        <div onClick={() => setShowUploadModal(false)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: 'white', borderRadius: '16px', padding: '32px', maxWidth: '800px', width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '24px' }}>📤 Upload Photos</h2>
-            <input type="file" multiple accept="image/*" onChange={handleFileSelect} style={{ width: '100%', padding: '12px', border: '2px dashed #B8936D', borderRadius: '8px', fontSize: '15px', cursor: 'pointer', marginBottom: '8px' }} />
-            <p style={{ fontSize: '13px', color: '#999', marginBottom: '24px' }}>Select multiple photos (JPG, PNG)</p>
+        <div className="gl-modal-overlay" onClick={() => { if (!uploading) { setShowUploadModal(false); setUploadingPhotos([]); setPhotoCaptions({}) } }}>
+          <div className="gl-modal gl-modal-lg" onClick={e => e.stopPropagation()}>
+            <h2 className="gl-modal-title">📤 Upload Photos</h2>
+            <input type="file" multiple accept="image/*"
+              className="gl-upload-input" onChange={handleFileSelect} />
+            <p className="gl-upload-hint">Select multiple photos (JPG, PNG, WebP)</p>
+
             {uploadingPhotos.length > 0 && (
               <>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
-                  {uploadingPhotos.map((file, index) => (
-                    <div key={index} style={{ display: 'flex', gap: '16px', padding: '12px', backgroundColor: '#F5F5F0', borderRadius: '8px' }}>
-                      <img src={URL.createObjectURL(file)} alt={file.name} style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '6px', flexShrink: 0 }} />
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '14px', fontWeight: '600', color: '#2C2C2C', marginBottom: '8px' }}>{file.name}</div>
-                        <input type="text" placeholder="Add caption (optional)" value={photoCaptions[index] || ''} onChange={(e) => setPhotoCaptions({...photoCaptions, [index]: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid #E5E5E0', borderRadius: '6px', fontSize: '14px' }} />
+                <div className="gl-upload-list">
+                  {uploadingPhotos.map((file, i) => (
+                    <div key={i} className="gl-upload-item">
+                      <img src={URL.createObjectURL(file)} alt={file.name} className="gl-upload-thumb" />
+                      <div className="gl-upload-item-body">
+                        <div className="gl-upload-fname">{file.name}</div>
+                        <input type="text" placeholder="Add caption (optional)"
+                          value={photoCaptions[i] || ''}
+                          onChange={e => setPhotoCaptions({ ...photoCaptions, [i]: e.target.value })}
+                          className="gl-caption-input" />
                       </div>
                     </div>
                   ))}
                 </div>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <button onClick={() => { setShowUploadModal(false); setUploadingPhotos([]); setPhotoCaptions({}) }} disabled={uploading} style={{ flex: 1, padding: '12px', backgroundColor: 'white', color: '#666', border: '2px solid #E5E5E0', borderRadius: '8px', fontSize: '16px', fontWeight: '600', cursor: uploading ? 'not-allowed' : 'pointer' }}>Cancel</button>
-                  <button onClick={handleUploadPhotos} disabled={uploading} style={{ flex: 1, padding: '12px', backgroundColor: uploading ? '#ccc' : '#B8936D', color: 'white', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: '600', cursor: uploading ? 'not-allowed' : 'pointer' }}>
-                    {uploading ? `Uploading... (${uploadingPhotos.length} photos)` : 'Upload All'}
+                <div className="gl-modal-footer">
+                  <button className="gl-modal-cancel" disabled={uploading}
+                    onClick={() => { setShowUploadModal(false); setUploadingPhotos([]); setPhotoCaptions({}) }}>
+                    Cancel
+                  </button>
+                  <button className="gl-modal-submit" disabled={uploading} onClick={handleUploadPhotos}>
+                    {uploading ? `⏳ Uploading ${uploadingPhotos.length} photo${uploadingPhotos.length > 1 ? 's' : ''}...` : `Upload All (${uploadingPhotos.length})`}
                   </button>
                 </div>
               </>
@@ -333,6 +506,6 @@ export default function MerchantGaleriPage() {
           </div>
         </div>
       )}
-    </div>
+    </>
   )
 }

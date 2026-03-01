@@ -36,7 +36,7 @@ export default async function NewCategoryPage() {
       <div className="cnp-header">
         <div>
           <h1 className="cnp-title">Add New Category</h1>
-          <p className="cnp-sub">Create a new category for panduan guides</p>
+          <p className="cnp-sub">Create a new category for guides</p>
         </div>
         <Link href="/admin/panduan/categories" className="cnp-back">← Back to Categories</Link>
       </div>

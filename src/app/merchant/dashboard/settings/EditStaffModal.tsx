@@ -3,17 +3,10 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
-export default function EditStaffModal({ 
-  staff, 
-  onClose 
-}: { 
-  staff: any
-  onClose: () => void 
-}) {
+export default function EditStaffModal({ staff, onClose }: { staff: any; onClose: () => void }) {
   const supabase = createClient()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  
   const [formData, setFormData] = useState({
     fullName: staff.full_name || '',
     email: staff.email,
@@ -24,204 +17,94 @@ export default function EditStaffModal({
     e.preventDefault()
     setLoading(true)
     setError('')
-
     try {
-      const { error: dbError } = await supabase
-        .from('agency_staff')
-        .update({
-          full_name: formData.fullName,
-          email: formData.email,
-          role: formData.role
-        })
+      const { error: dbError } = await supabase.from('agency_staff')
+        .update({ full_name: formData.fullName, email: formData.email, role: formData.role })
         .eq('id', staff.id)
-
       if (dbError) throw dbError
-
       alert('✅ Staff info updated!')
       window.location.reload()
-    } catch (error: any) {
-      setError(error.message)
+    } catch (e: any) {
+      setError(e.message)
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 9999
-    }}>
-      <div style={{
-        backgroundColor: 'white',
-        borderRadius: '16px',
-        padding: '32px',
-        maxWidth: '500px',
-        width: '90%'
-      }}>
-        <h2 style={{
-          fontSize: '24px',
-          fontWeight: 'bold',
-          color: '#2C2C2C',
-          marginBottom: '8px'
-        }}>
-          ✏️ Edit Staff Info
-        </h2>
-        <p style={{
-          fontSize: '14px',
-          color: '#666',
-          marginBottom: '24px'
-        }}>
-          Update staff member details
-        </p>
+    <>
+      <style>{`
+        .esm-overlay{
+          position:fixed;inset:0;background:rgba(0,0,0,.5);
+          display:flex;align-items:center;justify-content:center;
+          z-index:9999;padding:16px;
+        }
+        .esm-modal{
+          background:white;border-radius:14px;padding:28px;
+          max-width:480px;width:100%;
+          max-height:90vh;overflow-y:auto;
+        }
+        .esm,.esm *{box-sizing:border-box}
+        .esm-title{font-size:20px;font-weight:700;color:#2C2C2C;margin:0 0 4px}
+        .esm-sub{font-size:13px;color:#666;margin:0 0 20px}
+        .esm-error{padding:10px 13px;background:#FEE2E2;border:1px solid #FCA5A5;border-radius:8px;margin-bottom:14px;font-size:13px;color:#DC2626}
+        .esm-field{margin-bottom:14px}
+        .esm-label{display:block;font-size:13px;font-weight:600;color:#555;margin-bottom:6px}
+        .esm-input,.esm-select{
+          width:100%;padding:10px 13px;border:1.5px solid #E5E5E0;border-radius:8px;
+          font-size:14px;outline:none;font-family:inherit;color:#2C2C2C;background:white;
+          transition:border-color .15s;
+        }
+        .esm-input:focus,.esm-select:focus{border-color:#3B82F6}
+        .esm-footer{display:flex;gap:10px;margin-top:20px}
+        .esm-save{flex:1;padding:11px;background:#3B82F6;color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s}
+        .esm-save:hover:not(:disabled){background:#2563EB}
+        .esm-save:disabled{background:#ccc;cursor:not-allowed}
+        .esm-cancel{flex:1;padding:11px;background:white;color:#555;border:1.5px solid #E5E5E0;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
+        .esm-cancel:hover{background:#f8f8f8}
+        @media(max-width:639px){
+          .esm-modal{padding:20px}
+          .esm-title{font-size:18px}
+          .esm-footer{flex-direction:column}
+        }
+      `}</style>
 
-        {error && (
-          <div style={{
-            padding: '12px',
-            backgroundColor: '#FEE2E2',
-            border: '1px solid #FCA5A5',
-            borderRadius: '8px',
-            marginBottom: '16px'
-          }}>
-            <p style={{ fontSize: '14px', color: '#DC2626' }}>
-              {error}
-            </p>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div>
-              <label style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: '600',
-                color: '#2C2C2C',
-                marginBottom: '8px'
-              }}>
-                Full Name
-              </label>
-              <input
-                type="text"
+      <div className="esm-overlay" onClick={onClose}>
+        <div className="esm-modal esm" onClick={e => e.stopPropagation()}>
+          <h2 className="esm-title">✏️ Edit Staff Info</h2>
+          <p className="esm-sub">Update staff member details</p>
+          {error && <div className="esm-error">❌ {error}</div>}
+          <form onSubmit={handleSubmit}>
+            <div className="esm-field">
+              <label className="esm-label">Full Name</label>
+              <input type="text" required className="esm-input"
                 value={formData.fullName}
-                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                required
-                style={{
-                  width: '100%',
-                  padding: '10px 16px',
-                  border: '1px solid #E5E5E0',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  outline: 'none'
-                }}
-              />
+                onChange={e => setFormData({ ...formData, fullName: e.target.value })} />
             </div>
-
-            <div>
-              <label style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: '600',
-                color: '#2C2C2C',
-                marginBottom: '8px'
-              }}>
-                Email
-              </label>
-              <input
-                type="email"
+            <div className="esm-field">
+              <label className="esm-label">Email</label>
+              <input type="email" required className="esm-input"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                required
-                style={{
-                  width: '100%',
-                  padding: '10px 16px',
-                  border: '1px solid #E5E5E0',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  outline: 'none'
-                }}
-              />
+                onChange={e => setFormData({ ...formData, email: e.target.value })} />
             </div>
-
-            <div>
-              <label style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: '600',
-                color: '#2C2C2C',
-                marginBottom: '8px'
-              }}>
-                Role
-              </label>
-              <select
+            <div className="esm-field">
+              <label className="esm-label">Role</label>
+              <select className="esm-select"
                 value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                style={{
-                  width: '100%',
-                  padding: '10px 16px',
-                  border: '1px solid #E5E5E0',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  outline: 'none',
-                  cursor: 'pointer'
-                }}
-              >
-                <option value="staff">Staff</option>
-                <option value="owner">Owner</option>
+                onChange={e => setFormData({ ...formData, role: e.target.value })}>
+                <option value="staff">👤 Staff</option>
+                <option value="owner">👑 Owner</option>
               </select>
             </div>
-
-            <div style={{
-              display: 'flex',
-              gap: '12px',
-              marginTop: '8px'
-            }}>
-              <button
-                type="submit"
-                disabled={loading}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  backgroundColor: loading ? '#CCC' : '#3B82F6',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '15px',
-                  fontWeight: '600',
-                  cursor: loading ? 'not-allowed' : 'pointer'
-                }}
-              >
-                {loading ? 'Saving...' : 'Save Changes'}
+            <div className="esm-footer">
+              <button type="submit" disabled={loading} className="esm-save">
+                {loading ? '⏳ Saving...' : '💾 Save Changes'}
               </button>
-
-              <button
-                type="button"
-                onClick={onClose}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  backgroundColor: 'white',
-                  color: '#2C2C2C',
-                  border: '1px solid #E5E5E0',
-                  borderRadius: '8px',
-                  fontSize: '15px',
-                  fontWeight: '600',
-                  cursor: 'pointer'
-                }}
-              >
-                Cancel
-              </button>
+              <button type="button" className="esm-cancel" onClick={onClose}>Cancel</button>
             </div>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
-    </div>
+    </>
   )
 }

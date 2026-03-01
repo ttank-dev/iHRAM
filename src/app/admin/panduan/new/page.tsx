@@ -60,10 +60,10 @@ export default async function NewPanduanPage() {
 
       <div className="ngp-header">
         <div>
-          <h1 className="ngp-title">Tambah Panduan Baru</h1>
-          <p className="ngp-sub">Create a new umrah guide article</p>
+          <h1 className="ngp-title">New Guide</h1>
+          <p className="ngp-sub">Create a new Umrah guide article</p>
         </div>
-        <Link href="/admin/panduan" className="ngp-back">← Back to Panduan</Link>
+        <Link href="/admin/panduan" className="ngp-back">← Back to Guides</Link>
       </div>
 
       <NewGuideFormWrapper categories={safeCategories} />

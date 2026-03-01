@@ -59,8 +59,8 @@ export default function VerificationClient({
 
   const stats = [
     { key: 'pending', icon: '⏳', label: 'Pending', value: pendingCount, color: '#F59E0B' },
-    { key: 'approved', icon: '✅', label: 'Diluluskan', value: approvedCount, color: '#10B981' },
-    { key: 'rejected', icon: '❌', label: 'Ditolak', value: rejectedCount, color: '#EF4444' },
+    { key: 'approved', icon: '✅', label: 'Approved', value: approvedCount, color: '#10B981' },
+    { key: 'rejected', icon: '❌', label: 'Rejected', value: rejectedCount, color: '#EF4444' },
   ]
 
   return (
@@ -69,9 +69,9 @@ export default function VerificationClient({
 
         {/* ── HEADER ── */}
         <div className="vc-header">
-          <h1 className="vc-title">Permohonan Verifikasi</h1>
+          <h1 className="vc-title">Verification Requests</h1>
           <p className="vc-subtitle">
-            {filtered.length} permohonan {statusFilter !== 'all' ? `(${statusFilter})` : ''}
+            {filtered.length} requests {statusFilter !== 'all' ? `(${statusFilter})` : ''}
           </p>
         </div>
 
@@ -92,10 +92,10 @@ export default function VerificationClient({
         {/* ── FILTER TABS ── */}
         <div className="vc-filter-tabs">
           {[
-            { key: 'all', label: 'Semua', count: requests.length },
+            { key: 'all', label: 'All', count: requests.length },
             { key: 'pending', label: 'Pending', count: pendingCount },
-            { key: 'approved', label: 'Diluluskan', count: approvedCount },
-            { key: 'rejected', label: 'Ditolak', count: rejectedCount },
+            { key: 'approved', label: 'Approved', count: approvedCount },
+            { key: 'rejected', label: 'Rejected', count: rejectedCount },
           ].map((tab) => (
             <button
               key={tab.key}
@@ -120,9 +120,9 @@ export default function VerificationClient({
                     </div>
                     <div className="vc-item-body">
                       <div className="vc-item-name">{request.company_name}</div>
-                      <div className="vc-item-license">Lesen: {request.motac_license_number}</div>
+                      <div className="vc-item-license">License: {request.motac_license_number}</div>
                       <div className="vc-item-date">
-                        {new Date(request.created_at).toLocaleDateString('ms-MY', { timeZone: 'Asia/Kuala_Lumpur' })}
+                        {new Date(request.created_at).toLocaleDateString('en-MY', { timeZone: 'Asia/Kuala_Lumpur' })}
                       </div>
                     </div>
                     <div className="vc-item-right">
@@ -136,7 +136,7 @@ export default function VerificationClient({
           ) : (
             <div className="vc-empty">
               <div className="vc-empty-icon">📋</div>
-              <p className="vc-empty-text">Tiada permohonan verifikasi</p>
+              <p className="vc-empty-text">No verification requests</p>
             </div>
           )}
         </div>

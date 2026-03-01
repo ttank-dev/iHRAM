@@ -31,7 +31,7 @@ export default async function MerchantSettingsPage() {
 
   const agencyName = agencyData?.name || 'Your Agency'
 
-  // Staff hanya nampak password change — tak perlu fetch staff list
+  // Staff only sees password change — no need to fetch staff list
   let safeStaffMembers: any[] = []
   if (isOwner) {
     const { data: staffMembers } = await adminClient
@@ -43,76 +43,118 @@ export default async function MerchantSettingsPage() {
   }
 
   return (
-    <div>
-      {/* HEADER */}
-      <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '8px' }}>
-          Settings
-        </h1>
-        <p style={{ fontSize: '16px', color: '#666' }}>
-          {isOwner ? 'Manage your account and staff members' : 'Manage your account'}
-        </p>
-        <div style={{
-          marginTop: '8px', display: 'inline-flex', alignItems: 'center', gap: '6px',
-          padding: '4px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: '600',
-          backgroundColor: isOwner ? '#FEE2E2' : '#FFF8F0',
-          color: isOwner ? '#EF4444' : '#B8936D'
-        }}>
-          {isOwner ? '👑 Owner' : '👤 Staff'} · {agencyName}
+    <>
+      <style>{`
+        .st,.st *{box-sizing:border-box}
+        .st{max-width:900px;width:100%;overflow:hidden}
+
+        /* Header */
+        .st-header{margin-bottom:24px}
+        .st-title{font-size:28px;font-weight:700;color:#2C2C2C;margin:0 0 4px}
+        .st-sub{font-size:15px;color:#666;margin:0 0 10px}
+        .st-role-badge{
+          display:inline-flex;align-items:center;gap:6px;
+          padding:4px 12px;border-radius:20px;font-size:13px;font-weight:600;
+        }
+
+        /* Section cards */
+        .st-card{background:white;border-radius:14px;padding:28px;border:1px solid #E5E5E0;margin-bottom:20px}
+        .st-card-header{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid #f0f0ec}
+        .st-card-icon{width:48px;height:48px;border-radius:12px;background:#F5F5F0;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+        .st-card-title{font-size:18px;font-weight:700;color:#2C2C2C;margin:0 0 2px}
+        .st-card-sub{font-size:14px;color:#888;margin:0}
+
+        /* Stats grid */
+        .st-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+        .st-stat{padding:18px;background:#FFF8F0;border-radius:12px;border:1px solid #F5E5D3}
+        .st-stat-l{font-size:12px;color:#999;margin-bottom:6px}
+        .st-stat-v{font-size:26px;font-weight:700;color:#B8936D}
+
+        /* ── TABLET ── */
+        @media(max-width:1023px){
+          .st-title{font-size:24px}
+          .st-card{padding:22px}
+        }
+
+        /* ── MOBILE ── */
+        @media(max-width:639px){
+          .st-title{font-size:20px}
+          .st-card{padding:16px;border-radius:12px;margin-bottom:14px}
+          .st-card-title{font-size:16px}
+          .st-stats{grid-template-columns:repeat(3,1fr);gap:8px}
+          .st-stat{padding:12px 8px;border-radius:8px}
+          .st-stat-l{font-size:11px}
+          .st-stat-v{font-size:22px}
+        }
+
+        /* ── SMALL MOBILE ── */
+        @media(max-width:380px){
+          .st-card{padding:14px}
+          .st-stats{grid-template-columns:1fr 1fr}
+        }
+      `}</style>
+
+      <div className="st">
+
+        {/* Header */}
+        <div className="st-header">
+          <h1 className="st-title">Settings</h1>
+          <p className="st-sub">
+            {isOwner ? 'Manage your account and staff members' : 'Manage your account'}
+          </p>
+          <div className="st-role-badge" style={{
+            backgroundColor: isOwner ? '#FEE2E2' : '#FFF8F0',
+            color: isOwner ? '#EF4444' : '#B8936D'
+          }}>
+            {isOwner ? '👑 Owner' : '👤 Staff'} · {agencyName}
+          </div>
         </div>
-      </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-
-        {/* ACCOUNT SECURITY - Semua boleh, letak atas sekali untuk staff */}
-        <div style={{ backgroundColor: 'white', borderRadius: '16px', padding: '32px', border: '1px solid #E5E5E0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid #E5E5E0' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: '#F5F5F0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>
-              🔐
-            </div>
+        {/* Account Security — visible to all */}
+        <div className="st-card">
+          <div className="st-card-header">
+            <div className="st-card-icon">🔐</div>
             <div>
-              <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '4px' }}>Account Security</h2>
-              <p style={{ fontSize: '14px', color: '#666' }}>Change your password</p>
+              <div className="st-card-title">Account Security</div>
+              <div className="st-card-sub">Change your password</div>
             </div>
           </div>
           <MerchantPasswordChange />
         </div>
 
-        {/* STAFF MANAGEMENT - Owner sahaja */}
+        {/* Staff Management — owner only */}
         {isOwner && (
-          <div style={{ backgroundColor: 'white', borderRadius: '16px', padding: '32px', border: '1px solid #E5E5E0' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid #E5E5E0' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: '#F5F5F0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>
-                👥
-              </div>
+          <div className="st-card">
+            <div className="st-card-header">
+              <div className="st-card-icon">👥</div>
               <div>
-                <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '4px' }}>Staff Management</h2>
-                <p style={{ fontSize: '14px', color: '#666' }}>Add and manage staff members</p>
+                <div className="st-card-title">Staff Management</div>
+                <div className="st-card-sub">Add and manage staff members</div>
               </div>
             </div>
 
             {/* Stats */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
+            <div className="st-stats">
               {[
-                { label: 'Total Staff', value: safeStaffMembers.length },
-                { label: 'Owners', value: safeStaffMembers.filter(s => s.role === 'owner').length },
-                { label: 'Active Staff', value: safeStaffMembers.filter(s => s.is_active).length },
-              ].map((stat) => (
-                <div key={stat.label} style={{ padding: '20px', backgroundColor: '#FFF8F0', borderRadius: '12px', border: '1px solid #F5E5D3' }}>
-                  <div style={{ fontSize: '13px', color: '#999', marginBottom: '8px' }}>{stat.label}</div>
-                  <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#B8936D' }}>{stat.value}</div>
+                { label: 'Total Staff',   value: safeStaffMembers.length },
+                { label: 'Owners',        value: safeStaffMembers.filter(s => s.role === 'owner').length },
+                { label: 'Active Staff',  value: safeStaffMembers.filter(s => s.is_active).length },
+              ].map(stat => (
+                <div key={stat.label} className="st-stat">
+                  <div className="st-stat-l">{stat.label}</div>
+                  <div className="st-stat-v">{stat.value}</div>
                 </div>
               ))}
             </div>
 
             <AddStaffForm agencyId={merchantAgencyId} />
 
-            <div style={{ marginTop: '32px' }}>
+            <div style={{ marginTop: '28px' }}>
               <MerchantStaffList staff={safeStaffMembers} />
             </div>
           </div>
         )}
       </div>
-    </div>
+    </>
   )
 }

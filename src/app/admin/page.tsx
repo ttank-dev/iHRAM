@@ -114,7 +114,7 @@ export default function AdminDashboardPage() {
           company: v.company_name,
           agency: v.agencies?.name || 'Unknown',
           license: v.motac_license_number,
-          timestamp: new Date(v.created_at).toLocaleDateString('ms-MY')
+          timestamp: new Date(v.created_at).toLocaleDateString('en-MY')
         })) || [],
         recentReviews: recentReviewsData?.map(r => ({
           id: r.id,
@@ -127,7 +127,7 @@ export default function AdminDashboardPage() {
           id: l.id,
           package: (l.packages as any)?.title || 'Unknown Package',
           agency: (l.agencies as any)?.name || 'Unknown Agency',
-          timestamp: new Date(l.created_at).toLocaleDateString('ms-MY', { day: '2-digit', month: 'short' })
+          timestamp: new Date(l.created_at).toLocaleDateString('en-MY', { day: '2-digit', month: 'short' })
         })) || [],
       })
     } catch (error) {
@@ -138,12 +138,12 @@ export default function AdminDashboardPage() {
   }
 
   const statCards = [
-    { title: 'Verifikasi Pending', value: stats.pendingVerifications, icon: '✅', color: '#06B6D4', link: '/admin/verifikasi', change: 'Perlu review' },
-    { title: 'Total Agensi', value: stats.totalAgencies, icon: '🏢', color: '#3B82F6', link: '/admin/agensi', change: 'Aktif' },
-    { title: 'Pakej Umrah', value: stats.totalPackages, icon: '📦', color: '#8B5CF6', link: '/admin/pakej', change: 'Published' },
-    { title: 'Total Ulasan', value: stats.totalReviews, icon: '⭐', color: '#F59E0B', link: '/admin/ulasan', change: `${stats.pendingReviews} pending` },
-    { title: 'WhatsApp Leads', value: stats.totalLeads, icon: '🎯', color: '#10B981', link: '/admin/leads', change: 'Semua masa' },
-    { title: 'Panduan', value: stats.totalGuides, icon: '📚', color: '#B8936D', link: '/admin/panduan', change: 'Published' },
+    { title: 'Pending Verifications', value: stats.pendingVerifications, icon: '✅', color: '#06B6D4', link: '/admin/verifikasi', change: 'Perlu review' },
+    { title: 'Total Agencies', value: stats.totalAgencies, icon: '🏢', color: '#3B82F6', link: '/admin/agensi', change: 'Aktif' },
+    { title: 'Umrah Packages', value: stats.totalPackages, icon: '📦', color: '#8B5CF6', link: '/admin/pakej', change: 'Published' },
+    { title: 'Total Reviews', value: stats.totalReviews, icon: '⭐', color: '#F59E0B', link: '/admin/ulasan', change: `${stats.pendingReviews} pending` },
+    { title: 'WhatsApp Leads', value: stats.totalLeads, icon: '🎯', color: '#10B981', link: '/admin/leads', change: 'All time' },
+    { title: 'Guides', value: stats.totalGuides, icon: '📚', color: '#B8936D', link: '/admin/panduan', change: 'Published' },
   ]
 
   /* ── LOADING ── */
@@ -151,7 +151,7 @@ export default function AdminDashboardPage() {
     return (
       <div className="ad-loading">
         <div className="ad-loading-spinner" />
-        <p className="ad-loading-text">Memuatkan dashboard...</p>
+        <p className="ad-loading-text">Loading dashboard...</p>
         <style dangerouslySetInnerHTML={{ __html: `
           .ad-loading { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:400px; gap:16px; }
           .ad-loading-spinner { width:40px; height:40px; border:3px solid #e5e5e5; border-top-color:#B8936D; border-radius:50%; animation:adspin .8s linear infinite; }
@@ -170,7 +170,7 @@ export default function AdminDashboardPage() {
         <div className="ad-header">
           <div>
             <h1 className="ad-title">Dashboard Overview</h1>
-            <p className="ad-subtitle">Selamat kembali, <strong>{adminName || 'Admin'}</strong>! Ringkasan iHRAM hari ini.</p>
+            <p className="ad-subtitle">Welcome back, <strong>{adminName || 'Admin'}</strong>! Here's your iHRAM overview.</p>
           </div>
         </div>
 
@@ -285,13 +285,13 @@ export default function AdminDashboardPage() {
 
         {/* ── QUICK ACTIONS ── */}
         <div className="ad-actions-section">
-          <h2 className="ad-section-title">Tindakan Pantas</h2>
+          <h2 className="ad-section-title">Quick Actions</h2>
           <div className="ad-actions-grid">
             {[
-              { href: '/admin/verifikasi', icon: '✅', label: 'Review Verifikasi', badge: stats.pendingVerifications, accent: '#06B6D4' },
-              { href: '/admin/panduan/new', icon: '📝', label: 'Panduan Baru', badge: 0, accent: '#B8936D' },
-              { href: '/admin/agensi', icon: '🏢', label: 'Urus Agensi', badge: 0, accent: '#3B82F6' },
-              { href: '/admin/ulasan?status=pending', icon: '⏳', label: 'Review Ulasan', badge: stats.pendingReviews, accent: '#F59E0B' },
+              { href: '/admin/verifikasi', icon: '✅', label: 'Review Verifications', badge: stats.pendingVerifications, accent: '#06B6D4' },
+              { href: '/admin/panduan/new', icon: '📝', label: 'New Guide', badge: 0, accent: '#B8936D' },
+              { href: '/admin/agensi', icon: '🏢', label: 'Manage Agencies', badge: 0, accent: '#3B82F6' },
+              { href: '/admin/ulasan?status=pending', icon: '⏳', label: 'Review Reviews', badge: stats.pendingReviews, accent: '#F59E0B' },
             ].map((action) => (
               <Link key={action.href} href={action.href} className="ad-action-card">
                 {action.badge > 0 && <span className="ad-action-badge">{action.badge}</span>}

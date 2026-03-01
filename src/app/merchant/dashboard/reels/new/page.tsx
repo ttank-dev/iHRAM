@@ -13,100 +13,59 @@ export default function NewReelPage() {
   const router = useRouter()
   const supabase = createClient()
 
-  const [formData, setFormData] = useState({
-    title: '',
-    is_published: true
-  })
-
+  const [formData, setFormData] = useState({ title: '', is_published: true })
   const [videoFile, setVideoFile] = useState<File | null>(null)
   const [videoPreview, setVideoPreview] = useState<string | null>(null)
 
   const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-
-    // Check file type
     if (!file.type.startsWith('video/')) {
-      alert('Sila pilih file video sahaja')
+      alert('Please select a video file only.')
       return
     }
-
-    // Check file size (max 100MB)
     if (file.size > 100 * 1024 * 1024) {
-      alert('Saiz video terlalu besar. Maksimum 100MB')
+      alert('Video file is too large. Maximum size is 100MB.')
       return
     }
-
     setVideoFile(file)
     setVideoPreview(URL.createObjectURL(file))
   }
 
   const uploadVideo = async (agencyId: string) => {
     if (!videoFile) return null
-
     setUploadingVideo(true)
     setUploadProgress(0)
-    
     const fileExt = videoFile.name.split('.').pop()
     const fileName = `${agencyId}/${Date.now()}.${fileExt}`
-
-    const { data, error } = await supabase.storage
-      .from('reels-videos')
-      .upload(fileName, videoFile)
-
-    if (error) {
-      console.error('Upload error:', error)
-      setUploadingVideo(false)
-      return null
-    }
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('reels-videos')
-      .getPublicUrl(fileName)
-
+    const { error } = await supabase.storage.from('reels-videos').upload(fileName, videoFile)
+    if (error) { console.error('Upload error:', error); setUploadingVideo(false); return null }
+    const { data: { publicUrl } } = supabase.storage.from('reels-videos').getPublicUrl(fileName)
     setUploadingVideo(false)
     return publicUrl
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (!videoFile) {
-      alert('Sila pilih video untuk upload')
-      return
-    }
-
+    if (!videoFile) { alert('Please select a video to upload.'); return }
     setLoading(true)
     setError('')
-
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
-
-      const { data: agency } = await supabase
-        .from('agencies')
-        .select('id')
-        .eq('user_id', user.id)
-        .single()
-
+      const { data: agency } = await supabase.from('agencies').select('id').eq('user_id', user.id).single()
       if (!agency) throw new Error('Agency not found')
-
       const videoUrl = await uploadVideo(agency.id)
       if (!videoUrl) throw new Error('Video upload failed')
-
-      const { error: insertError } = await supabase
-        .from('reels')
-        .insert({
-          agency_id: agency.id,
-          title: formData.title,
-          video_url: videoUrl,
-          thumbnail_url: null, // No thumbnail needed
-          is_published: formData.is_published,
-          views: 0
-        })
-
+      const { error: insertError } = await supabase.from('reels').insert({
+        agency_id: agency.id,
+        title: formData.title,
+        video_url: videoUrl,
+        thumbnail_url: null,
+        is_published: formData.is_published,
+        views: 0
+      })
       if (insertError) throw insertError
-
       router.push('/merchant/dashboard/reels')
     } catch (err: any) {
       setError(err.message)
@@ -114,189 +73,209 @@ export default function NewReelPage() {
     }
   }
 
+  const isBusy = loading || uploadingVideo
+
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-        <div>
-          <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '8px' }}>
-            Upload Reel Baru
-          </h1>
-          <p style={{ fontSize: '15px', color: '#666' }}>
-            Upload video reel untuk profile agensi anda
-          </p>
-        </div>
-        <Link
-          href="/merchant/dashboard/reels"
-          style={{
-            padding: '12px 24px',
-            backgroundColor: '#F5F5F0',
-            color: '#2C2C2C',
-            borderRadius: '8px',
-            fontSize: '14px',
-            fontWeight: '600',
-            textDecoration: 'none'
-          }}
-        >
-          ← Kembali
-        </Link>
-      </div>
+    <>
+      <style>{`
+        .nr,.nr *{box-sizing:border-box}
+        .nr{max-width:900px;width:100%;overflow:hidden}
 
-      {error && (
-        <div style={{
-          padding: '16px',
-          backgroundColor: '#FEE',
-          border: '1px solid #FCC',
-          borderRadius: '8px',
-          marginBottom: '24px',
-          color: '#C33',
-          fontSize: '14px'
-        }}>
-          {error}
-        </div>
-      )}
+        /* Header */
+        .nr-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:24px;flex-wrap:wrap}
+        .nr-title{font-size:28px;font-weight:700;color:#2C2C2C;margin:0 0 4px}
+        .nr-sub{font-size:14px;color:#888;margin:0}
+        .nr-back{
+          padding:10px 20px;background:#F5F5F0;color:#2C2C2C;
+          border-radius:8px;font-size:14px;font-weight:600;
+          text-decoration:none;white-space:nowrap;flex-shrink:0;
+          transition:background .15s;display:inline-block;
+        }
+        .nr-back:hover{background:#e8e8e3}
 
-      <form onSubmit={handleSubmit}>
-        <div style={{ backgroundColor: 'white', borderRadius: '16px', padding: '32px', border: '1px solid #E5E5E0', marginBottom: '24px' }}>
-          
-          {/* Title */}
-          <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#2C2C2C', marginBottom: '8px' }}>
-              Tajuk Reel *
-            </label>
-            <input
-              type="text"
-              value={formData.title}
-              onChange={(e) => setFormData({...formData, title: e.target.value})}
-              placeholder="Contoh: Jemaah Kami di Madinah 2024"
-              required
-              style={{
-                width: '100%',
-                padding: '14px 16px',
-                fontSize: '15px',
-                border: '2px solid #E5E5E0',
-                borderRadius: '10px',
-                outline: 'none'
-              }}
-            />
-          </div>
+        /* Error */
+        .nr-error{padding:14px 16px;background:#FEE2E2;border:1px solid #FCA5A5;
+          border-radius:8px;margin-bottom:20px;color:#991B1B;font-size:14px}
 
-          {/* Video Upload */}
-          <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#2C2C2C', marginBottom: '8px' }}>
-              Video * (Maksimum 100MB)
-            </label>
-            <input
-              type="file"
-              accept="video/*"
-              onChange={handleVideoUpload}
-              required
-              style={{
-                width: '100%',
-                padding: '14px 16px',
-                fontSize: '14px',
-                border: '2px solid #E5E5E0',
-                borderRadius: '10px',
-                outline: 'none',
-                cursor: 'pointer'
-              }}
-            />
-            {videoFile && (
-              <div style={{ marginTop: '12px', fontSize: '14px', color: '#666' }}>
-                ✅ Video dipilih: {videoFile.name} ({(videoFile.size / (1024 * 1024)).toFixed(2)} MB)
-              </div>
-            )}
-            {videoPreview && (
-              <div style={{ marginTop: '16px' }}>
-                <video 
-                  src={videoPreview} 
-                  controls
-                  style={{ 
-                    width: '100%', 
-                    maxWidth: '400px',
-                    borderRadius: '8px',
-                    border: '2px solid #E5E5E0'
-                  }} 
-                />
-              </div>
-            )}
-          </div>
+        /* Card */
+        .nr-card{background:white;border-radius:14px;padding:28px;border:1px solid #E5E5E0;margin-bottom:20px}
+        .nr-card-title{font-size:17px;font-weight:700;color:#2C2C2C;margin:0 0 6px}
+        .nr-divider{border:none;border-top:1px solid #f0f0ec;margin:0 0 20px}
 
-          {/* Upload Progress */}
-          {uploadingVideo && (
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>
-                Uploading video... {uploadProgress}%
-              </div>
-              <div style={{ 
-                width: '100%', 
-                height: '8px', 
-                backgroundColor: '#F5F5F0', 
-                borderRadius: '4px',
-                overflow: 'hidden'
-              }}>
-                <div style={{ 
-                  width: `${uploadProgress}%`, 
-                  height: '100%', 
-                  backgroundColor: '#B8936D',
-                  transition: 'width 0.3s'
-                }} />
-              </div>
-            </div>
-          )}
+        /* Fields */
+        .nr-field{margin-bottom:20px}
+        .nr-field:last-child{margin-bottom:0}
+        .nr-label{display:block;font-size:13px;font-weight:600;color:#555;margin-bottom:6px}
+        .nr-req{color:#EF4444;margin-left:2px}
+        .nr-hint{font-size:12px;color:#aaa;margin-top:5px}
 
-          {/* Status */}
+        .nr-input{
+          width:100%;padding:12px 14px;font-size:14px;
+          border:1.5px solid #E5E5E0;border-radius:9px;
+          outline:none;transition:border-color .15s;
+          font-family:inherit;color:#2C2C2C;background:white;
+        }
+        .nr-input:focus{border-color:#B8936D}
+        .nr-input[type=file]{cursor:pointer;padding:10px 12px;font-size:13px}
+
+        /* Video info */
+        .nr-video-info{
+          margin-top:10px;padding:10px 14px;
+          background:#F0FFF4;border:1px solid #BBF7D0;border-radius:8px;
+          font-size:13px;color:#166534;
+        }
+
+        /* Video preview */
+        .nr-preview{margin-top:14px}
+        .nr-preview video{
+          width:100%;max-width:360px;border-radius:10px;
+          border:1.5px solid #E5E5E0;display:block;
+        }
+        .nr-preview-label{font-size:12px;color:#aaa;margin-bottom:6px}
+
+        /* Progress bar */
+        .nr-progress-wrap{margin-bottom:20px}
+        .nr-progress-label{font-size:13px;color:#666;margin-bottom:6px}
+        .nr-progress-track{
+          width:100%;height:8px;background:#F5F5F0;
+          border-radius:4px;overflow:hidden;
+        }
+        .nr-progress-fill{
+          height:100%;background:#B8936D;
+          transition:width .3s ease;border-radius:4px;
+        }
+
+        /* Publish toggle */
+        .nr-toggle{display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none}
+        .nr-toggle input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:#B8936D}
+        .nr-toggle-label{font-size:14px;color:#2C2C2C;font-weight:500}
+
+        /* Submit */
+        .nr-footer{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+        .nr-save{
+          padding:13px 28px;background:#B8936D;color:white;
+          border:none;border-radius:9px;font-size:15px;font-weight:700;
+          cursor:pointer;transition:background .15s;white-space:nowrap;
+        }
+        .nr-save:hover:not(:disabled){background:#a07d5a}
+        .nr-save:disabled{opacity:.6;cursor:not-allowed}
+        .nr-cancel{
+          padding:13px 24px;background:#F5F5F0;color:#555;
+          border-radius:9px;font-size:15px;font-weight:700;
+          text-decoration:none;display:inline-block;
+          transition:background .15s;white-space:nowrap;
+        }
+        .nr-cancel:hover{background:#e8e8e3}
+
+        /* ── TABLET ── */
+        @media(max-width:1023px){
+          .nr-title{font-size:24px}
+          .nr-card{padding:22px}
+        }
+
+        /* ── MOBILE ── */
+        @media(max-width:639px){
+          .nr-header{flex-direction:column;align-items:stretch;gap:10px;margin-bottom:16px}
+          .nr-back{text-align:center}
+          .nr-title{font-size:20px}
+          .nr-card{padding:16px;border-radius:12px;margin-bottom:14px}
+          .nr-card-title{font-size:15px}
+          .nr-preview video{max-width:100%}
+          .nr-footer{flex-direction:column;align-items:stretch}
+          .nr-save,.nr-cancel{width:100%;text-align:center;padding:14px}
+        }
+
+        /* ── SMALL MOBILE ── */
+        @media(max-width:380px){
+          .nr-card{padding:14px}
+          .nr-title{font-size:18px}
+        }
+      `}</style>
+
+      <div className="nr">
+
+        {/* Header */}
+        <div className="nr-header">
           <div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={formData.is_published}
-                onChange={(e) => setFormData({...formData, is_published: e.target.checked})}
-                style={{ width: '20px', height: '20px', cursor: 'pointer' }}
-              />
-              <span style={{ fontSize: '15px', color: '#2C2C2C' }}>
-                Publish segera
-              </span>
-            </label>
+            <h1 className="nr-title">🎬 Upload New Reel</h1>
+            <p className="nr-sub">Upload a video reel to your agency profile</p>
           </div>
+          <Link href="/merchant/dashboard/reels" className="nr-back">← Back</Link>
         </div>
 
-        {/* Submit */}
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <button
-            type="submit"
-            disabled={loading || uploadingVideo}
-            style={{
-              padding: '16px 32px',
-              backgroundColor: '#B8936D',
-              color: 'white',
-              border: 'none',
-              borderRadius: '10px',
-              fontSize: '16px',
-              fontWeight: '700',
-              cursor: 'pointer',
-              opacity: (loading || uploadingVideo) ? 0.7 : 1
-            }}
-          >
-            {uploadingVideo ? `Uploading... ${uploadProgress}%` : loading ? 'Menyimpan...' : 'Upload Reel'}
-          </button>
+        {error && <div className="nr-error">❌ {error}</div>}
 
-          <Link
-            href="/merchant/dashboard/reels"
-            style={{
-              padding: '16px 32px',
-              backgroundColor: '#F5F5F0',
-              color: '#2C2C2C',
-              borderRadius: '10px',
-              fontSize: '16px',
-              fontWeight: '700',
-              textDecoration: 'none',
-              display: 'inline-block'
-            }}
-          >
-            Batal
-          </Link>
-        </div>
-      </form>
-    </div>
+        <form onSubmit={handleSubmit}>
+          <div className="nr-card">
+            <div className="nr-card-title">🎥 Reel Details</div>
+            <hr className="nr-divider" />
+
+            {/* Title */}
+            <div className="nr-field">
+              <label className="nr-label">Reel Title <span className="nr-req">*</span></label>
+              <input type="text" required className="nr-input"
+                value={formData.title}
+                onChange={e => setFormData({ ...formData, title: e.target.value })}
+                placeholder="e.g. Our Pilgrims in Madinah 2024" />
+            </div>
+
+            {/* Video upload */}
+            <div className="nr-field">
+              <label className="nr-label">
+                Video File <span className="nr-req">*</span>
+                <span style={{ fontWeight: 400, color: '#aaa', marginLeft: 6 }}>(max 100MB)</span>
+              </label>
+              <input type="file" accept="video/*" required className="nr-input"
+                onChange={handleVideoUpload} />
+              <div className="nr-hint">Supported formats: MP4, MOV, WebM</div>
+
+              {videoFile && (
+                <div className="nr-video-info">
+                  ✅ Selected: <strong>{videoFile.name}</strong> — {(videoFile.size / (1024 * 1024)).toFixed(2)} MB
+                </div>
+              )}
+
+              {videoPreview && (
+                <div className="nr-preview">
+                  <div className="nr-preview-label">Preview:</div>
+                  <video src={videoPreview} controls />
+                </div>
+              )}
+            </div>
+
+            {/* Upload progress */}
+            {uploadingVideo && (
+              <div className="nr-progress-wrap">
+                <div className="nr-progress-label">⏳ Uploading video... {uploadProgress}%</div>
+                <div className="nr-progress-track">
+                  <div className="nr-progress-fill" style={{ width: `${uploadProgress}%` }} />
+                </div>
+              </div>
+            )}
+
+            {/* Publish toggle */}
+            <div className="nr-field">
+              <label className="nr-toggle">
+                <input type="checkbox"
+                  checked={formData.is_published}
+                  onChange={e => setFormData({ ...formData, is_published: e.target.checked })} />
+                <span className="nr-toggle-label">Publish immediately</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Submit */}
+          <div className="nr-footer">
+            <button type="submit" disabled={isBusy} className="nr-save">
+              {uploadingVideo
+                ? `⏳ Uploading... ${uploadProgress}%`
+                : loading ? '⏳ Saving...'
+                : '🎬 Upload Reel'}
+            </button>
+            <Link href="/merchant/dashboard/reels" className="nr-cancel">Cancel</Link>
+          </div>
+        </form>
+      </div>
+    </>
   )
 }

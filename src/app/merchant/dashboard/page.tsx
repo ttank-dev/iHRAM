@@ -68,18 +68,18 @@ export default async function MerchantDashboardPage() {
     const daysLeft = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
 
     if (daysLeft < 0) return {
-      type: 'expired', icon: '🔴', title: 'LESEN TELAH TAMAT',
-      message: `Lesen MOTAC anda telah tamat ${Math.abs(daysLeft)} hari lalu. Agensi anda telah disembunyikan daripada carian. Sila perbaharui segera.`,
+      type: 'expired', icon: '🔴', title: 'LICENSE EXPIRED',
+      message: `Your MOTAC license expired ${Math.abs(daysLeft)} days ago. Your agency is hidden from search results. Please renew immediately.`,
       bg: '#FEE2E2', borderColor: '#EF4444', textColor: '#B91C1C', daysLeft
     }
     if (daysLeft <= 30) return {
-      type: 'critical', icon: '🟠', title: 'SEGERA: LESEN HAMPIR TAMAT',
-      message: `Lesen MOTAC anda akan tamat dalam ${daysLeft} hari (${agency.motac_license_expiry}). Sila perbaharui secepat mungkin.`,
+      type: 'critical', icon: '🟠', title: 'URGENT: LICENSE EXPIRING SOON',
+      message: `Your MOTAC license expires in ${daysLeft} days (${agency.motac_license_expiry}). Please renew as soon as possible.`,
       bg: '#FFEDD5', borderColor: '#F97316', textColor: '#C2410C', daysLeft
     }
     if (daysLeft <= 90) return {
-      type: 'warning', icon: '🟡', title: 'Peringatan Pembaharuan Lesen',
-      message: `Lesen MOTAC anda akan tamat dalam ${daysLeft} hari (${agency.motac_license_expiry}). Sila sediakan dokumen pembaharuan.`,
+      type: 'warning', icon: '🟡', title: 'License Renewal Reminder',
+      message: `Your MOTAC license expires in ${daysLeft} days (${agency.motac_license_expiry}). Please prepare your renewal documents.`,
       bg: '#FEF9C3', borderColor: '#EAB308', textColor: '#A16207', daysLeft
     }
     return null
@@ -95,10 +95,10 @@ export default async function MerchantDashboardPage() {
           <div className="md-header-top">
             <div>
               <h1 className="md-title">
-                Selamat kembali, <strong>{userName}</strong>! 👋
+                Welcome back, <strong>{userName}</strong>! 👋
               </h1>
               <p className="md-subtitle">
-                Ringkasan aktiviti agensi anda hari ini
+                Here's your agency activity summary
               </p>
             </div>
             <div className={`md-role-badge ${role === 'owner' ? 'owner' : 'staff'}`}>
@@ -129,7 +129,7 @@ export default async function MerchantDashboardPage() {
                   className="md-license-btn-primary"
                   style={{ backgroundColor: licenseWarning.borderColor }}
                 >
-                  📋 Status Verifikasi
+                  📋 Verification Status
                 </Link>
                 <a
                   href="https://www.motac.gov.my/kategori-semakan-new/agensi-pelancongan-umrah/"
@@ -138,7 +138,7 @@ export default async function MerchantDashboardPage() {
                   className="md-license-btn-secondary"
                   style={{ color: licenseWarning.textColor, borderColor: licenseWarning.borderColor }}
                 >
-                  🏛️ Portal MOTAC
+                  🏛️ MOTAC Portal
                 </a>
               </div>
             </div>
@@ -150,7 +150,7 @@ export default async function MerchantDashboardPage() {
           <div className="md-stat-card">
             <div className="md-stat-header">
               <span className="md-stat-icon" style={{ background: 'rgba(44,44,44,0.08)' }}>📦</span>
-              <span className="md-stat-label">Jumlah Pakej</span>
+              <span className="md-stat-label">Total Packages</span>
             </div>
             <div className="md-stat-value">{totalPackages}</div>
             <div className="md-stat-sub">
@@ -166,25 +166,25 @@ export default async function MerchantDashboardPage() {
             </div>
             <div className="md-stat-value green">{publishedPackages}</div>
             <div className="md-stat-sub">
-              <span className="md-stat-meta">daripada {totalPackages} pakej</span>
+              <span className="md-stat-meta">of {totalPackages} packages</span>
             </div>
           </div>
 
           <div className="md-stat-card">
             <div className="md-stat-header">
               <span className="md-stat-icon" style={{ background: 'rgba(59,130,246,0.08)' }}>💬</span>
-              <span className="md-stat-label">Ulasan</span>
+              <span className="md-stat-label">Reviews</span>
             </div>
             <div className="md-stat-value">{totalReviews}</div>
             <div className="md-stat-sub">
-              <span className="md-stat-meta">ulasan yang diluluskan</span>
+              <span className="md-stat-meta">approved reviews</span>
             </div>
           </div>
 
           <div className="md-stat-card">
             <div className="md-stat-header">
               <span className="md-stat-icon" style={{ background: 'rgba(184,147,109,0.1)' }}>⭐</span>
-              <span className="md-stat-label">Rating Purata</span>
+              <span className="md-stat-label">Average Rating</span>
             </div>
             <div className="md-stat-value gold">{avgRating}</div>
             <div className="md-stat-sub">
@@ -199,18 +199,18 @@ export default async function MerchantDashboardPage() {
 
         {/* ── QUICK ACTIONS ── */}
         <div className="md-section">
-          <h2 className="md-section-title">Tindakan Pantas</h2>
+          <h2 className="md-section-title">Quick Actions</h2>
           <div className="md-actions-grid">
             {[
-              { href: '/merchant/dashboard/pakej/new', icon: '➕', label: 'Tambah Pakej', desc: 'Buat pakej baru' },
-              { href: '/merchant/dashboard/pakej', icon: '📦', label: 'Urus Pakej', desc: 'Edit & publish' },
-              { href: '/merchant/dashboard/newsfeed/new', icon: '📰', label: 'Tulis Berita', desc: 'Kongsi update' },
-              { href: '/merchant/dashboard/reels', icon: '🎬', label: 'Reels', desc: 'Video pendek' },
-              { href: '/merchant/dashboard/galeri', icon: '🖼️', label: 'Galeri', desc: 'Muat naik gambar' },
+              { href: '/merchant/dashboard/pakej/new', icon: '➕', label: 'Add Package', desc: 'Create new package' },
+              { href: '/merchant/dashboard/pakej', icon: '📦', label: 'Manage Packages', desc: 'Edit & publish' },
+              { href: '/merchant/dashboard/newsfeed/new', icon: '📰', label: 'Write News', desc: 'Share updates' },
+              { href: '/merchant/dashboard/reels', icon: '🎬', label: 'Reels', desc: 'Short videos' },
+              { href: '/merchant/dashboard/galeri', icon: '🖼️', label: 'Gallery', desc: 'Upload photos' },
               // Owner: Profil Agensi | Staff: Tetapan (tukar kata laluan sahaja)
               role === 'owner'
-                ? { href: '/merchant/dashboard/profil', icon: '🏢', label: 'Profil Agensi', desc: 'Kemaskini profil' }
-                : { href: '/merchant/dashboard/settings', icon: '⚙️', label: 'Tetapan', desc: 'Tukar kata laluan' },
+                ? { href: '/merchant/dashboard/profil', icon: '🏢', label: 'Agency Profile', desc: 'Update profile' }
+                : { href: '/merchant/dashboard/settings', icon: '⚙️', label: 'Settings', desc: 'Change password' },
             ].map((action) => (
               <Link key={action.href} href={action.href} className="md-action-card">
                 <div className="md-action-icon">{action.icon}</div>
@@ -223,30 +223,30 @@ export default async function MerchantDashboardPage() {
 
         {/* ── AGENCY INFO ── */}
         <div className="md-section">
-          <h2 className="md-section-title">Maklumat Agensi</h2>
+          <h2 className="md-section-title">Agency Information</h2>
           <div className="md-info-card">
             <div className="md-info-grid">
               <div className="md-info-item">
-                <div className="md-info-label">Nama Agensi</div>
+                <div className="md-info-label">Agency Name</div>
                 <div className="md-info-value">{agency.name}</div>
               </div>
               <div className="md-info-item">
-                <div className="md-info-label">Emel</div>
+                <div className="md-info-label">Email</div>
                 <div className="md-info-value">{agency.email || user.email}</div>
               </div>
               <div className="md-info-item">
                 <div className="md-info-label">Status</div>
                 <div>
                   <span className={`md-status-badge ${agency.is_verified ? 'verified' : 'pending'}`}>
-                    {agency.is_verified ? '✓ Disahkan' : '⏳ Menunggu Pengesahan'}
+                    {agency.is_verified ? '✓ Verified' : '⏳ Pending Verification'}
                   </span>
                 </div>
               </div>
               {agency.motac_license_expiry && (
                 <div className="md-info-item">
-                  <div className="md-info-label">Tamat Lesen MOTAC</div>
+                  <div className="md-info-label">MOTAC License Expiry</div>
                   <div className="md-info-value" style={{ color: licenseWarning ? licenseWarning.textColor : '#2C2C2C' }}>
-                    {new Date(agency.motac_license_expiry).toLocaleDateString('ms-MY', {
+                    {new Date(agency.motac_license_expiry).toLocaleDateString('en-MY', {
                       year: 'numeric', month: 'long', day: 'numeric'
                     })}
                     {licenseWarning && <span style={{ marginLeft: '8px' }}>{licenseWarning.icon}</span>}
@@ -255,13 +255,13 @@ export default async function MerchantDashboardPage() {
               )}
               {agency.phone && (
                 <div className="md-info-item">
-                  <div className="md-info-label">Telefon</div>
+                  <div className="md-info-label">Phone</div>
                   <div className="md-info-value">{agency.phone}</div>
                 </div>
               )}
               {agency.ssm_number && (
                 <div className="md-info-item">
-                  <div className="md-info-label">No. SSM</div>
+                  <div className="md-info-label">SSM No.</div>
                   <div className="md-info-value">{agency.ssm_number}</div>
                 </div>
               )}
@@ -273,7 +273,7 @@ export default async function MerchantDashboardPage() {
       {/* ── STYLES ── */}
       <style dangerouslySetInnerHTML={{ __html: `
         .md-page {
-          max-width: 1200px;
+          max-width: 1000px;
           margin: 0 auto;
         }
 
@@ -476,38 +476,64 @@ export default async function MerchantDashboardPage() {
 
         /* Tablet */
         @media (max-width: 1023px) {
-          .md-stats-grid { grid-template-columns: repeat(2, 1fr); }
+          .md-stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
           .md-actions-grid { grid-template-columns: repeat(3, 1fr); }
           .md-title { font-size: 24px; }
+          .md-stat-value { font-size: 28px; }
+          .md-section-title { font-size: 17px; }
         }
 
         /* Mobile */
         @media (max-width: 639px) {
-          .md-header-top { flex-direction: column; gap: 8px; }
-          .md-title { font-size: 22px; }
-          .md-stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-          .md-stat-card { padding: 16px; }
-          .md-stat-value { font-size: 26px; }
-          .md-stat-icon { width: 32px; height: 32px; font-size: 14px; }
-          .md-actions-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-          .md-action-card { padding: 16px; }
-          .md-action-icon { font-size: 24px; }
-          .md-info-grid { grid-template-columns: 1fr; gap: 16px; }
-          .md-license-warning { flex-direction: column; gap: 12px; padding: 16px; }
-          .md-license-icon { font-size: 28px; }
-          .md-license-title { font-size: 15px; }
+          .md-page { padding: 0; }
+          .md-header { margin-bottom: 20px; }
+          .md-header-top { flex-direction: row; align-items: center; gap: 10px; flex-wrap: nowrap; }
+          .md-title { font-size: 18px; margin-bottom: 2px; }
+          .md-subtitle { font-size: 13px; }
+          .md-role-badge { font-size: 11px; padding: 4px 10px; flex-shrink: 0; }
+
+          .md-license-warning { flex-direction: column; gap: 10px; padding: 14px; margin-bottom: 20px; }
+          .md-license-icon { font-size: 24px; }
+          .md-license-title { font-size: 14px; }
+          .md-license-msg { font-size: 13px; margin-bottom: 10px; }
+          .md-license-actions { gap: 8px; }
           .md-license-btn-primary, .md-license-btn-secondary {
-            padding: 10px 16px;
-            font-size: 12px;
-            width: 100%;
-            text-align: center;
+            padding: 9px 14px; font-size: 12px; flex: 1; text-align: center; box-sizing: border-box;
           }
+
+          .md-stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 20px; }
+          .md-stat-card { padding: 14px 12px; border-radius: 10px; }
+          .md-stat-header { gap: 8px; margin-bottom: 8px; }
+          .md-stat-icon { width: 30px; height: 30px; font-size: 13px; border-radius: 6px; }
+          .md-stat-label { font-size: 11px; }
+          .md-stat-value { font-size: 24px; margin-bottom: 6px; }
+          .md-stat-tag { font-size: 10px; }
+          .md-stat-meta { font-size: 11px; }
+          .md-stat-stars { font-size: 14px; letter-spacing: 1px; }
+
+          .md-section { margin-bottom: 24px; }
+          .md-section-title { font-size: 15px; margin-bottom: 12px; }
+
+          .md-actions-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+          .md-action-card { padding: 14px 8px; border-radius: 10px; }
+          .md-action-icon { font-size: 22px; margin-bottom: 6px; }
+          .md-action-label { font-size: 12px; margin-bottom: 1px; }
+          .md-action-desc { font-size: 10px; }
+
+          .md-info-card { padding: 16px; border-radius: 10px; }
+          .md-info-grid { grid-template-columns: 1fr 1fr; gap: 14px; }
+          .md-info-label { font-size: 11px; }
+          .md-info-value { font-size: 13px; }
+          .md-status-badge { font-size: 12px; padding: 3px 10px; }
         }
 
         /* Small mobile */
         @media (max-width: 400px) {
-          .md-stats-grid { grid-template-columns: 1fr; }
-          .md-actions-grid { grid-template-columns: 1fr; }
+          .md-title { font-size: 16px; }
+          .md-stats-grid { grid-template-columns: repeat(2, 1fr); }
+          .md-actions-grid { grid-template-columns: repeat(2, 1fr); }
+          .md-stat-value { font-size: 22px; }
+          .md-info-grid { grid-template-columns: 1fr; }
         }
       `}} />
     </>

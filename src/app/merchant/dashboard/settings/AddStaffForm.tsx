@@ -19,288 +19,135 @@ export default function AddStaffForm({ agencyId }: { agencyId: string }) {
     setLoading(true)
     setError('')
     setSuccess(null)
-
     try {
-      const result = await createMerchantStaff({
-        ...formData,
-        agencyId
-      })
-
-      if (!result.success) {
-        throw new Error(result.error)
-      }
-
-      setSuccess({
-        email: result.email!,
-        password: result.tempPassword!
-      })
-
-      // Reset form
-      setFormData({
-        fullName: '',
-        email: '',
-        role: 'staff'
-      })
-    } catch (error: any) {
-      setError(error.message)
+      const result = await createMerchantStaff({ ...formData, agencyId })
+      if (!result.success) throw new Error(result.error)
+      setSuccess({ email: result.email!, password: result.tempPassword! })
+      setFormData({ fullName: '', email: '', role: 'staff' })
+    } catch (e: any) {
+      setError(e.message)
     } finally {
       setLoading(false)
     }
   }
 
   const copyCredentials = () => {
-    const text = `Staff Login Credentials
-Email: ${success?.email}
-Temporary Password: ${success?.password}
-
-Login at: https://ihram.com.my/merchant/login`
-    
+    const text = `Staff Login Credentials\nEmail: ${success?.email}\nTemporary Password: ${success?.password}\n\nLogin at: https://ihram.com.my/merchant/login`
     navigator.clipboard.writeText(text)
     alert('📋 Copied to clipboard!')
   }
 
   return (
-    <div>
-      <div style={{
-        fontSize: '16px',
-        fontWeight: '600',
-        color: '#2C2C2C',
-        marginBottom: '16px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px'
-      }}>
-        <span>➕</span>
-        Add Staff Member
-      </div>
+    <>
+      <style>{`
+        .asf,.asf *{box-sizing:border-box}
+        .asf-section-title{font-size:15px;font-weight:700;color:#2C2C2C;margin:0 0 16px;display:flex;align-items:center;gap:8px}
 
-      {success && (
-        <div style={{
-          padding: '20px',
-          backgroundColor: '#ECFDF5',
-          border: '2px solid #10B981',
-          borderRadius: '12px',
-          marginBottom: '24px'
-        }}>
-          <div style={{
-            fontSize: '16px',
-            fontWeight: '700',
-            color: '#065F46',
-            marginBottom: '12px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
-            ✅ Staff Created Successfully!
+        /* Success box */
+        .asf-success{padding:18px;background:#ECFDF5;border:2px solid #10B981;border-radius:10px;margin-bottom:20px}
+        .asf-success-title{font-size:15px;font-weight:700;color:#065F46;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+        .asf-cred-box{background:#F0FDF4;border:1px solid #86EFAC;border-radius:8px;padding:14px;margin-bottom:12px;font-family:monospace;font-size:13px;line-height:1.8;color:#065F46}
+        .asf-warn{font-size:12px;color:#065F46;margin-bottom:12px;line-height:1.5}
+        .asf-copy-btn{width:100%;padding:9px;background:#10B981;color:white;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer}
+        .asf-copy-btn:hover{background:#059669}
+
+        /* Error */
+        .asf-error{padding:11px 14px;background:#FEE2E2;border:1px solid #FCA5A5;border-radius:8px;margin-bottom:14px;font-size:13px;color:#DC2626}
+
+        /* Form grid */
+        .asf-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+        .asf-field{margin-bottom:14px}
+        .asf-label{display:block;font-size:13px;font-weight:600;color:#555;margin-bottom:6px}
+        .asf-req{color:#EF4444;margin-left:2px}
+        .asf-input,.asf-select{
+          width:100%;padding:10px 13px;border:1.5px solid #E5E5E0;border-radius:8px;
+          font-size:13px;outline:none;font-family:inherit;color:#2C2C2C;background:white;
+          transition:border-color .15s;
+        }
+        .asf-input:focus,.asf-select:focus{border-color:#B8936D}
+        .asf-input:disabled,.asf-select:disabled{opacity:.6;cursor:not-allowed}
+
+        /* Info box */
+        .asf-info{padding:11px 14px;background:#EFF6FF;border-radius:8px;margin-bottom:14px;display:flex;gap:10px;align-items:flex-start}
+        .asf-info-text{font-size:12px;color:#1E40AF;line-height:1.6}
+
+        /* Submit */
+        .asf-submit{
+          width:100%;padding:11px;background:#B8936D;color:white;
+          border:none;border-radius:8px;font-size:14px;font-weight:600;
+          cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
+          transition:background .15s;
+        }
+        .asf-submit:hover:not(:disabled){background:#a07d5a}
+        .asf-submit:disabled{background:#ccc;cursor:not-allowed}
+
+        @media(max-width:639px){
+          .asf-grid{grid-template-columns:1fr;gap:0}
+          .asf-grid .asf-field{margin-bottom:14px}
+        }
+      `}</style>
+
+      <div className="asf">
+        <div className="asf-section-title"><span>➕</span> Add Staff Member</div>
+
+        {success && (
+          <div className="asf-success">
+            <div className="asf-success-title">✅ Staff Created Successfully!</div>
+            <div className="asf-cred-box">
+              <div><strong>Email:</strong> {success.email}</div>
+              <div><strong>Temporary Password:</strong> {success.password}</div>
+            </div>
+            <div className="asf-warn">
+              ⚠️ <strong>Important:</strong> Copy these credentials and share them securely.
+              They can login immediately at <strong>/merchant/login</strong>
+            </div>
+            <button className="asf-copy-btn" onClick={copyCredentials}>📋 Copy Credentials</button>
           </div>
+        )}
 
-          <div style={{
-            backgroundColor: '#F0FDF4',
-            padding: '16px',
-            borderRadius: '8px',
-            marginBottom: '12px',
-            border: '1px solid #86EFAC'
-          }}>
-            <div style={{ 
-              fontFamily: 'monospace', 
-              fontSize: '14px', 
-              lineHeight: '1.8',
-              color: '#065F46'
-            }}>
-              <div style={{ marginBottom: '8px' }}>
-                <strong style={{ color: '#047857' }}>Email:</strong>{' '}
-                <span style={{ color: '#166534' }}>{success.email}</span>
-              </div>
-              <div>
-                <strong style={{ color: '#047857' }}>Temporary Password:</strong>{' '}
-                <span style={{ color: '#166534', fontWeight: '600' }}>{success.password}</span>
-              </div>
+        {error && <div className="asf-error">❌ {error}</div>}
+
+        <form onSubmit={handleSubmit}>
+          <div className="asf-grid">
+            <div className="asf-field">
+              <label className="asf-label">Full Name <span className="asf-req">*</span></label>
+              <input type="text" required className="asf-input" disabled={loading}
+                value={formData.fullName}
+                onChange={e => setFormData({ ...formData, fullName: e.target.value })}
+                placeholder="Ahmad bin Ali" />
+            </div>
+            <div className="asf-field">
+              <label className="asf-label">Email Address <span className="asf-req">*</span></label>
+              <input type="email" required className="asf-input" disabled={loading}
+                value={formData.email}
+                onChange={e => setFormData({ ...formData, email: e.target.value })}
+                placeholder="staff@example.com" />
             </div>
           </div>
 
-          <div style={{
-            fontSize: '13px',
-            color: '#065F46',
-            marginBottom: '12px',
-            lineHeight: '1.6'
-          }}>
-            ⚠️ <strong>Important:</strong> Copy these credentials and share them securely. 
-            They can login immediately at <strong>/merchant/login</strong>
+          <div className="asf-field">
+            <label className="asf-label">Role <span className="asf-req">*</span></label>
+            <select className="asf-select" disabled={loading}
+              value={formData.role}
+              onChange={e => setFormData({ ...formData, role: e.target.value as 'staff' | 'owner' })}>
+              <option value="staff">👤 Staff — View only, help with inquiries</option>
+              <option value="owner">👑 Owner — Full access</option>
+            </select>
           </div>
 
-          <button
-            onClick={copyCredentials}
-            style={{
-              width: '100%',
-              padding: '10px',
-              backgroundColor: '#10B981',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: '600',
-              cursor: 'pointer'
-            }}
-          >
-            📋 Copy Credentials
+          <div className="asf-info">
+            <span style={{ fontSize: 16 }}>ℹ️</span>
+            <div className="asf-info-text">
+              <strong>Temporary Password:</strong> The system will generate a temporary password automatically.
+              The new staff member can use it to login immediately.
+            </div>
+          </div>
+
+          <button type="submit" disabled={loading} className="asf-submit">
+            {loading ? <>⏳ Creating Staff...</> : <>📧 Create Staff</>}
           </button>
-        </div>
-      )}
-
-      {error && (
-        <div style={{
-          padding: '12px 16px',
-          backgroundColor: '#FEE2E2',
-          border: '1px solid #FCA5A5',
-          borderRadius: '8px',
-          marginBottom: '16px',
-          fontSize: '14px',
-          color: '#DC2626'
-        }}>
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: '16px',
-          marginBottom: '16px'
-        }}>
-          {/* Full Name */}
-          <div>
-            <label style={{
-              display: 'block',
-              fontSize: '14px',
-              fontWeight: '600',
-              color: '#2C2C2C',
-              marginBottom: '8px'
-            }}>
-              Full Name <span style={{ color: '#EF4444' }}>*</span>
-            </label>
-            <input
-              type="text"
-              value={formData.fullName}
-              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-              placeholder="Ahmad bin Ali"
-              required
-              disabled={loading}
-              style={{
-                width: '100%',
-                padding: '10px 16px',
-                border: '1px solid #E5E5E0',
-                borderRadius: '8px',
-                fontSize: '14px',
-                outline: 'none'
-              }}
-            />
-          </div>
-
-          {/* Email */}
-          <div>
-            <label style={{
-              display: 'block',
-              fontSize: '14px',
-              fontWeight: '600',
-              color: '#2C2C2C',
-              marginBottom: '8px'
-            }}>
-              Email Address <span style={{ color: '#EF4444' }}>*</span>
-            </label>
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              placeholder="staff@example.com"
-              required
-              disabled={loading}
-              style={{
-                width: '100%',
-                padding: '10px 16px',
-                border: '1px solid #E5E5E0',
-                borderRadius: '8px',
-                fontSize: '14px',
-                outline: 'none'
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Role */}
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{
-            display: 'block',
-            fontSize: '14px',
-            fontWeight: '600',
-            color: '#2C2C2C',
-            marginBottom: '8px'
-          }}>
-            Role <span style={{ color: '#EF4444' }}>*</span>
-          </label>
-          <select
-            value={formData.role}
-            onChange={(e) => setFormData({ ...formData, role: e.target.value as 'staff' | 'owner' })}
-            disabled={loading}
-            style={{
-              width: '100%',
-              padding: '10px 16px',
-              border: '1px solid #E5E5E0',
-              borderRadius: '8px',
-              fontSize: '14px',
-              outline: 'none',
-              cursor: 'pointer'
-            }}
-          >
-            <option value="staff">👤 Staff - View only, help with inquiries</option>
-            <option value="owner">👑 Owner - Full access</option>
-          </select>
-        </div>
-
-        {/* Info Box */}
-        <div style={{
-          padding: '12px 16px',
-          backgroundColor: '#EFF6FF',
-          borderRadius: '8px',
-          marginBottom: '16px',
-          display: 'flex',
-          gap: '12px',
-          alignItems: 'start'
-        }}>
-          <span style={{ fontSize: '18px' }}>ℹ️</span>
-          <div style={{ fontSize: '13px', color: '#1E40AF', lineHeight: '1.6' }}>
-            <strong>Temporary Password:</strong> The system will generate a temporary password automatically. 
-            The new staff member can use it to login immediately.
-          </div>
-        </div>
-
-        {/* Submit Button */}
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            width: '100%',
-            padding: '12px',
-            backgroundColor: loading ? '#CCC' : '#B8936D',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '15px',
-            fontWeight: '600',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px'
-          }}
-        >
-          {loading ? (
-            <>⏳ Creating Staff...</>
-          ) : (
-            <>📧 Create Staff</>
-          )}
-        </button>
-      </form>
-    </div>
+        </form>
+      </div>
+    </>
   )
 }

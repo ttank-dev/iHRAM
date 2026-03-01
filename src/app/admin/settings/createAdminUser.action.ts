@@ -2,20 +2,14 @@
 
 import { createClient } from '@supabase/supabase-js'
 
-// Service Role Client (has admin privileges)
 const getServiceRoleClient = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-  
   return createClient(supabaseUrl, supabaseServiceKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
+    auth: { autoRefreshToken: false, persistSession: false }
   })
 }
 
-// Generate random temporary password
 const generateTempPassword = () => {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
   let password = ''
@@ -34,8 +28,7 @@ export async function createAdminUser(formData: {
     const supabaseAdmin = getServiceRoleClient()
     const tempPassword = generateTempPassword()
 
-    // Create user with admin privileges
-    // NO requires_password_change flag - let them decide!
+    // Step 1: Create auth user
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: formData.email,
       password: tempPassword,
@@ -43,45 +36,47 @@ export async function createAdminUser(formData: {
       user_metadata: {
         full_name: formData.fullName,
         role: formData.role
-        // Removed: requires_password_change: true
       }
     })
 
-    if (authError) {
-      return {
-        success: false,
-        error: authError.message
-      }
-    }
+    if (authError) return { success: false, error: authError.message }
 
-    // Add to admin_users table
-    const { error: dbError } = await supabaseAdmin
+    const userId = authData.user.id
+
+    // Step 2: Insert into admin_users
+    const { error: adminUsersError } = await supabaseAdmin
       .from('admin_users')
       .insert({
-        id: authData.user.id,
+        id: userId,
         email: formData.email,
         full_name: formData.fullName,
         role: formData.role,
         is_active: true
       })
 
-    if (dbError) {
-      return {
-        success: false,
-        error: dbError.message
-      }
+    if (adminUsersError) return { success: false, error: adminUsersError.message }
+
+    // Step 3: Insert into admin_roles (for RLS policies)
+    const { error: adminRolesError } = await supabaseAdmin
+      .from('admin_roles')
+      .insert({
+        user_id: userId,
+        role: formData.role,
+        is_active: true
+      })
+
+    // admin_roles insert failure is non-fatal — log it but don't block
+    if (adminRolesError) {
+      console.warn('admin_roles insert failed:', adminRolesError.message)
     }
 
     return {
       success: true,
-      tempPassword: tempPassword,
+      tempPassword,
       email: formData.email
     }
 
   } catch (error: any) {
-    return {
-      success: false,
-      error: error.message
-    }
+    return { success: false, error: error.message }
   }
 }

@@ -71,10 +71,10 @@ export default async function EditPanduanPage({ params }: { params: Promise<{ id
 
       <div className="egp-header">
         <div>
-          <h1 className="egp-title">Edit Panduan</h1>
+          <h1 className="egp-title">Edit Guide</h1>
           <p className="egp-sub">Update guide details and content</p>
         </div>
-        <Link href="/admin/panduan" className="egp-back">← Back to Panduan</Link>
+        <Link href="/admin/panduan" className="egp-back">← Back to Guides</Link>
       </div>
 
       <EditGuideFormWrapper guide={guide} categories={safeCategories} />

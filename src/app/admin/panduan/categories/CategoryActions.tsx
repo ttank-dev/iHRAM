@@ -17,7 +17,6 @@ export default function CategoryActions({ category }: { category: any }) {
     try {
       const { error } = await supabase.from('categories').update({ is_active: newStatus }).eq('id', category.id)
       if (error) throw error
-      alert(`✅ Category ${newStatus ? 'activated' : 'deactivated'}!`)
       router.refresh()
     } catch (error: any) {
       alert(`❌ Error: ${error.message}`)
@@ -27,12 +26,11 @@ export default function CategoryActions({ category }: { category: any }) {
   }
 
   const handleDelete = async () => {
-    if (!confirm(`Delete "${category.name}"? Cannot be undone.`)) return
+    if (!confirm(`Delete "${category.name}"?\n\nThis cannot be undone.`)) return
     setLoading(true)
     try {
       const { error } = await supabase.from('categories').delete().eq('id', category.id)
       if (error) throw error
-      alert('✅ Category deleted!')
       router.refresh()
     } catch (error: any) {
       alert(`❌ Error: ${error.message}`)
@@ -44,50 +42,56 @@ export default function CategoryActions({ category }: { category: any }) {
   return (
     <>
       <style>{`
-        .ca-wrap { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+        .ca-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
         .ca-btn {
-          padding: 8px 14px; border: none; border-radius: 6px;
-          font-size: 13px; font-weight: 600; cursor: pointer;
-          text-decoration: none; display: inline-block;
+          height: 30px;
+          padding: 0 8px;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 3px;
+          font-size: 11px;
+          font-weight: 700;
+          transition: filter 0.15s;
           white-space: nowrap;
+          width: 100%;
+          text-decoration: none;
+          font-family: inherit;
         }
+        .ca-btn:hover:not(:disabled) { filter: brightness(0.92); }
+        .ca-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .ca-btn-blue   { background: #3B82F6; color: white; }
+        .ca-btn-green  { background: #10B981; color: white; }
+        .ca-btn-amber  { background: #F59E0B; color: white; }
+        .ca-btn-red    { background: #EF4444; color: white; }
         @media (max-width: 639px) {
-          .ca-wrap { justify-content: flex-start; }
-          .ca-btn { padding: 8px 12px; font-size: 12px; flex: 1; text-align: center; }
+          .ca-actions { grid-template-columns: 1fr 1fr 1fr; }
         }
       `}</style>
-      <div className="ca-wrap">
+
+      <div className="ca-actions">
         <Link
           href={`/admin/panduan/categories/edit/${category.id}`}
-          className="ca-btn"
-          style={{ backgroundColor: '#EFF6FF', color: '#3B82F6' }}
+          className="ca-btn ca-btn-blue"
         >
-          Edit
+          ✏️ Edit
         </Link>
         <button
           onClick={handleToggleActive}
           disabled={loading}
-          className="ca-btn"
-          style={{
-            backgroundColor: category.is_active ? '#FEF3C7' : '#ECFDF5',
-            color: category.is_active ? '#F59E0B' : '#10B981',
-            opacity: loading ? 0.5 : 1,
-            cursor: loading ? 'not-allowed' : 'pointer'
-          }}
+          className={'ca-btn ' + (category.is_active ? 'ca-btn-amber' : 'ca-btn-green')}
         >
-          {loading ? '...' : category.is_active ? 'Deactivate' : 'Activate'}
+          {loading ? '...' : category.is_active ? '⏸ Deactivate' : '✓ Activate'}
         </button>
         <button
           onClick={handleDelete}
           disabled={loading}
-          className="ca-btn"
-          style={{
-            backgroundColor: '#FEE2E2', color: '#EF4444',
-            opacity: loading ? 0.5 : 1,
-            cursor: loading ? 'not-allowed' : 'pointer'
-          }}
+          className="ca-btn ca-btn-red"
         >
-          {loading ? '...' : 'Delete'}
+          {loading ? '...' : '🗑 Delete'}
         </button>
       </div>
     </>

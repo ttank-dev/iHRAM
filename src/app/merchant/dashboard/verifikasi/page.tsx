@@ -8,84 +8,51 @@ export default function VerificationPage() {
   const supabase = createClient()
   const router = useRouter()
   const searchParams = useSearchParams()
-  
-  // 🔥 NEW: Check for update mode
   const action = searchParams.get('action')
   const isUpdateMode = action === 'update'
-  
+
   const [loading, setLoading] = useState(false)
   const [existingRequest, setExistingRequest] = useState<any>(null)
   const [agencyId, setAgencyId] = useState<string | null>(null)
   const [agencyData, setAgencyData] = useState<any>(null)
-  
+
   const [formData, setFormData] = useState({
-    company_name: '',
-    ssm_number: '',
-    company_registration_date: '',
-    owner_name: '',
-    motac_license_number: '',
-    motac_license_expiry: '',
-    office_phone: '',
-    office_email: '',
-    office_address: '',
-    years_in_operation: '',
-    total_pilgrims_served: '',
-    website_url: '',
-    facebook_url: '',
-    instagram_url: '',
-    additional_notes: ''
+    company_name: '', ssm_number: '', company_registration_date: '',
+    owner_name: '', motac_license_number: '', motac_license_expiry: '',
+    office_phone: '', office_email: '', office_address: '',
+    years_in_operation: '', total_pilgrims_served: '',
+    website_url: '', facebook_url: '', instagram_url: '', additional_notes: ''
   })
-  
+
   const [documents, setDocuments] = useState({
     ssm_certificate: null as File | null,
     motac_license: null as File | null,
     business_license: null as File | null
   })
 
-  useEffect(() => {
-    fetchAgencyAndRequest()
-  }, [])
+  useEffect(() => { fetchAgencyAndRequest() }, [])
 
   const fetchAgencyAndRequest = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        router.push('/login')
-        return
-      }
+      if (!user) { router.push('/login'); return }
 
-      // Fetch agency with cache bypass
-      const { data: agency } = await supabase
-        .from('agencies')
-        .select('*')
-        .eq('email', user.email)
-        .single()
-
+      const { data: agency } = await supabase.from('agencies').select('*').eq('email', user.email).single()
       if (agency) {
         setAgencyId(agency.id)
         setAgencyData(agency)
-        
         setFormData(prev => ({
-          ...prev,
-          company_name: agency.name || '',
-          office_phone: agency.phone || '',
-          office_email: agency.email || '',
+          ...prev, company_name: agency.name || '',
+          office_phone: agency.phone || '', office_email: agency.email || '',
           website_url: agency.website || ''
         }))
 
-        // Fetch latest verification request
         const { data: request } = await supabase
-          .from('verification_requests')
-          .select('*')
-          .eq('agency_id', agency.id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single()
+          .from('verification_requests').select('*').eq('agency_id', agency.id)
+          .order('created_at', { ascending: false }).limit(1).single()
 
         if (request) {
           setExistingRequest(request)
-          
-          // 🔥 UPDATED: Pre-fill form if pending, rejected, OR update mode
           if (request.status === 'pending' || request.status === 'rejected' || isUpdateMode) {
             setFormData({
               company_name: request.company_name || agency.name || '',
@@ -107,616 +74,363 @@ export default function VerificationPage() {
           }
         }
       }
-    } catch (error) {
-      console.error('Error:', error)
-    }
+    } catch (error) { console.error('Error:', error) }
   }
 
   const uploadDocument = async (file: File, type: string): Promise<string> => {
-    try {
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${agencyId}/${type}_${Date.now()}.${fileExt}`
-      
-      console.log('🔵 Uploading:', fileName)
-      
-      const { error: uploadError, data } = await supabase.storage
-        .from('verification-documents')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
-        })
-
-      if (uploadError) {
-        console.error('❌ Upload error:', uploadError)
-        throw uploadError
-      }
-
-      console.log('✅ Upload success:', data)
-
-      // Use signed URL instead of public URL
-      const { data: signedUrlData, error: urlError } = await supabase.storage
-        .from('verification-documents')
-        .createSignedUrl(fileName, 31536000) // 1 year
-
-      if (urlError) throw urlError
-
-      return signedUrlData.signedUrl
-    } catch (error) {
-      console.error('❌ Upload failed:', error)
-      throw error
-    }
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${agencyId}/${type}_${Date.now()}.${fileExt}`
+    const { error: uploadError } = await supabase.storage
+      .from('verification-documents').upload(fileName, file, { cacheControl: '3600', upsert: false })
+    if (uploadError) throw uploadError
+    const { data: signedUrlData, error: urlError } = await supabase.storage
+      .from('verification-documents').createSignedUrl(fileName, 31536000)
+    if (urlError) throw urlError
+    return signedUrlData.signedUrl
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (!agencyId) {
-      alert('❌ Agency not found')
-      return
-    }
-
-    // 🔥 UPDATED: For update mode, documents are optional if already verified
+    if (!agencyId) { alert('❌ Agency not found'); return }
     if (!isUpdateMode && (!documents.ssm_certificate || !documents.motac_license)) {
-      alert('❌ Please upload SSM Certificate and MOTAC License')
-      return
+      alert('❌ Please upload SSM Certificate and MOTAC License'); return
     }
-
-    // For update mode, require at least MOTAC license re-upload
     if (isUpdateMode && !documents.motac_license) {
-      alert('❌ Please upload the renewed MOTAC License document')
-      return
+      alert('❌ Please upload the renewed MOTAC License document'); return
     }
-
     setLoading(true)
-
     try {
-      console.log('🔵 Starting upload process...')
-      
-      // Upload documents (use existing URLs if not re-uploaded)
-      const ssmUrl = documents.ssm_certificate 
-        ? await uploadDocument(documents.ssm_certificate, 'ssm')
-        : existingRequest?.ssm_certificate_url
-        
+      const ssmUrl = documents.ssm_certificate
+        ? await uploadDocument(documents.ssm_certificate, 'ssm') : existingRequest?.ssm_certificate_url
       const motacUrl = documents.motac_license
-        ? await uploadDocument(documents.motac_license, 'motac')
-        : existingRequest?.motac_license_url
-        
-      const businessUrl = documents.business_license 
-        ? await uploadDocument(documents.business_license, 'business')
-        : existingRequest?.business_license_url
+        ? await uploadDocument(documents.motac_license, 'motac') : existingRequest?.motac_license_url
+      const businessUrl = documents.business_license
+        ? await uploadDocument(documents.business_license, 'business') : existingRequest?.business_license_url
 
-      console.log('🔵 Documents uploaded, saving to database...')
+      const { error } = await supabase.from('verification_requests').insert({
+        agency_id: agencyId,
+        company_name: formData.company_name, ssm_number: formData.ssm_number,
+        company_registration_date: formData.company_registration_date || null,
+        owner_name: formData.owner_name || null,
+        motac_license_number: formData.motac_license_number,
+        motac_license_expiry: formData.motac_license_expiry,
+        office_phone: formData.office_phone, office_email: formData.office_email,
+        office_address: formData.office_address,
+        ssm_certificate_url: ssmUrl, motac_license_url: motacUrl, business_license_url: businessUrl,
+        years_in_operation: formData.years_in_operation ? parseInt(formData.years_in_operation) : null,
+        total_pilgrims_served: formData.total_pilgrims_served ? parseInt(formData.total_pilgrims_served) : null,
+        website_url: formData.website_url || null, facebook_url: formData.facebook_url || null,
+        instagram_url: formData.instagram_url || null, additional_notes: formData.additional_notes || null,
+        status: 'pending'
+      })
+      if (error) throw error
 
-      const { error } = await supabase
-        .from('verification_requests')
-        .insert({
-          agency_id: agencyId,
-          company_name: formData.company_name,
-          ssm_number: formData.ssm_number,
-          company_registration_date: formData.company_registration_date || null,
-          owner_name: formData.owner_name || null,
-          motac_license_number: formData.motac_license_number,
-          motac_license_expiry: formData.motac_license_expiry,
-          office_phone: formData.office_phone,
-          office_email: formData.office_email,
-          office_address: formData.office_address,
-          ssm_certificate_url: ssmUrl,
-          motac_license_url: motacUrl,
-          business_license_url: businessUrl,
-          years_in_operation: formData.years_in_operation ? parseInt(formData.years_in_operation) : null,
-          total_pilgrims_served: formData.total_pilgrims_served ? parseInt(formData.total_pilgrims_served) : null,
-          website_url: formData.website_url || null,
-          facebook_url: formData.facebook_url || null,
-          instagram_url: formData.instagram_url || null,
-          additional_notes: formData.additional_notes || null,
-          status: 'pending'
-        })
-
-      if (error) {
-        console.error('❌ Database error:', error)
-        throw error
-      }
-
-      console.log('🔵 Updating agency status...')
-
-      await supabase
-        .from('agencies')
-        .update({ verification_status: 'pending' })
-        .eq('id', agencyId)
-
-      console.log('✅ All done!')
-      
+      await supabase.from('agencies').update({ verification_status: 'pending' }).eq('id', agencyId)
       setLoading(false)
-
-      // 🔥 UPDATED: Different success message for update mode
-      if (isUpdateMode) {
-        alert('✅ License update submitted successfully! Admin will review your updated license details.')
-      } else {
-        alert('✅ Verification request submitted successfully!')
-      }
-      
-      // Force reload with delay
-      setTimeout(() => {
-        window.location.href = window.location.pathname
-      }, 1000)
-      
+      alert(isUpdateMode
+        ? '✅ License update submitted! Admin will review your updated details.'
+        : '✅ Verification request submitted successfully!')
+      setTimeout(() => { window.location.href = window.location.pathname }, 1000)
     } catch (error: any) {
-      console.error('❌ Error:', error)
       alert(`❌ Error: ${error.message}`)
       setLoading(false)
     }
   }
 
-  // 🔥 UPDATED: Only show success if NOT in update mode
-  const showVerifiedSuccess = existingRequest?.status === 'approved' 
-    && agencyData?.is_verified 
-    && !isUpdateMode
+  const set = (k: string, v: string) => setFormData(p => ({ ...p, [k]: v }))
+  const setDoc = (k: string, v: File | null) => setDocuments(p => ({ ...p, [k]: v }))
 
-  if (showVerifiedSuccess) {
-    return (
-      <div style={{ padding: '40px', maxWidth: '800px', margin: '0 auto' }}>
-        <div style={{
-          backgroundColor: '#E8F5E9',
-          border: '2px solid #4CAF50',
-          borderRadius: '16px',
-          padding: '40px',
-          textAlign: 'center'
-        }}>
-          <div style={{ fontSize: '64px', marginBottom: '16px' }}>✅</div>
-          <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '12px' }}>
-            Verified by MOTAC
-          </h2>
-          <p style={{ fontSize: '16px', color: '#666', marginBottom: '8px' }}>
-            Your agency has been successfully verified!
-          </p>
-          <div style={{ fontSize: '14px', color: '#999' }}>
-            License: {agencyData.motac_license_number || existingRequest.motac_license_number}
-          </div>
-          <div style={{ fontSize: '14px', color: '#999' }}>
-            Verified on: {new Date(agencyData.motac_verified_at || existingRequest.reviewed_at).toLocaleDateString('ms-MY', {
-              timeZone: 'Asia/Kuala_Lumpur',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            })}
-          </div>
+  const showVerifiedSuccess = existingRequest?.status === 'approved' && agencyData?.is_verified && !isUpdateMode
+  const showPending = existingRequest?.status === 'pending' && !isUpdateMode
+
+  /* ── VERIFIED STATE ── */
+  if (showVerifiedSuccess) return (
+    <>
+      <style>{`.vp-state{max-width:900px;width:100%;overflow:hidden}.vp-state *{box-sizing:border-box}.vp-box{border-radius:16px;padding:40px;text-align:center;border:2px solid}.vp-box-icon{font-size:56px;margin-bottom:14px}.vp-box-title{font-size:22px;font-weight:700;color:#2C2C2C;margin-bottom:10px}.vp-box-sub{font-size:14px;color:#666;margin-bottom:6px}.vp-box-meta{font-size:13px;color:#999}@media(max-width:639px){.vp-box{padding:28px 20px}.vp-box-icon{font-size:44px}.vp-box-title{font-size:19px}}`}</style>
+      <div className="vp-state">
+        <div className="vp-box" style={{ background: '#ECFDF5', borderColor: '#10B981' }}>
+          <div className="vp-box-icon">✅</div>
+          <div className="vp-box-title">Verified by MOTAC</div>
+          <p className="vp-box-sub">Your agency has been successfully verified!</p>
+          <div className="vp-box-meta">License: {agencyData.motac_license_number || existingRequest.motac_license_number}</div>
+          <div className="vp-box-meta">Verified on: {new Date(agencyData.motac_verified_at || existingRequest.reviewed_at).toLocaleDateString('en-MY', { timeZone: 'Asia/Kuala_Lumpur', year: 'numeric', month: 'long', day: 'numeric' })}</div>
         </div>
       </div>
-    )
-  }
+    </>
+  )
 
-  if (existingRequest?.status === 'pending' && !isUpdateMode) {
-    return (
-      <div style={{ padding: '40px', maxWidth: '800px', margin: '0 auto' }}>
-        <div style={{
-          backgroundColor: '#FFF9E6',
-          border: '2px solid #FFC107',
-          borderRadius: '16px',
-          padding: '40px',
-          textAlign: 'center'
-        }}>
-          <div style={{ fontSize: '64px', marginBottom: '16px' }}>⏳</div>
-          <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '12px' }}>
-            Verification Pending
-          </h2>
-          <p style={{ fontSize: '16px', color: '#666', marginBottom: '8px' }}>
-            Your verification request is being reviewed by our admin team.
-          </p>
-          <div style={{ fontSize: '14px', color: '#999' }}>
-            Submitted on: {new Date(existingRequest.created_at).toLocaleDateString('ms-MY', {
-              timeZone: 'Asia/Kuala_Lumpur',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            })}
-          </div>
+  /* ── PENDING STATE ── */
+  if (showPending) return (
+    <>
+      <style>{`.vp-state{max-width:900px;width:100%;overflow:hidden}.vp-state *{box-sizing:border-box}.vp-box{border-radius:16px;padding:40px;text-align:center;border:2px solid}.vp-box-icon{font-size:56px;margin-bottom:14px}.vp-box-title{font-size:22px;font-weight:700;color:#2C2C2C;margin-bottom:10px}.vp-box-sub{font-size:14px;color:#666;margin-bottom:6px}.vp-box-meta{font-size:13px;color:#999}@media(max-width:639px){.vp-box{padding:28px 20px}.vp-box-icon{font-size:44px}.vp-box-title{font-size:19px}}`}</style>
+      <div className="vp-state">
+        <div className="vp-box" style={{ background: '#FFFBEB', borderColor: '#F59E0B' }}>
+          <div className="vp-box-icon">⏳</div>
+          <div className="vp-box-title">Verification Pending</div>
+          <p className="vp-box-sub">Your request is being reviewed by our admin team.</p>
+          <div className="vp-box-meta">Submitted on: {new Date(existingRequest.created_at).toLocaleDateString('en-MY', { timeZone: 'Asia/Kuala_Lumpur', year: 'numeric', month: 'long', day: 'numeric' })}</div>
         </div>
       </div>
-    )
-  }
+    </>
+  )
 
+  /* ── MAIN FORM ── */
   return (
-    <div style={{ padding: '40px', maxWidth: '900px', margin: '0 auto' }}>
-      
-      <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '8px' }}>
-          {isUpdateMode ? '🔄 Update License Verification' : '✅ MOTAC Verification'}
-        </h1>
-        <p style={{ fontSize: '16px', color: '#666' }}>
-          {isUpdateMode 
-            ? 'Update your license details with the renewed MOTAC license information' 
-            : 'Get verified to build trust with customers and display the verified badge'
-          }
-        </p>
-      </div>
+    <>
+      <style>{`
+        .vp,.vp *{box-sizing:border-box}
+        .vp{max-width:900px;width:100%;overflow:hidden}
 
-      {/* 🔥 NEW: Update mode notice */}
-      {isUpdateMode && (
-        <div style={{
-          backgroundColor: '#FFF7ED',
-          border: '3px solid #F97316',
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '24px'
-        }}>
-          <div style={{ fontSize: '18px', fontWeight: '700', color: '#C2410C', marginBottom: '12px' }}>
-            📝 Updating Your License Verification
-          </div>
-          <div style={{ fontSize: '14px', color: '#9A3412', lineHeight: '1.8' }}>
-            • Your current data has been <strong>pre-filled</strong> below<br/>
-            • Update the <strong>License Expiry Date</strong> with your renewed license<br/>
-            • <strong>Re-upload your MOTAC License document</strong> (new version - required)<br/>
-            • SSM Certificate can be re-uploaded if needed (optional)<br/>
-            • Other details can be updated as needed<br/>
-            • Your previous verification history will be preserved<br/>
-            • Admin will review and approve your updated license
-          </div>
-        </div>
-      )}
+        /* Header */
+        .vp-header{margin-bottom:24px}
+        .vp-title{font-size:28px;font-weight:700;color:#2C2C2C;margin:0 0 6px}
+        .vp-sub{font-size:14px;color:#888;margin:0}
 
-      {existingRequest?.status === 'rejected' && !isUpdateMode && (
-        <div style={{
-          backgroundColor: '#FFEBEE',
-          border: '2px solid #F44336',
-          borderRadius: '12px',
-          padding: '20px',
-          marginBottom: '24px'
-        }}>
-          <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#D32F2F', marginBottom: '8px' }}>
-            ❌ Previous Request Rejected
-          </div>
-          <p style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>
-            Reason: {existingRequest.rejection_reason || 'No reason provided'}
+        /* Notice banners */
+        .vp-notice{border-radius:14px;padding:20px;margin-bottom:20px;border:3px solid}
+        .vp-notice-title{font-size:15px;font-weight:700;margin-bottom:10px}
+        .vp-notice-list{font-size:13px;line-height:1.9}
+        .vp-rejected{border-radius:12px;padding:18px;margin-bottom:20px;border:2px solid #EF4444;background:#FEE2E2}
+        .vp-rejected-title{font-size:15px;font-weight:700;color:#B91C1C;margin-bottom:6px}
+        .vp-rejected-sub{font-size:13px;color:#666}
+
+        /* Cards */
+        .vp-card{background:white;border-radius:14px;padding:28px;border:1px solid #E5E5E0;margin-bottom:20px}
+        .vp-card-title{font-size:17px;font-weight:700;color:#2C2C2C;margin:0 0 6px}
+        .vp-card-sub{font-size:13px;color:#888;margin:0 0 20px}
+        .vp-card-sub a{color:#B8936D}
+        .vp-divider{border:none;border-top:1px solid #f0f0ec;margin:0 0 20px}
+
+        /* Form fields */
+        .vp-2col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+        .vp-field{margin-bottom:16px}
+        .vp-field:last-child{margin-bottom:0}
+        .vp-label{display:block;font-size:13px;font-weight:600;color:#555;margin-bottom:6px}
+        .vp-req{color:#EF4444;margin-left:2px}
+        .vp-tag{font-size:11px;color:#F97316;margin-left:6px;font-weight:500}
+        .vp-tag-gray{font-size:11px;color:#999;margin-left:6px;font-weight:400}
+        .vp-input,.vp-textarea{
+          width:100%;padding:11px 13px;font-size:14px;
+          border:1.5px solid #E5E5E0;border-radius:9px;
+          outline:none;transition:border-color .15s;
+          font-family:inherit;color:#2C2C2C;background:white;
+        }
+        .vp-input:focus,.vp-textarea:focus{border-color:#B8936D}
+        .vp-input-orange{border:2px solid #F97316!important;background:#FFF7ED!important}
+        .vp-textarea{resize:vertical;min-height:90px}
+        .vp-hint{font-size:11px;color:#aaa;margin-top:4px}
+
+        /* File inputs */
+        .vp-file{
+          width:100%;padding:10px 12px;font-size:13px;
+          border:1.5px solid #E5E5E0;border-radius:9px;
+          cursor:pointer;background:white;color:#555;
+        }
+        .vp-file-orange{border:2px solid #F97316!important;background:#FFF7ED!important}
+
+        /* Submit */
+        .vp-footer{display:flex;justify-content:flex-end;gap:12px;flex-wrap:wrap}
+        .vp-submit{
+          padding:13px 28px;color:white;border:none;border-radius:9px;
+          font-size:15px;font-weight:700;cursor:pointer;transition:filter .15s;white-space:nowrap;
+        }
+        .vp-submit:hover:not(:disabled){filter:brightness(.92)}
+        .vp-submit:disabled{opacity:.6;cursor:not-allowed}
+
+        /* ── TABLET ── */
+        @media(max-width:1023px){
+          .vp-title{font-size:24px}
+          .vp-card{padding:22px}
+        }
+
+        /* ── MOBILE ── */
+        @media(max-width:639px){
+          .vp-title{font-size:20px}
+          .vp-card{padding:16px;border-radius:12px;margin-bottom:14px}
+          .vp-card-title{font-size:15px}
+          .vp-2col{grid-template-columns:1fr;gap:0}
+          .vp-2col .vp-field{margin-bottom:14px}
+          .vp-notice{padding:16px}
+          .vp-notice-title{font-size:14px}
+          .vp-footer{justify-content:stretch}
+          .vp-submit{width:100%;padding:14px;font-size:15px}
+        }
+
+        /* ── SMALL MOBILE ── */
+        @media(max-width:380px){
+          .vp-card{padding:14px}
+          .vp-title{font-size:18px}
+        }
+      `}</style>
+
+      <div className="vp">
+
+        {/* Header */}
+        <div className="vp-header">
+          <h1 className="vp-title">
+            {isUpdateMode ? '🔄 Update License Verification' : '✅ MOTAC Verification'}
+          </h1>
+          <p className="vp-sub">
+            {isUpdateMode
+              ? 'Update your license details with the renewed MOTAC license information'
+              : 'Get verified to build trust with pilgrims and display the verified badge'}
           </p>
-          <p style={{ fontSize: '14px', color: '#999' }}>
-            Please correct the issues and resubmit below.
-          </p>
         </div>
-      )}
 
-      <form onSubmit={handleSubmit}>
-        
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '16px',
-          padding: '32px',
-          marginBottom: '24px',
-          border: '1px solid #E5E5E0'
-        }}>
-          <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '24px' }}>
-            📋 Company Details
-          </h3>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#666', marginBottom: '8px' }}>
-                Company Name <span style={{ color: 'red' }}>*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.company_name}
-                onChange={(e) => setFormData({...formData, company_name: e.target.value})}
-                style={{
-                  width: '90%',
-                  padding: '12px',
-                  border: '1px solid #E5E5E0',
-                  borderRadius: '8px',
-                  fontSize: '15px'
-                }}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#666', marginBottom: '8px' }}>
-                SSM Number <span style={{ color: 'red' }}>*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.ssm_number}
-                onChange={(e) => setFormData({...formData, ssm_number: e.target.value})}
-                placeholder="e.g., 202301234567"
-                style={{
-                  width: '90%',
-                  padding: '12px',
-                  border: '1px solid #E5E5E0',
-                  borderRadius: '8px',
-                  fontSize: '15px'
-                }}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#666', marginBottom: '8px' }}>
-                Registration Date
-              </label>
-              <input
-                type="date"
-                value={formData.company_registration_date}
-                onChange={(e) => setFormData({...formData, company_registration_date: e.target.value})}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: '1px solid #E5E5E0',
-                  borderRadius: '8px',
-                  fontSize: '15px'
-                }}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#666', marginBottom: '8px' }}>
-                Owner / Director Name
-              </label>
-              <input
-                type="text"
-                value={formData.owner_name}
-                onChange={(e) => setFormData({...formData, owner_name: e.target.value})}
-                style={{
-                  width: '90%',
-                  padding: '12px',
-                  border: '1px solid #E5E5E0',
-                  borderRadius: '8px',
-                  fontSize: '15px'
-                }}
-              />
+        {/* Update mode notice */}
+        {isUpdateMode && (
+          <div className="vp-notice" style={{ background: '#FFF7ED', borderColor: '#F97316' }}>
+            <div className="vp-notice-title" style={{ color: '#C2410C' }}>📝 Updating Your License Verification</div>
+            <div className="vp-notice-list" style={{ color: '#9A3412' }}>
+              • Your current data has been <strong>pre-filled</strong> below<br />
+              • Update the <strong>License Expiry Date</strong> with your renewed license<br />
+              • <strong>Re-upload your MOTAC License document</strong> (new version — required)<br />
+              • SSM Certificate can be re-uploaded if needed (optional)<br />
+              • Admin will review and approve your updated license
             </div>
           </div>
-        </div>
+        )}
 
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '16px',
-          padding: '32px',
-          marginBottom: '24px',
-          border: '1px solid #E5E5E0'
-        }}>
-          <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '8px' }}>
-            🏛️ MOTAC License
-          </h3>
-          <p style={{ fontSize: '14px', color: '#666', marginBottom: '24px' }}>
-            Verify at: <a href="https://www.motac.gov.my/kategori-semakan-new/agensi-pelancongan-umrah/" target="_blank" style={{ color: '#B8936D' }}>
-              MOTAC Portal
-            </a>
-          </p>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#666', marginBottom: '8px' }}>
-                MOTAC License Number <span style={{ color: 'red' }}>*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.motac_license_number}
-                onChange={(e) => setFormData({...formData, motac_license_number: e.target.value})}
-                placeholder="e.g., KPL/LN 1234"
-                style={{
-                  width: '90%',
-                  padding: '12px',
-                  border: '1px solid #E5E5E0',
-                  borderRadius: '8px',
-                  fontSize: '15px'
-                }}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#666', marginBottom: '8px' }}>
-                License Expiry Date <span style={{ color: 'red' }}>*</span>
-                {isUpdateMode && (
-                  <span style={{ color: '#F97316', fontSize: '13px', marginLeft: '8px' }}>
-                    ← Update with new date
-                  </span>
-                )}
-              </label>
-              <input
-                type="date"
-                required
-                value={formData.motac_license_expiry}
-                onChange={(e) => setFormData({...formData, motac_license_expiry: e.target.value})}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: isUpdateMode ? '2px solid #F97316' : '1px solid #E5E5E0',
-                  borderRadius: '8px',
-                  fontSize: '15px',
-                  backgroundColor: isUpdateMode ? '#FFF7ED' : 'white'
-                }}
-              />
-            </div>
+        {/* Rejected notice */}
+        {existingRequest?.status === 'rejected' && !isUpdateMode && (
+          <div className="vp-rejected">
+            <div className="vp-rejected-title">❌ Previous Request Rejected</div>
+            <p className="vp-rejected-sub">Reason: {existingRequest.rejection_reason || 'No reason provided'}</p>
+            <p className="vp-rejected-sub" style={{ marginTop: 6 }}>Please correct the issues and resubmit below.</p>
           </div>
-        </div>
+        )}
 
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '16px',
-          padding: '32px',
-          marginBottom: '24px',
-          border: '1px solid #E5E5E0'
-        }}>
-          <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '24px' }}>
-            📞 Contact Details
-          </h3>
+        <form onSubmit={handleSubmit}>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#666', marginBottom: '8px' }}>
-                Office Phone <span style={{ color: 'red' }}>*</span>
-              </label>
-              <input
-                type="tel"
-                required
-                value={formData.office_phone}
-                onChange={(e) => setFormData({...formData, office_phone: e.target.value})}
-                placeholder="+60 12-345 6789"
-                style={{
-                  width: '90%',
-                  padding: '12px',
-                  border: '1px solid #E5E5E0',
-                  borderRadius: '8px',
-                  fontSize: '15px'
-                }}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#666', marginBottom: '8px' }}>
-                Office Email <span style={{ color: 'red' }}>*</span>
-              </label>
-              <input
-                type="email"
-                required
-                value={formData.office_email}
-                onChange={(e) => setFormData({...formData, office_email: e.target.value})}
-                placeholder="info@company.com"
-                style={{
-                  width: '90%',
-                  padding: '12px',
-                  border: '1px solid #E5E5E0',
-                  borderRadius: '8px',
-                  fontSize: '15px'
-                }}
-              />
+          {/* ── Company Details ── */}
+          <div className="vp-card">
+            <div className="vp-card-title">📋 Company Details</div>
+            <hr className="vp-divider" />
+            <div className="vp-2col">
+              <div className="vp-field">
+                <label className="vp-label">Company Name <span className="vp-req">*</span></label>
+                <input type="text" required className="vp-input"
+                  value={formData.company_name} onChange={e => set('company_name', e.target.value)} />
+              </div>
+              <div className="vp-field">
+                <label className="vp-label">SSM Number <span className="vp-req">*</span></label>
+                <input type="text" required className="vp-input"
+                  value={formData.ssm_number} onChange={e => set('ssm_number', e.target.value)}
+                  placeholder="e.g. 202301234567" />
+              </div>
+              <div className="vp-field">
+                <label className="vp-label">Registration Date</label>
+                <input type="date" className="vp-input"
+                  value={formData.company_registration_date} onChange={e => set('company_registration_date', e.target.value)} />
+              </div>
+              <div className="vp-field">
+                <label className="vp-label">Owner / Director Name</label>
+                <input type="text" className="vp-input"
+                  value={formData.owner_name} onChange={e => set('owner_name', e.target.value)} />
+              </div>
             </div>
           </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#666', marginBottom: '8px' }}>
-              Office Address <span style={{ color: 'red' }}>*</span>
-            </label>
-            <textarea
-              required
-              value={formData.office_address}
-              onChange={(e) => setFormData({...formData, office_address: e.target.value})}
-              rows={3}
-              placeholder="Full office address"
-              style={{
-                width: '95%',
-                padding: '12px',
-                border: '1px solid #E5E5E0',
-                borderRadius: '8px',
-                fontSize: '15px',
-                fontFamily: 'inherit',
-                resize: 'vertical'
-              }}
-            />
+          {/* ── MOTAC License ── */}
+          <div className="vp-card">
+            <div className="vp-card-title">🏛️ MOTAC License</div>
+            <p className="vp-card-sub">
+              Verify at: <a href="https://www.motac.gov.my/kategori-semakan-new/agensi-pelancongan-umrah/" target="_blank">MOTAC Portal →</a>
+            </p>
+            <hr className="vp-divider" style={{ margin: '0 0 20px' }} />
+            <div className="vp-2col">
+              <div className="vp-field">
+                <label className="vp-label">License Number <span className="vp-req">*</span></label>
+                <input type="text" required className="vp-input"
+                  value={formData.motac_license_number} onChange={e => set('motac_license_number', e.target.value)}
+                  placeholder="e.g. KPL/LN 1234" />
+              </div>
+              <div className="vp-field">
+                <label className="vp-label">
+                  License Expiry Date <span className="vp-req">*</span>
+                  {isUpdateMode && <span className="vp-tag">← Update with new date</span>}
+                </label>
+                <input type="date" required
+                  className={`vp-input${isUpdateMode ? ' vp-input-orange' : ''}`}
+                  value={formData.motac_license_expiry} onChange={e => set('motac_license_expiry', e.target.value)} />
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '16px',
-          padding: '32px',
-          marginBottom: '24px',
-          border: '1px solid #E5E5E0'
-        }}>
-          <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#2C2C2C', marginBottom: '24px' }}>
-            📄 Documents Upload
-          </h3>
+          {/* ── Contact Details ── */}
+          <div className="vp-card">
+            <div className="vp-card-title">📞 Contact Details</div>
+            <hr className="vp-divider" />
+            <div className="vp-2col">
+              <div className="vp-field">
+                <label className="vp-label">Office Phone <span className="vp-req">*</span></label>
+                <input type="tel" required className="vp-input"
+                  value={formData.office_phone} onChange={e => set('office_phone', e.target.value)}
+                  placeholder="+60 12-345 6789" />
+              </div>
+              <div className="vp-field">
+                <label className="vp-label">Office Email <span className="vp-req">*</span></label>
+                <input type="email" required className="vp-input"
+                  value={formData.office_email} onChange={e => set('office_email', e.target.value)}
+                  placeholder="info@company.com" />
+              </div>
+            </div>
+            <div className="vp-field" style={{ marginBottom: 0 }}>
+              <label className="vp-label">Office Address <span className="vp-req">*</span></label>
+              <textarea required className="vp-textarea"
+                value={formData.office_address} onChange={e => set('office_address', e.target.value)}
+                placeholder="Full office address" />
+            </div>
+          </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#666', marginBottom: '8px' }}>
-                SSM Certificate {!isUpdateMode && <span style={{ color: 'red' }}>*</span>}
-                {isUpdateMode && (
-                  <span style={{ fontSize: '13px', color: '#999', marginLeft: '8px' }}>
-                    (Optional - only if updated)
-                  </span>
-                )}
+          {/* ── Documents ── */}
+          <div className="vp-card">
+            <div className="vp-card-title">📄 Document Upload</div>
+            <hr className="vp-divider" />
+            <div className="vp-field">
+              <label className="vp-label">
+                SSM Certificate
+                {!isUpdateMode && <span className="vp-req">*</span>}
+                {isUpdateMode && <span className="vp-tag-gray">(Optional — only if updated)</span>}
               </label>
-              <input
-                type="file"
+              <input type="file" accept=".pdf,.jpg,.jpeg,.png"
                 required={!existingRequest && !isUpdateMode}
-                accept=".pdf,.jpg,.jpeg,.png"
-                onChange={(e) => setDocuments({...documents, ssm_certificate: e.target.files?.[0] || null})}
-                style={{
-                  width: '50%',
-                  padding: '12px',
-                  border: '1px solid #E5E5E0',
-                  borderRadius: '8px',
-                  fontSize: '14px'
-                }}
-              />
-              <p style={{ fontSize: '12px', color: '#999', marginTop: '4px' }}>
-                PDF, JPG, or PNG (Max 5MB)
-              </p>
+                className="vp-file"
+                onChange={e => setDoc('ssm_certificate', e.target.files?.[0] || null)} />
+              <div className="vp-hint">PDF, JPG or PNG — max 5MB</div>
             </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#666', marginBottom: '8px' }}>
-                MOTAC License <span style={{ color: 'red' }}>*</span>
-                {isUpdateMode && (
-                  <span style={{ color: '#F97316', fontSize: '13px', marginLeft: '8px' }}>
-                    ← Upload renewed license (Required)
-                  </span>
-                )}
+            <div className="vp-field">
+              <label className="vp-label">
+                MOTAC License <span className="vp-req">*</span>
+                {isUpdateMode && <span className="vp-tag">← Upload renewed license (required)</span>}
               </label>
-              <input
-                type="file"
+              <input type="file" accept=".pdf,.jpg,.jpeg,.png"
                 required={!existingRequest || isUpdateMode}
-                accept=".pdf,.jpg,.jpeg,.png"
-                onChange={(e) => setDocuments({...documents, motac_license: e.target.files?.[0] || null})}
-                style={{
-                  width: '50%',
-                  padding: '12px',
-                  border: isUpdateMode ? '2px solid #F97316' : '1px solid #E5E5E0',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  backgroundColor: isUpdateMode ? '#FFF7ED' : 'white'
-                }}
-              />
-              <p style={{ fontSize: '12px', color: '#999', marginTop: '4px' }}>
-                PDF, JPG, or PNG (Max 5MB)
-              </p>
+                className={`vp-file${isUpdateMode ? ' vp-file-orange' : ''}`}
+                onChange={e => setDoc('motac_license', e.target.files?.[0] || null)} />
+              <div className="vp-hint">PDF, JPG or PNG — max 5MB</div>
             </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#666', marginBottom: '8px' }}>
-                Business License (Optional)
-              </label>
-              <input
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
-                onChange={(e) => setDocuments({...documents, business_license: e.target.files?.[0] || null})}
-                style={{
-                  width: '50%',
-                  padding: '12px',
-                  border: '1px solid #E5E5E0',
-                  borderRadius: '8px',
-                  fontSize: '14px'
-                }}
-              />
+            <div className="vp-field" style={{ marginBottom: 0 }}>
+              <label className="vp-label">Business License <span className="vp-tag-gray">(Optional)</span></label>
+              <input type="file" accept=".pdf,.jpg,.jpeg,.png"
+                className="vp-file"
+                onChange={e => setDoc('business_license', e.target.files?.[0] || null)} />
             </div>
           </div>
-        </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              padding: '14px 32px',
-              backgroundColor: loading ? '#ccc' : (isUpdateMode ? '#F97316' : '#B8936D'),
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '16px',
-              fontWeight: '600',
-              cursor: loading ? 'not-allowed' : 'pointer'
-            }}
-          >
-            {loading 
-              ? 'Submitting...' 
-              : isUpdateMode 
-                ? '🔄 Submit Updated License' 
-                : '📤 Submit Verification Request'
-            }
-          </button>
-        </div>
+          {/* ── Submit ── */}
+          <div className="vp-footer">
+            <button type="submit" disabled={loading}
+              className="vp-submit"
+              style={{ background: loading ? '#ccc' : isUpdateMode ? '#F97316' : '#B8936D' }}>
+              {loading ? '⏳ Submitting...'
+                : isUpdateMode ? '🔄 Submit Updated License'
+                : '📤 Submit Verification Request'}
+            </button>
+          </div>
 
-      </form>
-    </div>
+        </form>
+      </div>
+    </>
   )
 }
