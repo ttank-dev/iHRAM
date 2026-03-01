@@ -196,11 +196,11 @@ export default async function SumbanganPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '15px' }}>
                 <div>
                   <div style={{ fontSize: '13px', color: '#999', marginBottom: '6px', fontWeight: '600' }}>Bank</div>
-                  <div style={{ fontWeight: '600', color: '#2C2C2C', fontSize: '17px' }}>{bankName}</div>
+                  <div style={{ fontWeight: '600', color: '#2C2C2C', fontSize: '17px' }}>NAMA BANK</div>
                 </div>
                 <div>
                   <div style={{ fontSize: '13px', color: '#999', marginBottom: '6px', fontWeight: '600' }}>Nama Akaun</div>
-                  <div style={{ fontWeight: '600', color: '#2C2C2C', fontSize: '17px' }}>{accountName}</div>
+                  <div style={{ fontWeight: '600', color: '#2C2C2C', fontSize: '17px' }}>NAMA AKAUN</div>
                 </div>
                 <div>
                   <div style={{ fontSize: '13px', color: '#999', marginBottom: '6px', fontWeight: '600' }}>No. Akaun</div>
@@ -211,7 +211,7 @@ export default async function SumbanganPage() {
                     fontFamily: 'monospace',
                     letterSpacing: '2px'
                   }}>
-                    {accountNumber}
+                    NO. AKAUN
                   </div>
                 </div>
               </div>
@@ -224,7 +224,7 @@ export default async function SumbanganPage() {
               border: '1px solid #F5E5D3'
             }}>
               <p style={{ fontSize: '14px', color: '#666', lineHeight: '1.6', margin: 0 }}>
-                {bankInstruction}
+                INSTRUCTION HERE
               </p>
             </div>
           </div>
@@ -264,7 +264,7 @@ export default async function SumbanganPage() {
                     width: '100%'
                   }}>
                     <img 
-                      src={duitnowQR}
+                      src="https://iltceupcvsvttzzucpac.supabase.co/storage/v1/object/public/public/qr-codes/qr-duitnow-1769740955770.jpg"
                       alt="DuitNow QR"
                       style={{
                         width: '200px',

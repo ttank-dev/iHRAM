@@ -19,283 +19,198 @@ export default function MerchantLoginPage() {
     setLoading(true)
 
     try {
-      console.log('🔵 Starting merchant login for:', email)
-      
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (signInError) {
-        console.error('❌ Auth error:', signInError)
-        throw signInError
-      }
-
-      console.log('✅ Auth success! User ID:', data.user?.id)
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+      if (signInError) throw signInError
 
       if (data.user) {
-        console.log('🔍 Checking agency_staff table...')
-        
-        // Check agency_staff table first (for staff members)
-        const { data: staffMember, error: staffError } = await supabase
+        const { data: staffMember } = await supabase
           .from('agency_staff')
           .select('*, agencies(name)')
           .eq('id', data.user.id)
           .single()
 
-        console.log('📊 Staff query result:', staffMember)
-        console.log('📊 Staff query error:', staffError)
-
         if (staffMember) {
           if (!staffMember.is_active) {
-            console.error('❌ Staff account is inactive')
-            setError('Your account is inactive.')
+            setError('Your account is inactive. Please contact your agency admin.')
             await supabase.auth.signOut()
             setLoading(false)
             return
           }
-
-          console.log('✅ Staff member found! Redirecting to /merchant/dashboard')
           router.push('/merchant/dashboard')
           router.refresh()
           return
         }
 
-        console.log('🔍 Not in agency_staff, checking agencies table...')
-
-        // If not in agency_staff, check agencies table (old owners)
-        const { data: agency, error: agencyError } = await supabase
+        const { data: agency } = await supabase
           .from('agencies')
           .select('*')
           .eq('user_id', data.user.id)
           .single()
 
-        console.log('📊 Agency query result:', agency)
-        console.log('📊 Agency query error:', agencyError)
-
         if (!agency) {
-          console.error('❌ User not found in agency_staff or agencies')
-          setError('This account is not a merchant account.')
+          setError('This account is not registered as a merchant.')
           await supabase.auth.signOut()
           setLoading(false)
           return
         }
 
         if (!agency.is_active) {
-          console.error('❌ Agency account is inactive')
-          setError('Your agency account is inactive.')
+          setError('Your agency account is inactive. Please contact support.')
           await supabase.auth.signOut()
           setLoading(false)
           return
         }
 
-        console.log('✅ Agency owner found! Redirecting to /merchant/dashboard')
         router.push('/merchant/dashboard')
         router.refresh()
       }
     } catch (err: any) {
-      console.error('❌ Login error:', err)
       setError(err.message || 'Login failed. Please try again.')
       setLoading(false)
     }
   }
 
   return (
-    <div className="ml-wrapper" style={{ 
-      backgroundColor: '#F5F5F0', 
-      minHeight: '100vh', 
-      display: 'flex', 
-      alignItems: 'center', 
-      justifyContent: 'center'
-    }}>
-      <div style={{ width: '100%', maxWidth: '480px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <Link href="/">
-            <img 
-              src="/logo.png" 
-              alt="iHRAM" 
-              style={{ 
-                height: '60px', 
-                filter: 'brightness(0) saturate(100%) invert(56%) sepia(35%) saturate(643%) hue-rotate(358deg) brightness(95%) contrast(92%)' 
-              }} 
-            />
-          </Link>
-        </div>
+    <>
+      <style>{`
+        .ml-page,.ml-page *{box-sizing:border-box}
+        .ml-page{
+          min-height:100vh;background:#F5F5F0;
+          display:flex;align-items:center;justify-content:center;
+          padding:24px 16px;
+        }
+        .ml-wrap{width:100%;max-width:460px}
 
-        <div className="ml-card" style={{ 
-          backgroundColor: 'white', 
-          borderRadius: '16px', 
-          boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-          boxSizing: 'border-box' as const
-        }}>
-          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <div style={{ 
-              display: 'inline-flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              width: '64px', 
-              height: '64px', 
-              backgroundColor: '#B8936D', 
-              borderRadius: '50%', 
-              marginBottom: '16px' 
-            }}>
-              <span style={{ fontSize: '32px' }}>🏢</span>
+        /* Logo */
+        .ml-logo{text-align:center;margin-bottom:32px}
+        .ml-logo img{height:56px;filter:brightness(0) saturate(100%) invert(56%) sepia(35%) saturate(643%) hue-rotate(358deg) brightness(95%) contrast(92%)}
+
+        /* Card */
+        .ml-card{background:white;border-radius:16px;padding:40px;box-shadow:0 8px 32px rgba(0,0,0,.10)}
+
+        /* Card header */
+        .ml-card-head{text-align:center;margin-bottom:28px}
+        .ml-icon{
+          display:inline-flex;align-items:center;justify-content:center;
+          width:60px;height:60px;background:#B8936D;border-radius:50%;
+          font-size:28px;margin-bottom:14px;
+        }
+        .ml-card-title{font-size:26px;font-weight:700;color:#2C2C2C;font-family:Georgia,serif;margin:0 0 6px}
+        .ml-card-sub{font-size:14px;color:#888;margin:0}
+
+        /* Error */
+        .ml-error{padding:12px 16px;background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;margin-bottom:20px;color:#DC2626;font-size:14px}
+
+        /* Form */
+        .ml-form{display:flex;flex-direction:column;gap:18px}
+        .ml-label{display:block;font-size:13px;font-weight:600;color:#2C2C2C;margin-bottom:6px}
+        .ml-input{
+          width:100%;padding:12px 14px;
+          border:1.5px solid #E5E5E0;border-radius:8px;
+          font-size:15px;outline:none;font-family:inherit;color:#2C2C2C;
+          transition:border-color .15s;
+        }
+        .ml-input:focus{border-color:#B8936D}
+        .ml-input:disabled{background:#F8F8F8;color:#aaa}
+        .ml-forgot{text-align:right;margin-top:-6px}
+        .ml-forgot a{font-size:13px;color:#B8936D;text-decoration:none;font-weight:600}
+        .ml-forgot a:hover{text-decoration:underline}
+
+        /* Submit */
+        .ml-btn{
+          width:100%;padding:14px;
+          background:#B8936D;color:white;
+          border:none;border-radius:8px;
+          font-size:15px;font-weight:700;
+          cursor:pointer;transition:background .15s;
+          font-family:inherit;
+        }
+        .ml-btn:hover:not(:disabled){background:#a07d5a}
+        .ml-btn:disabled{background:#ccc;cursor:not-allowed}
+
+        /* Footer links */
+        .ml-signup{text-align:center;color:#666;font-size:14px;margin-top:20px}
+        .ml-signup a{color:#B8936D;text-decoration:underline;font-weight:600}
+        .ml-back{text-align:center;margin-top:20px}
+        .ml-back a{color:#888;font-size:14px;text-decoration:none}
+        .ml-back a:hover{color:#555}
+
+        /* Mobile */
+        @media(max-width:480px){
+          .ml-card{padding:28px 20px;border-radius:14px}
+          .ml-card-title{font-size:22px}
+          .ml-icon{width:52px;height:52px;font-size:24px}
+          .ml-logo img{height:48px}
+          .ml-logo{margin-bottom:24px}
+        }
+      `}</style>
+
+      <div className="ml-page">
+        <div className="ml-wrap">
+
+          <div className="ml-logo">
+            <Link href="/">
+              <img src="/logo.png" alt="iHRAM" />
+            </Link>
+          </div>
+
+          <div className="ml-card">
+            <div className="ml-card-head">
+              <div className="ml-icon">🏢</div>
+              <h1 className="ml-card-title">Merchant Dashboard</h1>
+              <p className="ml-card-sub">Sign in to manage your Umrah packages</p>
             </div>
-            <h1 style={{ 
-              fontSize: '32px', 
-              fontWeight: 'bold', 
-              color: '#2C2C2C', 
-              fontFamily: 'Georgia, serif' 
-            }}>
-              Merchant Dashboard
-            </h1>
-            <p style={{ color: '#666' }}>
-              Log masuk untuk mengurus pakej umrah anda
+
+            {error && <div className="ml-error">⚠️ {error}</div>}
+
+            <form className="ml-form" onSubmit={handleLogin}>
+              <div>
+                <label className="ml-label">Email Address</label>
+                <input
+                  type="email"
+                  className="ml-input"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="agency@example.com"
+                  required
+                  disabled={loading}
+                />
+              </div>
+
+              <div>
+                <label className="ml-label">Password</label>
+                <input
+                  type="password"
+                  className="ml-input"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  disabled={loading}
+                />
+              </div>
+
+              <div className="ml-forgot">
+                <Link href="/merchant-forgot-password">Forgot password?</Link>
+              </div>
+
+              <button type="submit" className="ml-btn" disabled={loading}>
+                {loading ? '⏳ Signing in...' : 'Sign In'}
+              </button>
+            </form>
+
+            <p className="ml-signup">
+              Don't have an account?{' '}
+              <Link href="/merchant/signup">Register as an agency</Link>
             </p>
           </div>
 
-          {error && (
-            <div style={{ 
-              padding: '12px 16px', 
-              backgroundColor: '#FEE', 
-              border: '1px solid #F88', 
-              borderRadius: '8px', 
-              marginBottom: '20px', 
-              color: '#C33', 
-              fontSize: '14px' 
-            }}>
-              {error}
-            </div>
-          )}
+          <div className="ml-back">
+            <Link href="/">← Back to Homepage</Link>
+          </div>
 
-          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div>
-              <label style={{ 
-                display: 'block', 
-                fontSize: '14px', 
-                fontWeight: '600', 
-                color: '#2C2C2C', 
-                marginBottom: '8px' 
-              }}>
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="agency@example.com"
-                required
-                disabled={loading}
-                style={{ 
-                  width: '100%',
-                  boxSizing: 'border-box' as const,
-                  padding: '12px 16px', 
-                  border: '1px solid #E5E5E0', 
-                  borderRadius: '8px', 
-                  fontSize: '16px', 
-                  outline: 'none' 
-                }}
-              />
-            </div>
-
-            <div>
-              <label style={{ 
-                display: 'block', 
-                fontSize: '14px', 
-                fontWeight: '600', 
-                color: '#2C2C2C', 
-                marginBottom: '8px' 
-              }}>
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                disabled={loading}
-                style={{ 
-                  width: '100%',
-                  boxSizing: 'border-box' as const,
-                  padding: '12px 16px', 
-                  border: '1px solid #E5E5E0', 
-                  borderRadius: '8px', 
-                  fontSize: '16px', 
-                  outline: 'none' 
-                }}
-              />
-            </div>
-
-            <div style={{ textAlign: 'right', marginTop: '-8px' }}>
-              <Link
-                href="/merchant-forgot-password"
-                style={{
-                  fontSize: '14px',
-                  color: '#B8936D',
-                  textDecoration: 'none',
-                  fontWeight: '600'
-                }}
-              >
-                Lupa password?
-              </Link>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                width: '100%',
-                padding: '14px',
-                backgroundColor: loading ? '#CCC' : '#B8936D',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '16px',
-                fontWeight: '600',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                transition: 'background-color 0.2s'
-              }}
-            >
-              {loading ? 'Log Masuk...' : 'Log Masuk'}
-            </button>
-          </form>
-
-          {/* Signup Link */}
-          <p style={{ 
-            textAlign: 'center', 
-            color: '#666', 
-            fontSize: '14px', 
-            marginTop: '24px'
-          }}>
-            Belum ada akaun?{' '}
-            <Link 
-              href="/merchant/signup" 
-              style={{ 
-                color: '#B8936D', 
-                textDecoration: 'underline', 
-                fontWeight: '600'
-              }}
-            >
-              Daftar sebagai agensi
-            </Link>
-          </p>
-        </div>
-
-        {/* Back to Homepage */}
-        <div style={{ textAlign: 'center', marginTop: '24px' }}>
-          <Link 
-            href="/" 
-            style={{ 
-              color: '#666', 
-              fontSize: '14px', 
-              textDecoration: 'none' 
-            }}
-          >
-            ← Kembali ke Homepage
-          </Link>
         </div>
       </div>
-    </div>
+    </>
   )
 }

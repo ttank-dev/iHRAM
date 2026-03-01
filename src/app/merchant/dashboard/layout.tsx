@@ -27,10 +27,10 @@ const navSections: NavSection[] = [
   {
     title: 'MANAGEMENT',
     items: [
-      { href: '/merchant/dashboard/pakej', icon: '📦', label: 'Pakej Saya' },
-      { href: '/merchant/dashboard/ulasan', icon: '⭐', label: 'Ulasan' },
-      { href: '/merchant/dashboard/profil', icon: '🏢', label: 'Profil Agensi', ownerOnly: true },
-      { href: '/merchant/dashboard/verifikasi', icon: '✅', label: 'Mohon Verifikasi', ownerOnly: true },
+      { href: '/merchant/dashboard/pakej', icon: '📦', label: 'My Packages' },
+      { href: '/merchant/dashboard/ulasan', icon: '⭐', label: 'Reviews' },
+      { href: '/merchant/dashboard/profil', icon: '🏢', label: 'Agency Profile', ownerOnly: true },
+      { href: '/merchant/dashboard/verifikasi', icon: '✅', label: 'Apply Verification', ownerOnly: true },
     ],
   },
   {
@@ -38,7 +38,7 @@ const navSections: NavSection[] = [
     items: [
       { href: '/merchant/dashboard/newsfeed', icon: '📰', label: 'News Feed' },
       { href: '/merchant/dashboard/reels', icon: '🎬', label: 'Reels' },
-      { href: '/merchant/dashboard/galeri', icon: '🖼️', label: 'Galeri' },
+      { href: '/merchant/dashboard/galeri', icon: '🖼️', label: 'Gallery' },
     ],
   },
   {
@@ -137,7 +137,7 @@ export default function MerchantDashboardLayout({
     return (
       <div className="merchant-loading">
         <div className="loading-spinner" />
-        <p className="loading-text">Memuatkan dashboard...</p>
+        <p className="loading-text">Loading dashboard...</p>
         <style dangerouslySetInnerHTML={{ __html: `
           .merchant-loading {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -165,10 +165,10 @@ export default function MerchantDashboardLayout({
               <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
             </svg>
           </div>
-          <h1 className="error-title">Tiada Agensi Ditemui</h1>
-          <p className="error-desc">Akaun anda tidak dikaitkan dengan mana-mana agensi. Sila hubungi admin untuk bantuan.</p>
+          <h1 className="error-title">No Agency Found</h1>
+          <p className="error-desc">Your account is not linked to any agency. Please contact your admin for assistance.</p>
           <button onClick={handleLogout} className="error-btn">
-            Kembali ke Log Masuk
+            Back to Login
           </button>
         </div>
         <style dangerouslySetInnerHTML={{ __html: `
@@ -229,7 +229,7 @@ export default function MerchantDashboardLayout({
                 <div className="user-name-row">
                   <div className="user-avatar">{userName.charAt(0).toUpperCase()}</div>
                   <div>
-                    <div className="agency-label">PENGGUNA</div>
+                    <div className="agency-label">USER</div>
                     <div className="user-name-value">{userName}</div>
                   </div>
                 </div>
@@ -237,7 +237,7 @@ export default function MerchantDashboardLayout({
               {agencyName && (
                 <>
                   <div className="agency-divider" />
-                  <div className="agency-label">AGENSI</div>
+                  <div className="agency-label">AGENCY</div>
                   <div className="agency-name">{agencyName}</div>
                 </>
               )}
@@ -288,7 +288,7 @@ export default function MerchantDashboardLayout({
             <div className="nav-logout">
               <button onClick={handleLogout} className="logout-btn">
                 <span>🚪</span>
-                <span>Log Keluar</span>
+                <span>Logout</span>
               </button>
             </div>
           </nav>
