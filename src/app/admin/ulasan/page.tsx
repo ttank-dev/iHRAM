@@ -112,7 +112,7 @@ export default function AdminUlasanPage() {
     <>
       <style dangerouslySetInnerHTML={{ __html: `
         .au,.au *,.au *::before,.au *::after{box-sizing:border-box}
-        .au{width:100%;max-width:900px}
+        .au{width:100%;max-width:1100px}
         .au h1{font-size:24px;font-weight:700;color:#2C2C2C;margin:0 0 4px}
         .au-sub{font-size:14px;color:#888;margin:0 0 16px}
 
@@ -157,10 +157,10 @@ export default function AdminUlasanPage() {
 
         /* ── ACTION BUTTONS — 2×2 grid, exact same as all admin pages ── */
         .au-acts{padding-top:10px;border-top:1px solid #f0f0ec}
-        .au-actions{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+        .au-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
         .au-btn{
-          height:30px;
-          padding:0 8px;
+          height:34px;
+          padding:0 10px;
           border:none;
           border-radius:6px;
           cursor:pointer;
@@ -181,7 +181,7 @@ export default function AdminUlasanPage() {
         .au-btn-blue  {background:#3B82F6;color:white}
         .au-btn-purple{background:#8B5CF6;color:white}
         .au-btn-red   {background:#EF4444;color:white}
-        .au-btn-span2 {grid-column:1 / -1}
+
 
         /* Empty */
         .au-empty{background:#fff;border-radius:10px;padding:40px 16px;text-align:center;border:1px solid #E5E5E0}
@@ -333,7 +333,7 @@ export default function AdminUlasanPage() {
                   {r.is_verified ? 'Unverify' : 'Verify'}
                 </button>
                 <button
-                  className="au-btn au-btn-red au-btn-span2"
+                  className="au-btn au-btn-red"
                   onClick={() => handleDelete(r.id, r.reviewer_name || 'Anonymous')}
                 >
                   Delete

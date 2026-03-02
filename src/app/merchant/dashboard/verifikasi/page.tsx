@@ -146,7 +146,7 @@ export default function VerificationPage() {
   /* ── VERIFIED STATE ── */
   if (showVerifiedSuccess) return (
     <>
-      <style>{`.vp-state{max-width:900px;width:100%;overflow:hidden}.vp-state *{box-sizing:border-box}.vp-box{border-radius:16px;padding:40px;text-align:center;border:2px solid}.vp-box-icon{font-size:56px;margin-bottom:14px}.vp-box-title{font-size:22px;font-weight:700;color:#2C2C2C;margin-bottom:10px}.vp-box-sub{font-size:14px;color:#666;margin-bottom:6px}.vp-box-meta{font-size:13px;color:#999}@media(max-width:639px){.vp-box{padding:28px 20px}.vp-box-icon{font-size:44px}.vp-box-title{font-size:19px}}`}</style>
+      <style>{`.vp-state{max-width:1100px;width:100%;overflow:hidden}.vp-state *{box-sizing:border-box}.vp-box{border-radius:16px;padding:40px;text-align:center;border:2px solid}.vp-box-icon{font-size:56px;margin-bottom:14px}.vp-box-title{font-size:22px;font-weight:700;color:#2C2C2C;margin-bottom:10px}.vp-box-sub{font-size:14px;color:#666;margin-bottom:6px}.vp-box-meta{font-size:13px;color:#999}@media(max-width:639px){.vp-box{padding:28px 20px}.vp-box-icon{font-size:44px}.vp-box-title{font-size:19px}}`}</style>
       <div className="vp-state">
         <div className="vp-box" style={{ background: '#ECFDF5', borderColor: '#10B981' }}>
           <div className="vp-box-icon">✅</div>
@@ -162,7 +162,7 @@ export default function VerificationPage() {
   /* ── PENDING STATE ── */
   if (showPending) return (
     <>
-      <style>{`.vp-state{max-width:900px;width:100%;overflow:hidden}.vp-state *{box-sizing:border-box}.vp-box{border-radius:16px;padding:40px;text-align:center;border:2px solid}.vp-box-icon{font-size:56px;margin-bottom:14px}.vp-box-title{font-size:22px;font-weight:700;color:#2C2C2C;margin-bottom:10px}.vp-box-sub{font-size:14px;color:#666;margin-bottom:6px}.vp-box-meta{font-size:13px;color:#999}@media(max-width:639px){.vp-box{padding:28px 20px}.vp-box-icon{font-size:44px}.vp-box-title{font-size:19px}}`}</style>
+      <style>{`.vp-state{max-width:1100px;width:100%;overflow:hidden}.vp-state *{box-sizing:border-box}.vp-box{border-radius:16px;padding:40px;text-align:center;border:2px solid}.vp-box-icon{font-size:56px;margin-bottom:14px}.vp-box-title{font-size:22px;font-weight:700;color:#2C2C2C;margin-bottom:10px}.vp-box-sub{font-size:14px;color:#666;margin-bottom:6px}.vp-box-meta{font-size:13px;color:#999}@media(max-width:639px){.vp-box{padding:28px 20px}.vp-box-icon{font-size:44px}.vp-box-title{font-size:19px}}`}</style>
       <div className="vp-state">
         <div className="vp-box" style={{ background: '#FFFBEB', borderColor: '#F59E0B' }}>
           <div className="vp-box-icon">⏳</div>
@@ -179,7 +179,7 @@ export default function VerificationPage() {
     <>
       <style>{`
         .vp,.vp *{box-sizing:border-box}
-        .vp{max-width:900px;width:100%;overflow:hidden}
+        .vp{max-width:1100px;width:100%;overflow:hidden}
 
         /* Header */
         .vp-header{margin-bottom:24px}

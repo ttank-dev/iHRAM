@@ -182,7 +182,7 @@ export default function MerchantGalleryPage() {
     <>
       <style>{`
         .gl,.gl *{box-sizing:border-box}
-        .gl{max-width:900px;width:100%;overflow:hidden}
+        .gl{max-width:1100px;width:100%;overflow:hidden}
 
         /* ── ALBUM LIST VIEW ── */
         .gl-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:20px;flex-wrap:wrap}

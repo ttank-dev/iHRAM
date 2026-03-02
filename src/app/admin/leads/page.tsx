@@ -7,7 +7,7 @@ export const revalidate = 0
 
 export default async function LeadsPage() {
   const { isAdmin } = await checkAdminAccess()
-  if (!isAdmin) redirect('/admin-login')
+  if (!isAdmin) redirect('/admin/login')
 
   const supabase = await createClient()
   const { data: leads } = await supabase
@@ -34,11 +34,14 @@ export default async function LeadsPage() {
   const topPackages = Object.entries(leadsByPackage).sort(([,a]:any,[,b]:any) => b-a).slice(0,5)
 
   return (
-    <div>
+    <div className="lp-page">
       <style>{`
+        .lp-page,.lp-page *{box-sizing:border-box}
+        .lp-page{max-width:1100px}
+
         /* Header */
-        .lp-title { font-size: 32px; font-weight: bold; color: #2C2C2C; margin-bottom: 8px; }
-        .lp-sub { font-size: 16px; color: #666; margin-bottom: 32px; }
+        .lp-title { font-size: 28px; font-weight: 700; color: #2C2C2C; margin: 0 0 4px; }
+        .lp-sub { font-size: 14px; color: #888; margin: 0 0 20px; }
 
         /* Stats */
         .lp-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 32px; }
@@ -85,7 +88,7 @@ export default async function LeadsPage() {
 
         /* ── TABLET ── */
         @media (max-width: 1023px) {
-          .lp-title { font-size: 26px; }
+          .lp-title { font-size: 24px; }
           .lp-stats { grid-template-columns: repeat(2, 1fr); gap: 14px; }
           .lp-stat { padding: 18px; }
           .lp-stat-value { font-size: 26px; }
@@ -94,7 +97,7 @@ export default async function LeadsPage() {
 
         /* ── MOBILE ── */
         @media (max-width: 639px) {
-          .lp-title { font-size: 22px; }
+          .lp-title { font-size: 20px; }
           .lp-sub { font-size: 14px; margin-bottom: 20px; }
 
           .lp-stats { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
@@ -192,10 +195,10 @@ export default async function LeadsPage() {
                   <tr key={lead.id} className="lp-tr">
                     <td className="lp-td">
                       <div className="lp-date-main">
-                        {new Date(lead.created_at).toLocaleDateString('ms-MY', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        {new Date(lead.created_at).toLocaleDateString('en-MY', { day: '2-digit', month: 'short', year: 'numeric' })}
                       </div>
                       <div className="lp-date-time">
-                        {new Date(lead.created_at).toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(lead.created_at).toLocaleTimeString('en-MY', { hour: '2-digit', minute: '2-digit' })}
                       </div>
                     </td>
                     <td className="lp-td"><div style={{ fontSize: '15px', fontWeight: '600', color: '#2C2C2C' }}>{lead.packages?.title || '-'}</div></td>
@@ -231,9 +234,9 @@ export default async function LeadsPage() {
                   </div>
                   <div className="lp-mobile-footer">
                     <div style={{ fontSize: '13px', color: '#999' }}>
-                      {new Date(lead.created_at).toLocaleDateString('ms-MY', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      {new Date(lead.created_at).toLocaleDateString('en-MY', { day: '2-digit', month: 'short', year: 'numeric' })}
                       {' · '}
-                      {new Date(lead.created_at).toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' })}
+                      {new Date(lead.created_at).toLocaleTimeString('en-MY', { hour: '2-digit', minute: '2-digit' })}
                     </div>
                     <code style={{ fontSize: '11px', color: '#666', backgroundColor: '#F5F5F0', padding: '3px 6px', borderRadius: '4px' }}>
                       {lead.ref_code || '-'}

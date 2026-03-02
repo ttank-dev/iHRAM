@@ -100,7 +100,7 @@ export default function NewsFeedPage() {
     <>
       <style>{`
         .nf,.nf *{box-sizing:border-box}
-        .nf{max-width:900px;width:100%;overflow:hidden}
+        .nf{max-width:1100px;width:100%;overflow:hidden}
         .nf-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:20px;flex-wrap:wrap}
         .nf-title{font-size:28px;font-weight:700;color:#2C2C2C;margin:0 0 4px}
         .nf-sub{font-size:14px;color:#888;margin:0}

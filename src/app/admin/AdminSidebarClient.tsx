@@ -39,7 +39,6 @@ const navSections: NavSection[] = [
   {
     title: 'SETTINGS',
     items: [
-      { href: '/admin/sumbangan', icon: '💰', label: 'Donations' },
       { href: '/admin/settings', icon: '⚙️', label: 'Settings' },
       { href: '/admin/logs', icon: '📋', label: 'Moderation Logs' },
     ],

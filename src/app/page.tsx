@@ -67,14 +67,14 @@ export default async function HomePage() {
             Platform Carian Pakej Umrah
           </h1>
           <p className="hp-hero-sub" style={{ color: 'white', fontSize: '20px', marginBottom: '40px', maxWidth: '800px', lineHeight: '1.6' }}>
-            Temui pakej umrah yang sesuai dengan anda dari agensi-agensi Umrah di Malaysia.
+            Temui pakej umrah yang sesuai dengan anda dari agensi-agensi berdaftar di Malaysia.
           </p>
         </div>
 
         {/* Three Category Cards */}
         <div className="hp-cats" style={{ 
           position: 'absolute', 
-          bottom: '-60px', 
+          bottom: '-160px', 
           left: '50%', 
           transform: 'translateX(-50%)', 
           width: '90%', 

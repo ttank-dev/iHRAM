@@ -120,7 +120,7 @@ export default function ProfilAgensiPage() {
     <>
       <style>{`
         .pp,.pp *{box-sizing:border-box}
-        .pp{max-width:900px;width:100%;overflow:hidden}
+        .pp{max-width:1100px;width:100%;overflow:hidden}
 
         /* Header */
         .pp-header{margin-bottom:24px}

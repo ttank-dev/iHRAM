@@ -46,7 +46,7 @@ export default async function MerchantSettingsPage() {
     <>
       <style>{`
         .st,.st *{box-sizing:border-box}
-        .st{max-width:900px;width:100%;overflow:hidden}
+        .st{max-width:1100px;width:100%;overflow:hidden}
 
         /* Header */
         .st-header{margin-bottom:24px}

@@ -65,7 +65,7 @@ export default function UlasanPage() {
     <>
       <style>{`
         .ur-page,.ur-page *{box-sizing:border-box}
-        .ur-page{max-width:900px}
+        .ur-page{max-width:1100px}
         .ur-header{margin-bottom:20px}
         .ur-title{font-size:28px;font-weight:700;color:#2C2C2C;margin:0 0 4px}
         .ur-sub{font-size:14px;color:#888;margin:0}

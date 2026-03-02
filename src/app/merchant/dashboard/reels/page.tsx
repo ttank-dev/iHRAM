@@ -95,7 +95,7 @@ export default function ReelsPage() {
     <>
       <style>{`
         .rl,.rl *{box-sizing:border-box}
-        .rl{max-width:900px;width:100%;overflow:hidden}
+        .rl{max-width:1100px;width:100%;overflow:hidden}
         .rl-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:20px;flex-wrap:wrap}
         .rl-title{font-size:28px;font-weight:700;color:#2C2C2C;margin:0 0 4px}
         .rl-sub{font-size:14px;color:#888;margin:0}

@@ -10,12 +10,14 @@ import PakejDetailNavbar from './PakejDetailNavbar'
 export default function PakejDetail() {
   const params = useParams()
   const slug = params.slug as string
+  const supabase = createClient()
   const [pkg, setPkg] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [tracking, setTracking] = useState(false)
 
   useEffect(() => {
     const fetchPackage = async () => {
-      const supabase = createClient()
+      // supabase from component level
       const { data } = await supabase
         .from('packages')
         .select('*, agencies(*)')
@@ -37,7 +39,7 @@ export default function PakejDetail() {
     return (
       <div style={{ backgroundColor: '#F5F5F0', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <PakejDetailNavbar />
-        <div style={{ textAlign: 'center', color: '#B8936D', fontSize: '18px' }}>Memuatkan...</div>
+        <div style={{ textAlign: 'center', color: '#B8936D', fontSize: '18px' }}>Loading...</div>
       </div>
     )
   }
@@ -59,6 +61,23 @@ export default function PakejDetail() {
     } catch {
       return dateStr
     }
+  }
+
+  const handleWhatsApp = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    setTracking(true)
+    try {
+      await supabase.from('leads').insert({
+        package_id: pkg.id,
+        agency_id: pkg.agency_id,
+        source: 'whatsapp_click',
+        ref_code: `iHRAM-${pkg.slug.toUpperCase().slice(0, 8)}`
+      })
+    } catch (err) {
+      // fail silently — don't block user
+    }
+    setTracking(false)
+    window.open(waLink, '_blank')
   }
 
   return (
@@ -102,7 +121,7 @@ export default function PakejDetail() {
               ) : (
                 <div className="pd-hero-img" style={{ backgroundColor: '#E5E5E0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '16px' }}>
                   <span style={{ fontSize: '64px', opacity: 0.5 }}>📷</span>
-                  <span style={{ fontSize: '16px', color: '#999' }}>Tiada Gambar</span>
+                  <span style={{ fontSize: '16px', color: '#999' }}>No Image</span>
                 </div>
               )}
             </div>
@@ -273,28 +292,31 @@ export default function PakejDetail() {
                 )}
 
                 {/* WhatsApp Button */}
-                <Link 
-                  href={waLink} 
-                  target="_blank"
+                <button
+                  onClick={handleWhatsApp}
+                  disabled={tracking}
                   style={{ 
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                      padding: '10px 20px',
-                      backgroundColor: '#25D366',
-                      color: 'white',
-                      borderRadius: '6px',
-                      fontSize: '15px',
-                      fontWeight: '600',
-                      textDecoration: 'none',
-                      whiteSpace: 'nowrap'
-                    }}
-                  >
-                    <span>💬</span>
-                    <span>WhatsApp</span>
-
-                </Link>
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    padding: '10px 20px',
+                    backgroundColor: tracking ? '#aaa' : '#25D366',
+                    color: 'white',
+                    borderRadius: '6px',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    border: 'none',
+                    cursor: tracking ? 'not-allowed' : 'pointer',
+                    whiteSpace: 'nowrap',
+                    width: '100%',
+                    transition: 'background-color 0.2s',
+                    fontFamily: 'inherit'
+                  }}
+                >
+                  <span>💬</span>
+                  <span>{tracking ? 'Connecting...' : 'WhatsApp'}</span>
+                </button>
               </div>
 
               {/* Agency Card */}
