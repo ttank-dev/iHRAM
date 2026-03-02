@@ -432,15 +432,22 @@ export default function AgensiProfileClient({
   const supabase = createClient()
   const [activeTab, setActiveTab] = useState<'pakej' | 'newsfeed' | 'reels' | 'galeri' | 'tentang' | 'ulasan'>('pakej')  // 🖼️ ADD 'galeri'
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({})
+  const tabsContainerRef = useRef<HTMLDivElement | null>(null)
 
   const handleTabClick = (tab: 'pakej' | 'newsfeed' | 'reels' | 'galeri' | 'tentang' | 'ulasan') => {
     setActiveTab(tab)
-    // Auto scroll active tab into center view on mobile
+    // Scroll tab bar only — NOT the page
     setTimeout(() => {
-      tabRefs.current[tab]?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'center'
+      const container = tabsContainerRef.current
+      const btn = tabRefs.current[tab]
+      if (!container || !btn) return
+      const containerWidth = container.offsetWidth
+      const btnLeft = btn.offsetLeft
+      const btnWidth = btn.offsetWidth
+      // Center the active tab within the container
+      container.scrollTo({
+        left: btnLeft - (containerWidth / 2) + (btnWidth / 2),
+        behavior: 'smooth'
       })
     }, 0)
   }
@@ -943,7 +950,7 @@ export default function AgensiProfileClient({
               </div>
             </div>
 
-            <div className="ap-tabs" style={{
+            <div className="ap-tabs" ref={tabsContainerRef} style={{
               borderBottom: '2px solid #E5E5E0',
               paddingBottom: '0'
             }}>
