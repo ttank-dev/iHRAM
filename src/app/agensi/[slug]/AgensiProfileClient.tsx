@@ -431,6 +431,19 @@ export default function AgensiProfileClient({
 }) {
   const supabase = createClient()
   const [activeTab, setActiveTab] = useState<'pakej' | 'newsfeed' | 'reels' | 'galeri' | 'tentang' | 'ulasan'>('pakej')  // 🖼️ ADD 'galeri'
+  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({})
+
+  const handleTabClick = (tab: 'pakej' | 'newsfeed' | 'reels' | 'galeri' | 'tentang' | 'ulasan') => {
+    setActiveTab(tab)
+    // Auto scroll active tab into center view on mobile
+    setTimeout(() => {
+      tabRefs.current[tab]?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center'
+      })
+    }, 0)
+  }
   const [showShareMenu, setShowShareMenu] = useState(false)
   const [selectedReelIndex, setSelectedReelIndex] = useState<number | null>(null)
   
@@ -935,7 +948,8 @@ export default function AgensiProfileClient({
               paddingBottom: '0'
             }}>
               <button
-                onClick={() => setActiveTab('pakej')}
+                onClick={() => handleTabClick('pakej')}
+                ref={(el) => { tabRefs.current['pakej'] = el }}
                 style={{
                   padding: '16px 24px',
                   backgroundColor: 'transparent',
@@ -948,11 +962,12 @@ export default function AgensiProfileClient({
                   transition: 'all 0.3s'
                 }}
               >
-                📦 Pakej ({packages.length})
+                📦 Pakej 
               </button>
 
               <button
-                onClick={() => setActiveTab('newsfeed')}
+                onClick={() => handleTabClick('newsfeed')}
+                ref={(el) => { tabRefs.current['newsfeed'] = el }}
                 style={{
                   padding: '16px 24px',
                   backgroundColor: 'transparent',
@@ -965,11 +980,12 @@ export default function AgensiProfileClient({
                   transition: 'all 0.3s'
                 }}
               >
-                📰 News Feed ({newsFeed.length})
+                📰 Berita 
               </button>
 
               <button
-                onClick={() => setActiveTab('reels')}
+                onClick={() => handleTabClick('reels')}
+                ref={(el) => { tabRefs.current['reels'] = el }}
                 style={{
                   padding: '16px 24px',
                   backgroundColor: 'transparent',
@@ -982,12 +998,13 @@ export default function AgensiProfileClient({
                   transition: 'all 0.3s'
                 }}
               >
-                🎬 Reels ({reels.length})
+                🎬 Video 
               </button>
 
               {/* 🖼️ GALERI TAB BUTTON */}
               <button
-                onClick={() => setActiveTab('galeri')}
+                onClick={() => handleTabClick('galeri')}
+                ref={(el) => { tabRefs.current['galeri'] = el }}
                 style={{
                   padding: '16px 24px',
                   backgroundColor: 'transparent',
@@ -1000,11 +1017,12 @@ export default function AgensiProfileClient({
                   transition: 'all 0.3s'
                 }}
               >
-                🖼️ Galeri ({albums.length})
+                🖼️ Galeri 
               </button>
 
               <button
-                onClick={() => setActiveTab('tentang')}
+                onClick={() => handleTabClick('tentang')}
+                ref={(el) => { tabRefs.current['tentang'] = el }}
                 style={{
                   padding: '16px 24px',
                   backgroundColor: 'transparent',
@@ -1021,7 +1039,8 @@ export default function AgensiProfileClient({
               </button>
 
               <button
-                onClick={() => setActiveTab('ulasan')}
+                onClick={() => handleTabClick('ulasan')}
+                ref={(el) => { tabRefs.current['ulasan'] = el }}
                 style={{
                   padding: '16px 24px',
                   backgroundColor: 'transparent',
@@ -1034,7 +1053,7 @@ export default function AgensiProfileClient({
                   transition: 'all 0.3s'
                 }}
               >
-                ⭐ Ulasan ({reviewCount})
+                ⭐ Ulasan 
               </button>
             </div>
           </div>
