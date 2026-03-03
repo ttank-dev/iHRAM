@@ -34,12 +34,12 @@ export default function Footer() {
 
           <div>
             <h3 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '20px', fontFamily: 'Georgia, serif' }}>
-              Hubungi Kami
+              -
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '16px', color: 'rgba(255,255,255,0.9)' }}>
-              <div><strong>Email:</strong><br/>info@ihram.com.my</div>
-              <div><strong>WhatsApp:</strong><br/>+60 12-345 6789</div>
-              <div><strong>Waktu Operasi:</strong><br/>Isnin - Jumaat: 9:00 AM - 6:00 PM</div>
+              <div><strong>-</strong><br/>-</div>
+              <div><strong>-</strong><br/>-</div>
+              <div><strong>-</strong><br/>-</div>
             </div>
           </div>
 

@@ -143,7 +143,7 @@ export default function AdminLoginPage() {
                 <label className="al-label">Email Address</label>
                 <input type="email" className="al-input"
                   value={email} onChange={e => setEmail(e.target.value)}
-                  placeholder="admin@ihram.com.my"
+                  placeholder="user@example.com"
                   required disabled={loading} />
               </div>
 

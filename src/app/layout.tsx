@@ -1,5 +1,6 @@
 import { Inter } from 'next/font/google'
 import './globals.css'
+import VisitorTracker from '@/app/VisitorTracker'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -12,6 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ms">
       <body className={inter.className}>
+        <VisitorTracker />
         {children}
       </body>
     </html>
