@@ -45,7 +45,7 @@ export function useVisitorTrack() {
     })
     channel.subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
-        await channel.track({ online_at: new Date().toISOString() })
+        await channel.track({ online_at: new Date().toISOString(), page_path: path })
       }
     })
 

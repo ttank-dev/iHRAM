@@ -44,6 +44,7 @@ const navSections: NavSection[] = [
   {
     title: 'SETTINGS',
     items: [
+      { href: '/merchant/dashboard/visitors', icon: '👥', label: 'Visitor Stats', ownerOnly: true },
       { href: '/merchant/dashboard/settings', icon: '⚙️', label: 'Settings', staffBadge: 'PW' },
     ],
   },

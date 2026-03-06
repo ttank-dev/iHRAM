@@ -12,18 +12,18 @@ export async function POST(req: NextRequest) {
       req.headers.get('cf-connecting-ip') ||
       'unknown'
 
-    // Geo lookup — skip for localhost/unknown
+    const isLocal = !ip || ip === 'unknown' || ip === '127.0.0.1' || ip.startsWith('192.168.') || ip.startsWith('10.')
+
     let city: string | null = null
     let region: string | null = null
     let country: string | null = null
+    let agency_id: string | null = null
 
-    const isLocal = !ip || ip === 'unknown' || ip === '127.0.0.1' || ip.startsWith('192.168.') || ip.startsWith('10.')
-
+    // Geo lookup
     if (!isLocal) {
       try {
-        // ip-api.com free tier, no API key needed, 45 req/min
         const geo = await fetch(`http://ip-api.com/json/${ip}?fields=status,city,regionName,country,countryCode`, {
-          signal: AbortSignal.timeout(3000) // 3s timeout max
+          signal: AbortSignal.timeout(3000)
         })
         const data = await geo.json()
         if (data.status === 'success') {
@@ -31,12 +31,34 @@ export async function POST(req: NextRequest) {
           region  = data.regionName || null
           country = data.country    || null
         }
-      } catch {
-        // geo lookup failed silently — still save visit
-      }
+      } catch { /* silent fail */ }
     }
 
+    // Lookup agency_id from page_path
+    // Matches: /agensi/[slug] or /pakej/[slug]
     const supabase = await createClient()
+
+    const agensiMatch = page_path?.match(/^\/agensi\/([^\/]+)/)
+    const pakejMatch  = page_path?.match(/^\/pakej\/([^\/]+)/)
+
+    if (agensiMatch) {
+      const slug = agensiMatch[1]
+      const { data } = await supabase
+        .from('agencies')
+        .select('id')
+        .eq('slug', slug)
+        .single()
+      agency_id = data?.id || null
+    } else if (pakejMatch) {
+      const slug = pakejMatch[1]
+      const { data } = await supabase
+        .from('packages')
+        .select('agency_id')
+        .eq('slug', slug)
+        .single()
+      agency_id = data?.agency_id || null
+    }
+
     await supabase.from('visitor_stats').insert({
       page_path,
       session_id,
@@ -44,6 +66,7 @@ export async function POST(req: NextRequest) {
       city,
       region,
       country,
+      agency_id,
     })
 
     return NextResponse.json({ ok: true })
