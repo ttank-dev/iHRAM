@@ -232,7 +232,7 @@ export default async function VerificationDetailPage({
 
         {/* ── STYLES ── */}
         <style dangerouslySetInnerHTML={{ __html: `
-          .vd-page { max-width: 1200px; margin: 0 auto; }
+          .vd-page { width: 100%; }
 
           /* Header */
           .vd-header { margin-bottom: 28px; }

@@ -320,6 +320,7 @@ export default function MerchantDashboardLayout({
       {/* ── STYLES ── */}
       <style dangerouslySetInnerHTML={{ __html: `
         /* ===== BASE ===== */
+        *, *::before, *::after { box-sizing: border-box; }
         .merchant-layout {
           display: flex;
           min-height: 100vh;
@@ -548,6 +549,10 @@ export default function MerchantDashboardLayout({
           flex: 1;
           min-width: 0;
           overflow-x: hidden;
+          max-width: 900px;
+          width: 100%;
+          box-sizing: border-box;
+          margin-right: auto;
         }
 
         /* ===== TOP BAR (mobile) ===== */
@@ -635,6 +640,8 @@ export default function MerchantDashboardLayout({
           }
           .merchant-content {
             padding: 24px 20px;
+            max-width: 100%;
+            box-sizing: border-box;
           }
         }
 
@@ -644,6 +651,8 @@ export default function MerchantDashboardLayout({
           .merchant-content {
             padding: 16px;
             overflow-x: hidden;
+            max-width: 100%;
+            box-sizing: border-box;
           }
           .topbar {
             padding: 10px 12px;

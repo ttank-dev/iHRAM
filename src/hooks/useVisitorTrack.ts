@@ -13,20 +13,27 @@ function getSessionId(): string {
   return sid
 }
 
+const EXCLUDED = ['/admin', '/merchant', '/api']
+
 export function useVisitorTrack() {
   useEffect(() => {
+    const path = window.location.pathname
+
+    // Skip admin, merchant, api routes
+    if (EXCLUDED.some(p => path.startsWith(p))) return
+
     const supabase = createClient()
     const sessionId = getSessionId()
     if (!sessionId) return
 
     // Insert visit via API route (captures real IP server-side)
-    const trackKey = `ihram_tracked_${window.location.pathname}`
+    const trackKey = `ihram_tracked_${path}`
     if (!sessionStorage.getItem(trackKey)) {
       fetch('/api/track', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          page_path: window.location.pathname,
+          page_path: path,
           session_id: sessionId,
         }),
       }).then(() => sessionStorage.setItem(trackKey, '1'))

@@ -19,11 +19,11 @@ const navSections: NavSection[] = [
   {
     title: 'MANAGEMENT',
     items: [
-      { href: '/admin/agensi', icon: '🏢', label: 'Agencies' },
-      { href: '/admin/verifikasi', icon: '✅', label: 'Verifications' },
-      { href: '/admin/pakej', icon: '📦', label: 'Packages' },
-      { href: '/admin/ulasan', icon: '⭐', label: 'Reviews' },
-      { href: '/admin/panduan', icon: '📚', label: 'Guides' },
+      { href: '/admin/agensi', icon: '🏢', label: 'Agensi' },
+      { href: '/admin/verifikasi', icon: '✅', label: 'Review Verifikasi' },
+      { href: '/admin/pakej', icon: '📦', label: 'Pakej' },
+      { href: '/admin/ulasan', icon: '⭐', label: 'Ulasan' },
+      { href: '/admin/panduan', icon: '📚', label: 'Panduan' },
       { href: '/admin/panduan/categories', icon: '🏷️', label: 'Categories', indent: true },
       { href: '/admin/leads', icon: '🎯', label: 'Leads' },
     ],
@@ -33,14 +33,14 @@ const navSections: NavSection[] = [
     items: [
       { href: '/admin/newsfeed', icon: '📰', label: 'News Feed' },
       { href: '/admin/reels', icon: '🎬', label: 'Reels' },
-      { href: '/admin/galeri', icon: '🖼️', label: 'Gallery' },
+      { href: '/admin/galeri', icon: '🖼️', label: 'Galeri' },
     ],
   },
   {
     title: 'SETTINGS',
     items: [
+      { href: '/admin/visitors', icon: '👥', label: 'Visitors' },
       { href: '/admin/settings', icon: '⚙️', label: 'Settings' },
-      { href: '/admin/visitors', icon: '👥', label: 'Visitors Stats' },
       { href: '/admin/logs', icon: '📋', label: 'Moderation Logs' },
     ],
   },
@@ -171,6 +171,7 @@ export default function AdminSidebarClient({ children, adminName }: { children: 
       {/* ── STYLES ── */}
       <style dangerouslySetInnerHTML={{ __html: `
         /* ===== RESET & BASE ===== */
+        *, *::before, *::after { box-sizing: border-box; }
         .admin-layout {
           display: flex;
           min-height: 100vh;
@@ -333,6 +334,10 @@ export default function AdminSidebarClient({ children, adminName }: { children: 
         .admin-content {
           padding: 32px 40px;
           flex: 1;
+          max-width: 900px;
+          width: 100%;
+          box-sizing: border-box;
+          margin-right: auto;
         }
 
         /* ===== TOP BAR (mobile) ===== */
@@ -431,6 +436,8 @@ export default function AdminSidebarClient({ children, adminName }: { children: 
           }
           .admin-content {
             padding: 24px 20px;
+            max-width: 100%;
+            box-sizing: border-box;
           }
         }
 
@@ -438,7 +445,10 @@ export default function AdminSidebarClient({ children, adminName }: { children: 
         @media (max-width: 639px) {
           .admin-sidebar { width: 280px; }
           .admin-content {
-            padding: 16px 12px;
+            padding: 16px 16px;
+            max-width: 100%;
+            overflow-x: hidden;
+            box-sizing: border-box;
           }
           .topbar {
             padding: 10px 12px;

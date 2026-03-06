@@ -273,8 +273,7 @@ export default async function MerchantDashboardPage() {
       {/* ── STYLES ── */}
       <style dangerouslySetInnerHTML={{ __html: `
         .md-page {
-          max-width: 1000px;
-          margin: 0 auto;
+          width: 100%;
         }
 
         /* ── HEADER ── */

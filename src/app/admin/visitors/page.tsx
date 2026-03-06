@@ -2,8 +2,10 @@ import { checkAdminAccess } from '@/lib/admin'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
+import AdminOnlineNow from '@/components/AdminOnlineNow'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
+
 
 export default async function VisitorStatsPage() {
   const { isAdmin } = await checkAdminAccess()
@@ -12,19 +14,21 @@ export default async function VisitorStatsPage() {
   const supabase = await createClient()
 
   const now = new Date()
-  const todayStart   = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
-  const weekStart    = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
-  const monthStart   = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+  const TZ = 'Asia/Kuala_Lumpur'
+  const todayStart     = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
+  const weekStart      = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  const monthStart     = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
   const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString()
 
-  const [todayRes, weekRes, monthRes, prevMonthRes, totalRes, recentRes, pageRes] = await Promise.all([
+  const [todayRes, weekRes, monthRes, prevMonthRes, totalRes, recentRes, pageRes, locationRes] = await Promise.all([
     supabase.from('visitor_stats').select('id', { count: 'exact', head: true }).gte('created_at', todayStart),
     supabase.from('visitor_stats').select('id', { count: 'exact', head: true }).gte('created_at', weekStart),
     supabase.from('visitor_stats').select('id', { count: 'exact', head: true }).gte('created_at', monthStart),
     supabase.from('visitor_stats').select('id', { count: 'exact', head: true }).gte('created_at', prevMonthStart).lt('created_at', monthStart),
     supabase.from('visitor_stats').select('id', { count: 'exact', head: true }),
-    supabase.from('visitor_stats').select('created_at, page_path, session_id, ip_address').order('created_at', { ascending: false }).limit(200),
+    supabase.from('visitor_stats').select('created_at, page_path, session_id, ip_address, city, region, country').order('created_at', { ascending: false }).limit(200),
     supabase.from('visitor_stats').select('page_path').gte('created_at', weekStart),
+    supabase.from('visitor_stats').select('city, region, country').not('region', 'is', null),
   ])
 
   const todayCount     = todayRes.count     || 0
@@ -34,11 +38,13 @@ export default async function VisitorStatsPage() {
   const totalCount     = totalRes.count     || 0
   const recentVisits   = recentRes.data     || []
   const pageVisits     = pageRes.data       || []
+  const locationData   = locationRes.data   || []
 
   const monthChange = prevMonthCount > 0
     ? Math.round(((monthCount - prevMonthCount) / prevMonthCount) * 100)
     : null
 
+  // Top pages
   const pageCounts: Record<string, number> = {}
   pageVisits.forEach((v: any) => {
     const p = v.page_path || '/'
@@ -46,33 +52,49 @@ export default async function VisitorStatsPage() {
   })
   const topPages = Object.entries(pageCounts).sort(([,a],[,b]) => b-a).slice(0,8)
 
+  // Daily chart
   const dailyMap: Record<string, number> = {}
   for (let i = 6; i >= 0; i--) {
     const d = new Date(now); d.setDate(d.getDate() - i)
-    dailyMap[d.toISOString().split('T')[0]] = 0
+    const key = d.toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' })
+    dailyMap[key] = 0
   }
   recentVisits.forEach((v: any) => {
-    const day = new Date(v.created_at).toISOString().split('T')[0]
+    const day = new Date(v.created_at).toLocaleDateString('en-CA', { timeZone: TZ })
     if (day in dailyMap) dailyMap[day]++
   })
   const dailyData = Object.entries(dailyMap).map(([date, count]) => ({
     date, count,
-    label: new Date(date).toLocaleDateString('en-MY', { weekday: 'short', day: 'numeric', month: 'short' })
+    label: new Date(date + 'T00:00:00+08:00').toLocaleDateString('en-MY', { weekday: 'short', day: 'numeric', month: 'short', timeZone: TZ })
   }))
   const maxDaily = Math.max(...dailyData.map(d => d.count), 1)
 
-  const fmt     = (d: string) => new Date(d).toLocaleDateString('en-MY', { day: '2-digit', month: 'short', year: 'numeric' })
-  const fmtTime = (d: string) => new Date(d).toLocaleTimeString('en-MY', { hour: '2-digit', minute: '2-digit' })
+  // Region/state counts
+  const regionCounts: Record<string, number> = {}
+  const cityCounts:   Record<string, number> = {}
+  const countryCounts: Record<string, number> = {}
+  locationData.forEach((v: any) => {
+    if (v.region)  regionCounts[v.region]   = (regionCounts[v.region]  || 0) + 1
+    if (v.city)    cityCounts[v.city]        = (cityCounts[v.city]      || 0) + 1
+    if (v.country) countryCounts[v.country]  = (countryCounts[v.country]|| 0) + 1
+  })
+  const topRegions   = Object.entries(regionCounts).sort(([,a],[,b]) => b-a).slice(0,10)
+  const topCities    = Object.entries(cityCounts).sort(([,a],[,b]) => b-a).slice(0,8)
+  const maxRegion    = topRegions[0]?.[1] || 1
+
+
+  const fmt     = (d: string) => new Date(d).toLocaleDateString('en-MY', { day: '2-digit', month: 'short', year: 'numeric', timeZone: TZ })
+  const fmtTime = (d: string) => new Date(d).toLocaleTimeString('en-MY', { hour: '2-digit', minute: '2-digit', timeZone: TZ })
 
   return (
     <div>
       <style>{`
         .vs-page,.vs-page *{box-sizing:border-box}
-        .vs-page{max-width:1100px}
+        .vs-page{width:100%}
         .vs-title{font-size:28px;font-weight:700;color:#2C2C2C;margin:0 0 4px}
         .vs-sub{font-size:14px;color:#888;margin:0 0 24px}
 
-        .vs-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+        .vs-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px}
         .vs-stat{background:white;border-radius:12px;padding:20px;border:1px solid #E5E5E0}
         .vs-stat-icon{font-size:22px;margin-bottom:8px}
         .vs-stat-label{font-size:11px;color:#999;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px}
@@ -102,38 +124,49 @@ export default async function VisitorStatsPage() {
         .vs-pg-bar{height:100%;background:#B8936D;border-radius:3px}
         .vs-pg-count{font-size:12px;font-weight:700;color:#B8936D;min-width:28px;text-align:right;flex-shrink:0}
 
-        .vs-table-wrap{background:white;border-radius:12px;border:1px solid #E5E5E0;overflow:hidden}
+        /* Top states list */
+        .vs-state-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f0f0ec}
+        .vs-state-row:last-child{border-bottom:none}
+        .vs-state-name{font-size:12px;font-weight:600;color:#2C2C2C;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .vs-state-bar-wrap{width:70px;height:5px;background:#F0F0EC;border-radius:3px;flex-shrink:0}
+        .vs-state-bar{height:100%;background:#B8936D;border-radius:3px}
+        .vs-state-count{font-size:12px;font-weight:700;color:#B8936D;min-width:24px;text-align:right;flex-shrink:0}
+
+        /* Table */
+        .vs-table-wrap{background:white;border-radius:12px;border:1px solid #E5E5E0;overflow:hidden;margin-bottom:16px}
         .vs-table-head{padding:14px 18px;border-bottom:1px solid #E5E5E0;display:flex;justify-content:space-between;align-items:center}
         .vs-table-title{font-size:14px;font-weight:700;color:#2C2C2C}
         .vs-table-count{font-size:12px;color:#999}
         .vs-scroll{overflow-x:auto}
         .vs-table{width:100%;border-collapse:collapse}
         .vs-thead{background:#F9F9F7;border-bottom:1px solid #E5E5E0}
-        .vs-th{padding:10px 16px;text-align:left;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.8px;white-space:nowrap}
+        .vs-th{padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.7px;white-space:nowrap}
         .vs-tr{border-bottom:1px solid #F0F0EC}
         .vs-tr:last-child{border-bottom:none}
         .vs-tr:hover{background:#FAFAFA}
-        .vs-td{padding:11px 16px;font-size:13px;color:#2C2C2C}
+        .vs-td{padding:10px 14px;font-size:12px;color:#2C2C2C}
         .vs-td-gray{color:#999}
-        .vs-path{display:inline-block;padding:2px 8px;background:#F5F5F0;border-radius:4px;font-size:11px;font-family:monospace;color:#555;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
-        .vs-sid{font-family:monospace;font-size:11px;color:#aaa}
+        .vs-path{display:inline-block;padding:2px 7px;background:#F5F5F0;border-radius:4px;font-size:11px;font-family:monospace;color:#555;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
+        .vs-sid{font-family:monospace;font-size:10px;color:#bbb}
+        .vs-loc{font-size:11px;color:#555}
 
+        /* Mobile cards */
         .vs-mob-list{display:none;flex-direction:column;gap:8px;padding:12px}
         .vs-mob-card{background:#F9F9F7;border-radius:8px;padding:11px;border:1px solid #E5E5E0}
-        .vs-mob-top{margin-bottom:6px}
-        .vs-mob-footer{display:flex;justify-content:space-between;font-size:11px;color:#999}
+        .vs-mob-row{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
+        .vs-mob-loc{font-size:11px;color:#888;margin-top:3px}
+        .vs-mob-footer{display:flex;justify-content:space-between;font-size:11px;color:#999;margin-top:6px;padding-top:6px;border-top:1px solid #E5E5E0}
 
-        .vs-empty{padding:40px;text-align:center;color:#aaa;font-size:14px}
+        .vs-empty{padding:32px;text-align:center;color:#aaa;font-size:13px}
 
         @media(max-width:1023px){
           .vs-title{font-size:24px}
-          .vs-stats{grid-template-columns:repeat(2,1fr);gap:10px}
+          .vs-stats{grid-template-columns:repeat(3,1fr);gap:10px}
           .vs-stat-value{font-size:24px}
           .vs-row{grid-template-columns:1fr}
         }
         @media(max-width:639px){
           .vs-title{font-size:20px}
-          .vs-sub{font-size:13px}
           .vs-stats{gap:8px;margin-bottom:14px}
           .vs-stat{padding:12px}
           .vs-stat-value{font-size:20px}
@@ -149,9 +182,11 @@ export default async function VisitorStatsPage() {
 
       <div className="vs-page">
         <h1 className="vs-title">Visitor Statistics</h1>
-        <p className="vs-sub">Traffic and engagement across the platform</p>
+        <p className="vs-sub">Traffic and engagement across the platform · UTC+8</p>
 
+        {/* Stat Cards */}
         <div className="vs-stats">
+          <AdminOnlineNow />
           {([
             { icon: '📅', label: 'Today',       value: todayCount,  color: '#2C2C2C' },
             { icon: '📈', label: 'Last 7 Days',  value: weekCount,   color: '#3B82F6' },
@@ -171,8 +206,8 @@ export default async function VisitorStatsPage() {
           ))}
         </div>
 
+        {/* Daily Chart + Top Pages */}
         <div className="vs-row">
-          {/* Daily Chart */}
           <div className="vs-card">
             <div className="vs-card-head">
               <h3 className="vs-card-title">Daily Visits</h3>
@@ -193,7 +228,6 @@ export default async function VisitorStatsPage() {
             </div>
           </div>
 
-          {/* Top Pages */}
           <div className="vs-card">
             <div className="vs-card-head">
               <h3 className="vs-card-title">Top Pages</h3>
@@ -217,7 +251,54 @@ export default async function VisitorStatsPage() {
           </div>
         </div>
 
-        {/* Recent Visits */}
+        {/* Top States + Cities */}
+        <div className="vs-row">
+          <div className="vs-card">
+            <div className="vs-card-head">
+              <h3 className="vs-card-title">Top States</h3>
+              <span className="vs-card-sub">All time</span>
+            </div>
+            <div className="vs-card-body">
+              {topRegions.length === 0
+                ? <div className="vs-empty">No data yet</div>
+                : topRegions.map(([region, count], i) => (
+                  <div key={region} className="vs-state-row">
+                    <div className="vs-pg-rank" style={{ background: i === 0 ? "#B8936D" : "#F0F0EC", color: i === 0 ? "white" : "#666" }}>{i+1}</div>
+                    <div className="vs-state-name">{region}</div>
+                    <div className="vs-state-bar-wrap">
+                      <div className="vs-state-bar" style={{ width: `${Math.round((count / maxRegion) * 100)}%` }}/>
+                    </div>
+                    <div className="vs-state-count">{count}</div>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+
+          <div className="vs-card">
+            <div className="vs-card-head">
+              <h3 className="vs-card-title">Top Cities</h3>
+              <span className="vs-card-sub">All time</span>
+            </div>
+            <div className="vs-card-body">
+              {topCities.length === 0
+                ? <div className="vs-empty">No data yet</div>
+                : topCities.map(([city, count], i) => (
+                  <div key={city} className="vs-state-row">
+                    <div className="vs-pg-rank" style={{ background: i === 0 ? "#B8936D" : "#F0F0EC", color: i === 0 ? "white" : "#666" }}>{i+1}</div>
+                    <div className="vs-state-name">{city}</div>
+                    <div className="vs-state-bar-wrap">
+                      <div className="vs-state-bar" style={{ width: `${Math.round((count / (topCities[0]?.[1] || 1)) * 100)}%` }}/>
+                    </div>
+                    <div className="vs-state-count">{count}</div>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+        </div>
+
+                {/* Recent Visits Table */}
         <div className="vs-table-wrap">
           <div className="vs-table-head">
             <div className="vs-table-title">Recent Visits</div>
@@ -225,7 +306,7 @@ export default async function VisitorStatsPage() {
           </div>
           {recentVisits.length === 0 ? (
             <div className="vs-empty">
-              <div style={{ fontSize: '40px', marginBottom: '8px' }}>📊</div>
+              <div style={{ fontSize: '36px', marginBottom: '8px' }}>📊</div>
               No visits recorded yet
             </div>
           ) : (
@@ -236,8 +317,10 @@ export default async function VisitorStatsPage() {
                     <th className="vs-th">Date</th>
                     <th className="vs-th">Time</th>
                     <th className="vs-th">Page</th>
-                    <th className="vs-th">IP Address</th>
-                    <th className="vs-th">Session</th>
+                    <th className="vs-th">City</th>
+                    <th className="vs-th">State</th>
+                    <th className="vs-th">Country</th>
+                    <th className="vs-th">IP</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -246,19 +329,28 @@ export default async function VisitorStatsPage() {
                       <td className="vs-td">{fmt(v.created_at)}</td>
                       <td className="vs-td vs-td-gray">{fmtTime(v.created_at)}</td>
                       <td className="vs-td"><span className="vs-path">{v.page_path || '/'}</span></td>
-                      <td className="vs-td vs-td-gray" style={{fontFamily:'monospace',fontSize:'11px'}}>{v.ip_address || '—'}</td>
-                      <td className="vs-td"><span className="vs-sid">{v.session_id?.slice(0, 10) || '—'}…</span></td>
+                      <td className="vs-td vs-loc">{v.city    || '—'}</td>
+                      <td className="vs-td vs-loc">{v.region  || '—'}</td>
+                      <td className="vs-td vs-loc">{v.country || '—'}</td>
+                      <td className="vs-td"><span className="vs-sid">{v.ip_address || '—'}</span></td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+
+              {/* Mobile */}
               <div className="vs-mob-list">
                 {recentVisits.map((v: any, i: number) => (
                   <div key={`m-${v.session_id}-${i}`} className="vs-mob-card">
-                    <div className="vs-mob-top"><span className="vs-path">{v.page_path || '/'}</span></div>
+                    <div className="vs-mob-row">
+                      <span className="vs-path">{v.page_path || '/'}</span>
+                    </div>
+                    <div className="vs-mob-loc">
+                      📍 {[v.city, v.region, v.country].filter(Boolean).join(', ') || 'Location unknown'}
+                    </div>
                     <div className="vs-mob-footer">
                       <span>{fmt(v.created_at)} · {fmtTime(v.created_at)}</span>
-                      <span className="vs-sid">{v.ip_address || v.session_id?.slice(0, 8) || '—'}</span>
+                      <span className="vs-sid">{v.ip_address || '—'}</span>
                     </div>
                   </div>
                 ))}

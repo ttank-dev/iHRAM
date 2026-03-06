@@ -165,7 +165,7 @@ export default function VerificationClient({
 
       {/* ── STYLES ── */}
       <style dangerouslySetInnerHTML={{ __html: `
-        .vc-page { max-width: 1000px; margin: 0 auto; }
+        .vc-page { width: 100%; }
 
         /* Header */
         .vc-header { margin-bottom: 24px; }

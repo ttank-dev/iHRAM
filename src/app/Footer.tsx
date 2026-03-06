@@ -20,8 +20,8 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '20px', fontFamily: 'Georgia, serif' }}>
-              Pautan Pantas
+            <h3 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '20px', fontFamily: 'Arial, sans-serif' }}>
+              <u>Pautan Pantas</u>
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <Link href="/" style={{ color: 'rgba(255,255,255,0.9)', textDecoration: 'none', fontSize: '16px' }}>Home</Link>
@@ -33,12 +33,12 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '20px', fontFamily: 'Georgia, serif' }}>
-              -
+            <h3 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '20px', fontFamily: 'Arial, sans-serif' }}>
+              <u>Log Masuk</u>
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '16px', color: 'rgba(255,255,255,0.9)' }}>
-              <div><strong>-</strong><br/>-</div>
-              <div><strong>-</strong><br/>-</div>
+              <div><strong>Admin</strong><br/>-</div>
+              <div><strong>Agensi</strong><br/>-</div>
               <div><strong>-</strong><br/>-</div>
             </div>
           </div>

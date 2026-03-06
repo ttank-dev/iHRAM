@@ -113,7 +113,7 @@ export default function PakejSayaPage() {
     <>
       <style>{`
         .mp-page,.mp-page *{box-sizing:border-box}
-        .mp-page{max-width:1100px}
+        .mp-page{width:100%}
         .mp-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;gap:12px;flex-wrap:wrap}
         .mp-title{font-size:28px;font-weight:700;color:#2C2C2C;margin:0 0 4px}
         .mp-sub{font-size:14px;color:#888;margin:0}
