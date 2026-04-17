@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Pagination from '@/app/Pagination'
+import DashboardButton from '@/components/ui/DashboardButton'
 
 function ActionButtons({ pkg, onDuplicate, onDelete, deleting }: {
   pkg: any
@@ -14,16 +15,18 @@ function ActionButtons({ pkg, onDuplicate, onDelete, deleting }: {
 }) {
   return (
     <div className="mp-actions">
-      <Link href={`/merchant/dashboard/pakej/edit/${pkg.id}`} className="mp-btn mp-btn-gold">✏️ Edit</Link>
-      <button className="mp-btn mp-btn-slate" onClick={() => onDuplicate(pkg)}>📋 Duplicate</button>
-      <Link href={`/pakej/${pkg.slug}`} target="_blank" className="mp-btn mp-btn-slate">👁 Preview</Link>
-      <button
-        className={`mp-btn mp-btn-red${deleting === pkg.id ? ' mp-btn-loading' : ''}`}
+      <DashboardButton href={`/merchant/dashboard/pakej/edit/${pkg.id}`} variant="primary" size="sm" fullWidth>✏️ Edit</DashboardButton>
+      <DashboardButton variant="secondary" size="sm" fullWidth onClick={() => onDuplicate(pkg)}>📋 Duplicate</DashboardButton>
+      <DashboardButton href={`/pakej/${pkg.slug}`} target="_blank" variant="secondary" size="sm" fullWidth>👁 Preview</DashboardButton>
+      <DashboardButton
+        variant="danger"
+        size="sm"
+        fullWidth
         onClick={() => onDelete(pkg.id, pkg.title)}
         disabled={deleting === pkg.id}
       >
         {deleting === pkg.id ? '⏳...' : '🗑 Delete'}
-      </button>
+      </DashboardButton>
     </div>
   )
 }
@@ -120,9 +123,10 @@ export default function PakejSayaPage() {
         .mp-add-btn{display:inline-flex;align-items:center;gap:6px;padding:12px 22px;background:#B8936D;color:white;border-radius:10px;font-size:14px;font-weight:700;text-decoration:none;transition:background .15s;white-space:nowrap;flex-shrink:0}
         .mp-add-btn:hover{background:#a07d5a}
         .mp-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
-        .mp-stat{background:white;border-radius:10px;padding:14px 10px;border:2px solid #E5E5E0;cursor:pointer;text-align:center;transition:border-color .15s}
+        .mp-stat{background:white;border-radius:10px;padding:14px 10px;border:2px solid #E5E5E0;cursor:pointer;text-align:center;transition:border-color .15s;appearance:none;width:100%}
         .mp-stat:hover{border-color:#ccc}
         .mp-stat.on{border-color:#B8936D}
+        .mp-stat:focus-visible{outline:2px solid #B8936D;outline-offset:2px}
         .mp-stat-i{font-size:14px;margin-bottom:3px}
         .mp-stat-l{font-size:10px;color:#888;font-weight:500;margin-bottom:2px}
         .mp-stat-v{font-size:20px;font-weight:700;color:#2C2C2C}
@@ -136,13 +140,6 @@ export default function PakejSayaPage() {
         .mp-card-desc{font-size:13px;color:#888;line-height:1.5}
         .mp-badge{padding:4px 12px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0}
         .mp-actions{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:5px;padding-top:14px;border-top:1px solid #f0f0ec}
-        .mp-btn{height:34px;padding:0 8px;border:none;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:700;transition:filter .15s;white-space:nowrap;width:100%;text-decoration:none;font-family:inherit}
-        .mp-btn:hover:not(:disabled){filter:brightness(.92)}
-        .mp-btn:disabled{opacity:.55;cursor:not-allowed;filter:none}
-        .mp-btn-gold  {background:#B8936D;color:white}
-        .mp-btn-slate {background:#E2E8F0;color:#334155}
-        .mp-btn-red   {background:#EF4444;color:white}
-        .mp-btn-loading{background:#ccc!important;color:#666!important}
         .mp-empty{background:white;border-radius:16px;padding:60px 24px;text-align:center;border:1px solid #E5E5E0}
         .mp-empty-icon{font-size:48px;margin-bottom:12px}
         .mp-empty-title{font-size:20px;font-weight:700;color:#2C2C2C;margin-bottom:8px}
@@ -163,7 +160,7 @@ export default function PakejSayaPage() {
           .mp-card-meta{gap:8px;font-size:12px}
           .mp-card-desc{font-size:12px}
           .mp-actions{grid-template-columns:1fr 1fr;gap:6px;padding-top:12px}
-          .mp-btn{height:36px;font-size:12px}
+          .db-btn{min-height:36px;font-size:12px}
         }
         @media(max-width:380px){
           .mp-stats{grid-template-columns:1fr 1fr}
@@ -187,11 +184,17 @@ export default function PakejSayaPage() {
             { key: 'draft',     icon: '📝', label: 'Draft',     v: stats.draft },
             { key: 'archived',  icon: '📁', label: 'Archived',  v: stats.archived },
           ] as const).map(s => (
-            <div key={s.key} className={`mp-stat${filter === s.key ? ' on' : ''}`} onClick={() => setFilter(s.key)}>
+            <button
+              key={s.key}
+              type="button"
+              className={`mp-stat${filter === s.key ? ' on' : ''}`}
+              onClick={() => setFilter(s.key)}
+              aria-pressed={filter === s.key}
+            >
               <div className="mp-stat-i">{s.icon}</div>
               <div className="mp-stat-l">{s.label}</div>
               <div className="mp-stat-v">{s.v}</div>
-            </div>
+            </button>
           ))}
         </div>
 

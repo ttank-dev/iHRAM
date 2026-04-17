@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Pagination from '@/app/Pagination'
+import DashboardButton from '@/components/ui/DashboardButton'
 
 function ActionButtons({ reel, onToggle, onDelete, deleting }: {
   reel: any
@@ -14,14 +15,20 @@ function ActionButtons({ reel, onToggle, onDelete, deleting }: {
 }) {
   return (
     <div className="rl-actions">
-      <button className={`rl-btn ${reel.is_published ? 'rl-btn-amber' : 'rl-btn-green'}`}
+      <DashboardButton
+        variant={reel.is_published ? 'warning' : 'success'}
+        size="sm"
+        fullWidth
         onClick={() => onToggle(reel.id, reel.is_published)}>
         {reel.is_published ? '⏸ Unpublish' : '📣 Publish'}
-      </button>
-      <button className={`rl-btn rl-btn-red${deleting === reel.id ? ' rl-btn-loading' : ''}`}
+      </DashboardButton>
+      <DashboardButton
+        variant="danger"
+        size="sm"
+        fullWidth
         onClick={() => onDelete(reel.id, reel.title)} disabled={deleting === reel.id}>
         {deleting === reel.id ? '⏳...' : '🗑 Delete'}
-      </button>
+      </DashboardButton>
     </div>
   )
 }
@@ -102,9 +109,10 @@ export default function ReelsPage() {
         .rl-add{display:inline-flex;align-items:center;gap:6px;padding:12px 22px;background:#B8936D;color:white;border-radius:10px;font-size:14px;font-weight:700;text-decoration:none;transition:background .15s;white-space:nowrap;flex-shrink:0}
         .rl-add:hover{background:#a07d5a}
         .rl-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
-        .rl-stat{background:white;border-radius:10px;padding:14px 10px;border:2px solid #E5E5E0;cursor:pointer;text-align:center;transition:border-color .15s}
+        .rl-stat{background:white;border-radius:10px;padding:14px 10px;border:2px solid #E5E5E0;cursor:pointer;text-align:center;transition:border-color .15s;appearance:none;width:100%}
         .rl-stat:hover{border-color:#ccc}
         .rl-stat.on{border-color:#B8936D}
+        .rl-stat:focus-visible{outline:2px solid #B8936D;outline-offset:2px}
         .rl-stat-i{font-size:14px;margin-bottom:3px}
         .rl-stat-l{font-size:10px;color:#888;font-weight:500;margin-bottom:2px}
         .rl-stat-v{font-size:22px;font-weight:700;color:#2C2C2C}
@@ -123,13 +131,6 @@ export default function ReelsPage() {
         .rl-overlay-title{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
         .rl-overlay-views{font-size:10px;opacity:.85}
         .rl-actions{padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px}
-        .rl-btn{height:34px;padding:0 6px;border:none;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:700;transition:filter .15s;white-space:nowrap;width:100%;font-family:inherit}
-        .rl-btn:hover:not(:disabled){filter:brightness(.92)}
-        .rl-btn:disabled{opacity:.55;cursor:not-allowed;filter:none}
-        .rl-btn-green {background:#10B981;color:white}
-        .rl-btn-amber {background:#F59E0B;color:white}
-        .rl-btn-red   {background:#EF4444;color:white}
-        .rl-btn-loading{background:#ccc!important;color:#666!important}
         .rl-empty{background:white;border-radius:16px;padding:60px 24px;text-align:center;border:1px solid #E5E5E0}
         .rl-empty-icon{font-size:48px;margin-bottom:12px}
         .rl-empty-title{font-size:20px;font-weight:700;color:#2C2C2C;margin-bottom:8px}
@@ -155,7 +156,7 @@ export default function ReelsPage() {
           .rl-play{width:44px;height:44px;font-size:18px}
           .rl-overlay-title{font-size:11px}
         }
-        @media(max-width:380px){.rl-grid{grid-template-columns:repeat(2,1fr);gap:8px}.rl-btn{height:32px;font-size:11px}}
+        @media(max-width:380px){.rl-grid{grid-template-columns:repeat(2,1fr);gap:8px}.db-btn{min-height:32px;font-size:11px}}
       `}</style>
 
       <div className="rl">
@@ -173,11 +174,17 @@ export default function ReelsPage() {
             { key: 'published', icon: '✅', label: 'Published', v: stats.published },
             { key: 'draft',     icon: '📝', label: 'Draft',     v: stats.draft },
           ] as const).map(s => (
-            <div key={s.key} className={`rl-stat${filter === s.key ? ' on' : ''}`} onClick={() => setFilter(s.key)}>
+            <button
+              key={s.key}
+              type="button"
+              className={`rl-stat${filter === s.key ? ' on' : ''}`}
+              onClick={() => setFilter(s.key)}
+              aria-pressed={filter === s.key}
+            >
               <div className="rl-stat-i">{s.icon}</div>
               <div className="rl-stat-l">{s.label}</div>
               <div className="rl-stat-v">{s.v}</div>
-            </div>
+            </button>
           ))}
         </div>
 
@@ -225,7 +232,7 @@ export default function ReelsPage() {
       {playingReel && (
         <div className="rl-modal-overlay" onClick={() => setPlayingReel(null)}>
           <div className="rl-modal" onClick={e => e.stopPropagation()}>
-            <button className="rl-modal-close" onClick={() => setPlayingReel(null)}>✕</button>
+            <button className="rl-modal-close" onClick={() => setPlayingReel(null)} aria-label="Close reel preview">✕</button>
             <video src={playingReel.video_url} controls autoPlay playsInline className="rl-modal-video" />
             <div className="rl-modal-info">
               <div className="rl-modal-title">{playingReel.title || 'Untitled'}</div>

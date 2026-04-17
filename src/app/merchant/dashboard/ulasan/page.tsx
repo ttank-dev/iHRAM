@@ -70,9 +70,10 @@ export default function UlasanPage() {
         .ur-title{font-size:28px;font-weight:700;color:#2C2C2C;margin:0 0 4px}
         .ur-sub{font-size:14px;color:#888;margin:0}
         .ur-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
-        .ur-stat{background:white;border-radius:10px;padding:14px 10px;border:2px solid #E5E5E0;cursor:pointer;text-align:center;transition:border-color .15s}
+        .ur-stat{background:white;border-radius:10px;padding:14px 10px;border:2px solid #E5E5E0;cursor:pointer;text-align:center;transition:border-color .15s;appearance:none;width:100%}
         .ur-stat:hover{border-color:#ccc}
         .ur-stat.on{border-color:#B8936D}
+        .ur-stat:focus-visible{outline:2px solid #B8936D;outline-offset:2px}
         .ur-stat-i{font-size:14px;margin-bottom:3px}
         .ur-stat-l{font-size:10px;color:#888;font-weight:500;margin-bottom:2px}
         .ur-stat-v{font-size:20px;font-weight:700;color:#2C2C2C}
@@ -143,11 +144,17 @@ export default function UlasanPage() {
                 <div className="ur-stat-v" style={{ color: '#B8936D' }}>{s.v}</div>
               </div>
             ) : (
-              <div key={s.key} className={`ur-stat${filter === s.key ? ' on' : ''}`} onClick={() => setFilter(s.key)}>
+              <button
+                key={s.key}
+                type="button"
+                className={`ur-stat${filter === s.key ? ' on' : ''}`}
+                onClick={() => setFilter(s.key)}
+                aria-pressed={filter === s.key}
+              >
                 <div className="ur-stat-i">{s.icon}</div>
                 <div className="ur-stat-l">{s.label}</div>
                 <div className="ur-stat-v">{s.v}</div>
-              </div>
+              </button>
             )
           )}
         </div>

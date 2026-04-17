@@ -1,9 +1,64 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
+const BOT_UA_PATTERNS = [
+  'bot',
+  'crawler',
+  'spider',
+  'slurp',
+  'bingpreview',
+  'facebookexternalhit',
+  'telegrambot',
+  'whatsapp',
+  'discordbot',
+  'skypeuripreview',
+  'slackbot',
+  'google-site-verification',
+  'headlesschrome',
+  'phantomjs',
+  'selenium',
+  'puppeteer',
+  'playwright',
+  'python-requests',
+  'axios/',
+  'curl/',
+  'wget/',
+  'httpclient',
+  'go-http-client',
+]
+
+function isBotRequest(req: NextRequest): boolean {
+  const ua = (req.headers.get('user-agent') || '').toLowerCase()
+  if (!ua) return true
+
+  if (BOT_UA_PATTERNS.some(pattern => ua.includes(pattern))) {
+    return true
+  }
+
+  // Treat browser prefetch/prerender as non-visit traffic.
+  const purpose = (req.headers.get('purpose') || req.headers.get('sec-purpose') || '').toLowerCase()
+  if (purpose.includes('prefetch') || purpose.includes('prerender')) {
+    return true
+  }
+
+  const xMoz = (req.headers.get('x-moz') || '').toLowerCase()
+  if (xMoz.includes('prefetch')) {
+    return true
+  }
+
+  return false
+}
+
 export async function POST(req: NextRequest) {
   try {
+    if (isBotRequest(req)) {
+      return NextResponse.json({ ok: true, skipped: 'bot' })
+    }
+
     const { page_path, session_id } = await req.json()
+    if (typeof page_path !== 'string' || typeof session_id !== 'string' || !page_path || !session_id) {
+      return NextResponse.json({ ok: true, skipped: 'invalid_payload' })
+    }
 
     // Get real IP
     const ip =

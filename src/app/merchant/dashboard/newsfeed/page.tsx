@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Pagination from '@/app/Pagination'
+import DashboardButton from '@/components/ui/DashboardButton'
 
 function ActionButtons({ post, onToggle, onDelete, deleting }: {
   post: any
@@ -14,19 +15,28 @@ function ActionButtons({ post, onToggle, onDelete, deleting }: {
 }) {
   return (
     <div className="nf-actions">
-      <Link href={`/merchant/dashboard/newsfeed/edit/${post.id}`} className="nf-btn nf-btn-gold">✏️ Edit</Link>
-      <button className={`nf-btn ${post.is_published ? 'nf-btn-amber' : 'nf-btn-green'}`}
+      <DashboardButton href={`/merchant/dashboard/newsfeed/edit/${post.id}`} variant="primary" size="sm" fullWidth>✏️ Edit</DashboardButton>
+      <DashboardButton
+        variant={post.is_published ? 'warning' : 'success'}
+        size="sm"
+        fullWidth
         onClick={() => onToggle(post.id, post.is_published)}>
         {post.is_published ? '⏸ Unpublish' : '📣 Publish'}
-      </button>
-      <button className="nf-btn nf-btn-slate"
+      </DashboardButton>
+      <DashboardButton
+        variant="secondary"
+        size="sm"
+        fullWidth
         onClick={() => window.open(`/agensi/${post.agencies?.slug}`, '_blank')}>
         👁 Preview
-      </button>
-      <button className={`nf-btn nf-btn-red${deleting === post.id ? ' nf-btn-loading' : ''}`}
+      </DashboardButton>
+      <DashboardButton
+        variant="danger"
+        size="sm"
+        fullWidth
         onClick={() => onDelete(post.id, post.title)} disabled={deleting === post.id}>
         {deleting === post.id ? '⏳...' : '🗑 Delete'}
-      </button>
+      </DashboardButton>
     </div>
   )
 }
@@ -107,9 +117,10 @@ export default function NewsFeedPage() {
         .nf-add{display:inline-flex;align-items:center;gap:6px;padding:12px 22px;background:#B8936D;color:white;border-radius:10px;font-size:14px;font-weight:700;text-decoration:none;transition:background .15s;white-space:nowrap;flex-shrink:0}
         .nf-add:hover{background:#a07d5a}
         .nf-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
-        .nf-stat{background:white;border-radius:10px;padding:14px 10px;border:2px solid #E5E5E0;cursor:pointer;text-align:center;transition:border-color .15s}
+        .nf-stat{background:white;border-radius:10px;padding:14px 10px;border:2px solid #E5E5E0;cursor:pointer;text-align:center;transition:border-color .15s;appearance:none;width:100%}
         .nf-stat:hover{border-color:#ccc}
         .nf-stat.on{border-color:#B8936D}
+        .nf-stat:focus-visible{outline:2px solid #B8936D;outline-offset:2px}
         .nf-stat-i{font-size:14px;margin-bottom:3px}
         .nf-stat-l{font-size:10px;color:#888;font-weight:500;margin-bottom:2px}
         .nf-stat-v{font-size:22px;font-weight:700;color:#2C2C2C}
@@ -128,15 +139,6 @@ export default function NewsFeedPage() {
         .nf-excerpt{font-size:13px;color:#666;line-height:1.6;margin-bottom:10px}
         .nf-date{font-size:12px;color:#aaa;margin-bottom:14px}
         .nf-actions{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:5px;padding-top:14px;border-top:1px solid #f0f0ec}
-        .nf-btn{height:34px;padding:0 8px;border:none;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:700;transition:filter .15s;white-space:nowrap;width:100%;text-decoration:none;font-family:inherit}
-        .nf-btn:hover:not(:disabled){filter:brightness(.92)}
-        .nf-btn:disabled{opacity:.55;cursor:not-allowed;filter:none}
-        .nf-btn-gold  {background:#B8936D;color:white}
-        .nf-btn-green {background:#10B981;color:white}
-        .nf-btn-amber {background:#F59E0B;color:white}
-        .nf-btn-slate {background:#E2E8F0;color:#334155}
-        .nf-btn-red   {background:#EF4444;color:white}
-        .nf-btn-loading{background:#ccc!important;color:#666!important}
         .nf-empty{background:white;border-radius:16px;padding:60px 24px;text-align:center;border:1px solid #E5E5E0}
         .nf-empty-icon{font-size:48px;margin-bottom:12px}
         .nf-empty-title{font-size:20px;font-weight:700;color:#2C2C2C;margin-bottom:8px}
@@ -157,7 +159,7 @@ export default function NewsFeedPage() {
           .nf-card-title{font-size:15px}
           .nf-excerpt{font-size:13px}
           .nf-actions{grid-template-columns:1fr 1fr;gap:6px;padding-top:12px}
-          .nf-btn{height:36px;font-size:12px}
+          .db-btn{min-height:36px;font-size:12px}
         }
         @media(max-width:380px){.nf-thumb{height:130px}.nf-card-title{font-size:14px}}
       `}</style>
@@ -177,11 +179,17 @@ export default function NewsFeedPage() {
             { key: 'published', icon: '✅', label: 'Published', v: stats.published },
             { key: 'draft',     icon: '📝', label: 'Draft',     v: stats.draft },
           ] as const).map(s => (
-            <div key={s.key} className={`nf-stat${filter === s.key ? ' on' : ''}`} onClick={() => setFilter(s.key)}>
+            <button
+              key={s.key}
+              type="button"
+              className={`nf-stat${filter === s.key ? ' on' : ''}`}
+              onClick={() => setFilter(s.key)}
+              aria-pressed={filter === s.key}
+            >
               <div className="nf-stat-i">{s.icon}</div>
               <div className="nf-stat-l">{s.label}</div>
               <div className="nf-stat-v">{s.v}</div>
-            </div>
+            </button>
           ))}
         </div>
 

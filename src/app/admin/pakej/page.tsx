@@ -1,9 +1,9 @@
 'use client'
 
-import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { StatusBadge } from '@/components/StatusToggleButton'
+import DashboardButton from '@/components/ui/DashboardButton'
 
 interface Package {
   id: string
@@ -46,30 +46,34 @@ function ActionButtons({ pkg, onToggleFeatured, onChangeStatus, onDelete }: {
   const statusLabel = pkg.status === 'published' ? '⏸ Unpublish'
     : pkg.status === 'draft' ? '✓ Publish'
     : '↩ Restore'
-  const statusClass = pkg.status === 'published' ? 'ap-btn ap-btn-amber'
-    : pkg.status === 'draft' ? 'ap-btn ap-btn-green'
-    : 'ap-btn ap-btn-slate'
+  const statusVariant = pkg.status === 'published' ? 'warning'
+    : pkg.status === 'draft' ? 'success'
+    : 'secondary'
 
   return (
     <div className="ap-actions">
-      <Link href={`/pakej/${pkg.slug}`} target="_blank" className="ap-btn ap-btn-slate">
+      <DashboardButton href={`/pakej/${pkg.slug}`} target="_blank" variant="secondary" size="sm" fullWidth>
         👁 View
-      </Link>
-      <button
-        className={pkg.is_featured ? 'ap-btn ap-btn-amber' : 'ap-btn ap-btn-blue'}
+      </DashboardButton>
+      <DashboardButton
+        variant={pkg.is_featured ? 'warning' : 'info'}
+        size="sm"
+        fullWidth
         onClick={() => onToggleFeatured(pkg.id, pkg.is_featured)}
       >
         {pkg.is_featured ? '⭐ Featured' : '☆ Feature'}
-      </button>
-      <button
-        className={statusClass}
+      </DashboardButton>
+      <DashboardButton
+        variant={statusVariant}
+        size="sm"
+        fullWidth
         onClick={() => onChangeStatus(pkg.id, nextStatus)}
       >
         {statusLabel}
-      </button>
-      <button className="ap-btn ap-btn-red" onClick={() => onDelete(pkg.id, pkg.title)}>
+      </DashboardButton>
+      <DashboardButton variant="danger" size="sm" fullWidth onClick={() => onDelete(pkg.id, pkg.title)}>
         🗑 Delete
-      </button>
+      </DashboardButton>
     </div>
   )
 }
@@ -178,9 +182,10 @@ export default function AdminPakejPage() {
 
         /* Stats */
         .ap-stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
-        .ap-stat-card{background:white;border-radius:12px;padding:18px;border:2px solid #E5E5E0;cursor:pointer;transition:all .2s}
+        .ap-stat-card{background:white;border-radius:12px;padding:18px;border:2px solid #E5E5E0;cursor:pointer;transition:all .2s;appearance:none;width:100%;text-align:left}
         .ap-stat-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.06)}
         .ap-stat-card.active{border-color:#B8936D}
+        .ap-stat-card:focus-visible{outline:2px solid #B8936D;outline-offset:2px}
         .ap-stat-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:10px}
         .ap-stat-label{font-size:13px;color:#888;font-weight:500;margin-bottom:4px}
         .ap-stat-value{font-size:28px;font-weight:700;color:#2C2C2C}
@@ -217,31 +222,6 @@ export default function AdminPakejPage() {
 
         /* ── ACTION BUTTONS — exact same as Guides page ── */
         .ap-actions{display:grid;grid-template-columns:1fr 1fr;gap:4px;width:210px}
-        .ap-btn{
-          height:30px;
-          padding:0 8px;
-          border:none;
-          border-radius:6px;
-          cursor:pointer;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          gap:3px;
-          font-size:11px;
-          font-weight:700;
-          transition:filter .15s;
-          text-decoration:none;
-          white-space:nowrap;
-          width:100%;
-          font-family:inherit;
-        }
-        .ap-btn:hover{filter:brightness(0.92)}
-        .ap-btn-slate  {background:#E2E8F0;color:#334155}
-        .ap-btn-blue   {background:#3B82F6;color:white}
-        .ap-btn-green  {background:#10B981;color:white}
-        .ap-btn-amber  {background:#F59E0B;color:white}
-        .ap-btn-red    {background:#EF4444;color:white}
-
         /* Cards (mobile) */
         .ap-cards-wrap{display:none}
         .ap-card{background:white;border-radius:12px;border:1px solid #E5E5E0;padding:14px;margin-bottom:8px}
@@ -252,7 +232,7 @@ export default function AdminPakejPage() {
         /* Mobile card actions — same as gp-card-acts in Guides */
         .ap-card-acts{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding-top:10px;border-top:1px solid #f0f0ec}
         .ap-card-acts .ap-actions{width:100%;display:contents}
-        .ap-card-acts .ap-btn{height:34px;font-size:12px}
+        .ap-card-acts .db-btn{min-height:34px;font-size:12px}
 
         /* Empty */
         .ap-empty{padding:60px 20px;text-align:center}
@@ -264,10 +244,12 @@ export default function AdminPakejPage() {
         .ap-pagination{display:flex;align-items:center;justify-content:center;gap:8px;padding:16px;flex-wrap:wrap;border-top:1px solid #f0f0ec}
         .ap-pg-btn{padding:8px 16px;background:white;border:1px solid #E5E5E0;border-radius:8px;font-size:13px;font-weight:600;color:#555;cursor:pointer;transition:all .15s;white-space:nowrap}
         .ap-pg-btn:hover:not(:disabled){border-color:#B8936D;color:#B8936D}
+        .ap-pg-btn:focus-visible{outline:2px solid #B8936D;outline-offset:1px}
         .ap-pg-btn:disabled{opacity:.4;cursor:not-allowed}
         .ap-pg-pages{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
         .ap-pg-num{width:36px;height:36px;border:1px solid #E5E5E0;border-radius:8px;background:white;font-size:13px;font-weight:600;color:#555;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center}
         .ap-pg-num:hover{border-color:#B8936D;color:#B8936D}
+        .ap-pg-num:focus-visible{outline:2px solid #B8936D;outline-offset:1px}
         .ap-pg-num.active{background:#B8936D;border-color:#B8936D;color:white}
         .ap-pg-ellipsis{color:#aaa;font-size:13px;padding:0 2px}
 
@@ -313,11 +295,17 @@ export default function AdminPakejPage() {
         {/* STATS */}
         <div className="ap-stats-grid">
           {statCards.map(c => (
-            <div key={c.key} className={`ap-stat-card ${filter === c.key ? 'active' : ''}`} onClick={() => setFilter(c.key)}>
+            <button
+              key={c.key}
+              type="button"
+              className={`ap-stat-card ${filter === c.key ? 'active' : ''}`}
+              onClick={() => setFilter(c.key)}
+              aria-pressed={filter === c.key}
+            >
               <div className="ap-stat-icon" style={{ background: c.color + '12' }}>{c.icon}</div>
               <div className="ap-stat-label">{c.label}</div>
               <div className="ap-stat-value">{c.value}</div>
-            </div>
+            </button>
           ))}
         </div>
 

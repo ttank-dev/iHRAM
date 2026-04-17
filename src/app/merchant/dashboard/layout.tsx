@@ -327,6 +327,19 @@ export default function MerchantDashboardLayout({
           min-height: 100vh;
           background-color: #F5F5F0;
         }
+        .merchant-layout button {
+          font-family: inherit;
+          -webkit-tap-highlight-color: transparent;
+          transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s, filter 0.2s, opacity 0.2s;
+        }
+        .merchant-layout button:disabled {
+          cursor: not-allowed;
+          opacity: 0.6;
+        }
+        .merchant-layout button:focus-visible {
+          outline: 2px solid #B8936D;
+          outline-offset: 2px;
+        }
 
         /* ===== SIDEBAR ===== */
         .merchant-sidebar {

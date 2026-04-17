@@ -39,7 +39,7 @@ const navSections: NavSection[] = [
   {
     title: 'SETTINGS',
     items: [
-      { href: '/admin/visitors', icon: '👥', label: 'Visitors' },
+      { href: '/admin/visitors', icon: '👥', label: 'Visitor Stats' },
       { href: '/admin/settings', icon: '⚙️', label: 'Settings' },
       { href: '/admin/logs', icon: '📋', label: 'Moderation Logs' },
     ],
@@ -176,6 +176,19 @@ export default function AdminSidebarClient({ children, adminName }: { children: 
           display: flex;
           min-height: 100vh;
           background-color: #F5F5F0;
+        }
+        .admin-layout button {
+          font-family: inherit;
+          -webkit-tap-highlight-color: transparent;
+          transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s, filter 0.2s, opacity 0.2s;
+        }
+        .admin-layout button:disabled {
+          cursor: not-allowed;
+          opacity: 0.6;
+        }
+        .admin-layout button:focus-visible {
+          outline: 2px solid #B8936D;
+          outline-offset: 2px;
         }
 
         /* ===== SIDEBAR ===== */

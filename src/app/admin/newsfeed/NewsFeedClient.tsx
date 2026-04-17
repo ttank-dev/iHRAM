@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { StatusBadge } from '@/components/StatusToggleButton'
+import DashboardButton from '@/components/ui/DashboardButton'
 
 /* ── ActionButtons: TOP-LEVEL — same pattern as pakej/agensi pages ── */
 function ActionButtons({ post, onToggle, onDelete }: {
@@ -13,18 +14,22 @@ function ActionButtons({ post, onToggle, onDelete }: {
   const displayName = post.title || post.content?.slice(0, 30) + '...' || 'this post'
   return (
     <div className="nf-actions">
-      <button
-        className={'nf-btn ' + (post.is_active ? 'nf-btn-amber' : 'nf-btn-green')}
+      <DashboardButton
+        variant={post.is_active ? 'warning' : 'success'}
+        size="sm"
+        fullWidth
         onClick={() => onToggle(post.id, post.is_active)}
       >
         {post.is_active ? '⏸ Unpublish' : '✓ Publish'}
-      </button>
-      <button
-        className="nf-btn nf-btn-red"
+      </DashboardButton>
+      <DashboardButton
+        variant="danger"
+        size="sm"
+        fullWidth
         onClick={() => onDelete(post.id, displayName)}
       >
         🗑 Delete
-      </button>
+      </DashboardButton>
     </div>
   )
 }
@@ -88,9 +93,10 @@ export default function NewsFeedClient({ initialPosts }: { initialPosts: any[] }
 
         /* Stats — clickable filters */
         .nf-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
-        .nf-stat { background: white; border-radius: 12px; padding: 18px; border: 2px solid #E5E5E0; cursor: pointer; transition: all 0.2s; }
+        .nf-stat { background: white; border-radius: 12px; padding: 18px; border: 2px solid #E5E5E0; cursor: pointer; transition: all 0.2s; appearance: none; width: 100%; text-align: left; }
         .nf-stat:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
         .nf-stat.active { border-color: #B8936D; }
+        .nf-stat:focus-visible { outline: 2px solid #B8936D; outline-offset: 2px; }
         .nf-stat-icon { font-size: 18px; margin-bottom: 8px; }
         .nf-stat-label { font-size: 13px; color: #888; font-weight: 500; margin-bottom: 4px; }
         .nf-stat-value { font-size: 28px; font-weight: 700; color: #2C2C2C; }
@@ -124,36 +130,16 @@ export default function NewsFeedClient({ initialPosts }: { initialPosts: any[] }
 
         /* ── ACTION BUTTONS — same system as pakej/agensi ── */
         .nf-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; max-width: 220px; }
-        .nf-btn {
-          height: 30px;
-          padding: 0 10px;
-          border: none;
-          border-radius: 7px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 4px;
-          font-size: 12px;
-          font-weight: 700;
-          transition: filter 0.15s;
-          white-space: nowrap;
-          width: 100%;
-          font-family: inherit;
-        }
-        .nf-btn:hover { filter: brightness(0.92); }
-        .nf-btn-green  { background: #10B981; color: white; }
-        .nf-btn-amber  { background: #F59E0B; color: white; }
-        .nf-btn-red    { background: #EF4444; color: white; }
-
         /* Pagination */
         .nf-pagination { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px; flex-wrap: wrap; border-top: 1px solid #f0f0ec; }
         .nf-pg-btn { padding: 8px 16px; background: white; border: 1px solid #E5E5E0; border-radius: 8px; font-size: 13px; font-weight: 600; color: #555; cursor: pointer; transition: all .15s; white-space: nowrap; }
         .nf-pg-btn:hover:not(:disabled) { border-color: #B8936D; color: #B8936D; }
+        .nf-pg-btn:focus-visible { outline: 2px solid #B8936D; outline-offset: 1px; }
         .nf-pg-btn:disabled { opacity: .4; cursor: not-allowed; }
         .nf-pg-pages { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
         .nf-pg-num { width: 36px; height: 36px; border: 1px solid #E5E5E0; border-radius: 8px; background: white; font-size: 13px; font-weight: 600; color: #555; cursor: pointer; transition: all .15s; display: flex; align-items: center; justify-content: center; }
         .nf-pg-num:hover { border-color: #B8936D; color: #B8936D; }
+        .nf-pg-num:focus-visible { outline: 2px solid #B8936D; outline-offset: 1px; }
         .nf-pg-num.active { background: #B8936D; border-color: #B8936D; color: white; }
         .nf-pg-ellipsis { color: #aaa; font-size: 13px; padding: 0 2px; }
 
@@ -203,15 +189,17 @@ export default function NewsFeedClient({ initialPosts }: { initialPosts: any[] }
           { key: 'active', icon: '✅', label: 'Published',     value: stats.published,   color: '#10B981' },
           { key: 'hidden', icon: '📤', label: 'Unpublished',   value: stats.unpublished, color: '#F59E0B' },
         ].map(s => (
-          <div
+          <button
+            type="button"
             key={s.key}
             className={'nf-stat' + (statusFilter === s.key || (s.key === 'all' && statusFilter === 'all') ? ' active' : '')}
             onClick={() => handleStatus(s.key)}
+            aria-pressed={statusFilter === s.key || (s.key === 'all' && statusFilter === 'all')}
           >
             <div className="nf-stat-icon">{s.icon}</div>
             <div className="nf-stat-label">{s.label}</div>
             <div className="nf-stat-value" style={{ color: s.value > 0 ? s.color : '#2C2C2C' }}>{s.value}</div>
-          </div>
+          </button>
         ))}
       </div>
 
